@@ -1,0 +1,35 @@
+# 环境变量与密钥
+.env
+*.env.local
+
+# 编译产物
+*.exe
+*.out
+
+# 日志
+*.log
+
+# 测试请求体（含测试账号密码，勿提交）
+backend/body.json
+backend/lbody.json
+backend/rbody.json
+
+# 前端
+frontend/node_modules/
+frontend/dist/
+
+# 后端
+backend/server
+backend/seed
+
+# IDE
+.idea/
+.vscode/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 临时文件
+__pycache__/
+*.pyc

@@ -1,0 +1,128 @@
+package handler
+
+import (
+	"errors"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"github.com/soft-test-study/backend/internal/dto"
+	"github.com/soft-test-study/backend/internal/service"
+	"github.com/soft-test-study/backend/pkg/response"
+)
+
+type UserHandler struct {
+	svc *service.UserService
+}
+
+func NewUserHandler(svc *service.UserService) *UserHandler {
+	return &UserHandler{svc: svc}
+}
+
+func translateBindingError(err error) string {
+	var verr validator.ValidationErrors
+	if errors.As(err, &verr) {
+		for _, e := range verr {
+			switch e.Field() {
+			case "Username":
+				if e.Tag() == "min" {
+					return "用户名至少3个字符"
+				}
+				if e.Tag() == "max" {
+					return "用户名不超过50个字符"
+				}
+				return "用户名格式不正确"
+			case "Password":
+				if e.Tag() == "min" {
+					return "密码长度至少8位"
+				}
+				return "密码格式不正确"
+			case "ConfirmPassword":
+				return "两次密码输入不一致"
+			case "Email":
+				return "邮箱格式不正确"
+			case "OldPassword":
+				return "请输入原密码"
+			case "NewPassword":
+				if e.Tag() == "min" {
+					return "新密码长度至少8位"
+				}
+				return "新密码格式不正确"
+			case "Nickname":
+				return "昵称不超过50个字符"
+			case "Avatar":
+				return "头像地址过长"
+			}
+		}
+	}
+	msg := err.Error()
+	if strings.Contains(msg, "invalid JSON") {
+		return "请求数据格式错误"
+	}
+	return "参数错误"
+}
+
+func (h *UserHandler) Register(c *gin.Context) {
+	var req dto.RegisterReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 10002, translateBindingError(err))
+		return
+	}
+	if err := h.svc.Register(&req); err != nil {
+		response.Error(c, 10001, err.Error())
+		return
+	}
+	response.Success(c, nil)
+}
+
+func (h *UserHandler) Login(c *gin.Context) {
+	var req dto.LoginReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 10002, translateBindingError(err))
+		return
+	}
+	resp, err := h.svc.Login(&req)
+	if err != nil {
+		response.Error(c, 10001, err.Error())
+		return
+	}
+	response.Success(c, resp)
+}
+
+func (h *UserHandler) GetUserInfo(c *gin.Context) {
+	userID := c.GetUint("user_id")
+	info, err := h.svc.GetUserInfo(userID)
+	if err != nil {
+		response.Error(c, 10001, err.Error())
+		return
+	}
+	response.Success(c, info)
+}
+
+func (h *UserHandler) UpdateProfile(c *gin.Context) {
+	var req dto.UpdateProfileReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 10002, translateBindingError(err))
+		return
+	}
+	userID := c.GetUint("user_id")
+	if err := h.svc.UpdateProfile(userID, &req); err != nil {
+		response.Error(c, 10001, err.Error())
+		return
+	}
+	response.Success(c, nil)
+}
+
+func (h *UserHandler) ChangePassword(c *gin.Context) {
+	var req dto.ChangePasswordReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 10002, translateBindingError(err))
+		return
+	}
+	userID := c.GetUint("user_id")
+	if err := h.svc.ChangePassword(userID, &req); err != nil {
+		response.Error(c, 10001, err.Error())
+		return
+	}
+	response.Success(c, nil)
+}
