@@ -36,7 +36,12 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function register(username: string, password: string, confirmPassword: string, email: string, levelId: number, subjectId: number, difficulty?: string) {
-    await authApi.register({ username, password, confirm_password: confirmPassword, email, level_id: levelId, subject_id: subjectId, difficulty })
+    const res = await authApi.register({ username, password, confirm_password: confirmPassword, email, level_id: levelId, subject_id: subjectId, difficulty })
+    localStorage.setItem('access_token', res.access_token)
+    isLoggedIn.value = true
+    user.value = res.user_info
+    syncSelection()
+    await loadUserSubjects()
   }
 
   async function fetchUserInfo() {

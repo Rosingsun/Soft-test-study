@@ -29,6 +29,7 @@ const navGroups = computed(() => {
     {
       title: '练习',
       items: [
+        { label: 'AI 学习', icon: 'ai', to: '/ai/practice' },
         { label: '随机练习', icon: 'random', to: '/practice/random' },
         { label: '专项练习', icon: 'target', to: '/practice/special' },
         { label: '错题本', icon: 'wrong', to: '/wrong-questions' },
@@ -133,8 +134,8 @@ function navigate(to: string) {
   <div class="min-h-screen bg-gray-50">
     <!-- 桌面侧边栏 -->
     <aside class="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-gray-200 bg-white lg:flex">
-      <div class="flex h-16 items-center gap-2 border-b border-gray-100 px-5">
-        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
+      <div class="flex h-16 items-center gap-2.5 border-b border-gray-100 px-5">
+        <div class="bg-brand-gradient flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-md shadow-indigo-600/25">
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
@@ -149,10 +150,10 @@ function navigate(to: string) {
             <button
               v-for="item in group.items"
               :key="item.to"
-              class="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+              class="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200"
               :class="isActive(item.to)
-                ? 'bg-indigo-50 text-indigo-600'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                ? 'bg-brand-gradient text-white shadow-md shadow-indigo-600/20'
+                : 'text-gray-600 hover:bg-indigo-50/60 hover:text-indigo-700'"
               @click="navigate(item.to)"
             >
               <svg class="h-4.5 w-4.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -164,6 +165,9 @@ function navigate(to: string) {
                 </template>
                 <template v-else-if="item.icon === 'random'">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.77 4.769L4 5.5m0 0H4m0 0V4m10.5 15.5h-.582m-15.356-2a8.001 8.001 0 0015.356 1.731L20 18.5m0 0V19m0 0h.5m0 0V14" />
+                </template>
+                <template v-else-if="item.icon === 'ai'">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
                 </template>
                 <template v-else-if="item.icon === 'target'">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -206,8 +210,8 @@ function navigate(to: string) {
       </nav>
 
       <div class="border-t border-gray-100 p-3">
-        <div class="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2.5">
-          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-600">
+        <div class="flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/80 px-3 py-2.5">
+          <div class="bg-brand-gradient flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white shadow-sm">
             {{ (auth.user?.nickname || auth.user?.username || '?').slice(0, 1).toUpperCase() }}
           </div>
           <div class="min-w-0 flex-1">
@@ -231,7 +235,7 @@ function navigate(to: string) {
       <aside v-if="mobileOpen" class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-gray-200 bg-white lg:hidden">
         <div class="flex h-16 items-center justify-between border-b border-gray-100 px-5">
           <div class="flex items-center gap-2">
-            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
+            <div class="bg-brand-gradient flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-sm">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
@@ -251,13 +255,13 @@ function navigate(to: string) {
               <button
                 v-for="item in group.items"
                 :key="item.to"
-                class="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+                class="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200"
                 :class="isActive(item.to)
-                  ? 'bg-indigo-50 text-indigo-600'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                  ? 'bg-brand-gradient text-white shadow-md shadow-indigo-600/20'
+                  : 'text-gray-600 hover:bg-indigo-50/60 hover:text-indigo-700'"
                 @click="navigate(item.to)"
               >
-                <span class="text-gray-400">{{ item.label }}</span>
+                <span>{{ item.label }}</span>
               </button>
             </div>
           </div>
@@ -327,7 +331,7 @@ function navigate(to: string) {
         <div class="flex items-center gap-3">
           <router-link
             to="/practice/random"
-            class="hidden items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700 sm:flex"
+            class="bg-brand-gradient hidden items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:shadow-md hover:brightness-110 sm:flex"
           >
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -340,7 +344,7 @@ function navigate(to: string) {
               class="flex cursor-pointer items-center gap-2 rounded-xl py-1 pl-1 pr-2 transition-colors hover:bg-gray-100"
               @click.stop="userOpen = !userOpen"
             >
-              <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-600">
+              <span class="bg-brand-gradient flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold text-white shadow-sm">
                 {{ (auth.user?.nickname || auth.user?.username || '?').slice(0, 1).toUpperCase() }}
               </span>
               <span class="hidden text-sm font-medium text-gray-700 sm:block">{{ auth.user?.nickname || auth.user?.username }}</span>
@@ -367,7 +371,9 @@ function navigate(to: string) {
       </header>
 
       <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <router-view />
+        <router-view v-slot="{ Component }">
+          <component :is="Component" :key="route.path" class="animate-page-in" />
+        </router-view>
       </main>
     </div>
   </div>

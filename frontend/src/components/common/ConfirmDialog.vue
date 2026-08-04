@@ -37,7 +37,7 @@ defineExpose({ open })
     <Transition name="modal-fade">
       <div v-if="visible" class="fixed inset-0 z-[110] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" @click="cancel" />
-        <div class="relative w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
+        <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
           <div class="mb-4 flex items-start gap-3">
             <div
               class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"

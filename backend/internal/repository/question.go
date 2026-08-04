@@ -53,6 +53,30 @@ func (r *QuestionRepo) FindRandom(subjectID uint, difficulty string, limit int) 
 	return list, err
 }
 
+func (r *QuestionRepo) FindRandomFiltered(subjectID uint, difficulty, qtype string, limit int) ([]model.Question, error) {
+	var list []model.Question
+	query := r.db.Where("subject_id = ? AND status = 1", subjectID)
+	if difficulty != "" {
+		query = query.Where("difficulty = ?", difficulty)
+	}
+	if qtype != "" {
+		query = query.Where("type = ?", qtype)
+	}
+	err := query.Order("RAND()").Limit(limit).Find(&list).Error
+	return list, err
+}
+
+func (r *QuestionRepo) CountBySubjectAndType(subjectID uint, qtype string) (int64, error) {
+	var count int64
+	query := r.db.Model(&model.Question{}).
+		Where("subject_id = ? AND status = 1", subjectID)
+	if qtype != "" {
+		query = query.Where("type = ?", qtype)
+	}
+	err := query.Count(&count).Error
+	return count, err
+}
+
 func (r *QuestionRepo) FindSpecial(subjectID uint, qtype, difficulty string, limit int) ([]model.Question, error) {
 	var list []model.Question
 	query := r.db.Where("subject_id = ? AND status = 1", subjectID)
@@ -79,4 +103,11 @@ func (r *QuestionRepo) CountByChapterID(chapterID uint) (int64, error) {
 		Where("chapter_id = ? AND status = 1", chapterID).
 		Count(&count).Error
 	return count, err
+}
+
+func (r *QuestionRepo) BatchCreate(questions []model.Question) error {
+	if len(questions) == 0 {
+		return nil
+	}
+	return r.db.CreateInBatches(questions, 50).Error
 }

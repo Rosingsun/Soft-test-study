@@ -9,10 +9,10 @@ withDefaults(defineProps<{
 })
 
 const colorMap = {
-  indigo: 'bg-indigo-500',
-  emerald: 'bg-emerald-500',
-  red: 'bg-red-500',
-  yellow: 'bg-yellow-400',
+  indigo: 'bg-gradient-to-r from-indigo-500 to-violet-500',
+  emerald: 'bg-gradient-to-r from-emerald-500 to-teal-400',
+  red: 'bg-gradient-to-r from-red-500 to-rose-400',
+  yellow: 'bg-gradient-to-r from-amber-400 to-yellow-400',
   gray: 'bg-gray-300',
 }
 </script>

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"math"
 	"sort"
 	"time"
 
@@ -16,6 +17,8 @@ type ExamService struct {
 	recordRepo   *repository.ExamRecordRepo
 	questionRepo *repository.QuestionRepo
 }
+
+const examPaperSize = 75
 
 func NewExamService(
 	templateRepo *repository.ExamTemplateRepo,
@@ -32,9 +35,13 @@ func (s *ExamService) ListTemplates() ([]dto.ExamTemplateResp, error) {
 	}
 	resp := make([]dto.ExamTemplateResp, len(templates))
 	for i, t := range templates {
-		count, err := s.templateRepo.CountQuestions(t.ID)
-		if err != nil {
-			return nil, err
+		questionCount := examPaperSize
+		if t.QuestionType == model.TypeEssay {
+			questionCount = 1
+		} else if t.QuestionType != "" {
+			if n, err := s.questionRepo.CountBySubjectAndType(t.SubjectID, t.QuestionType); err == nil {
+				questionCount = int(n)
+			}
 		}
 		resp[i] = dto.ExamTemplateResp{
 			ID:            t.ID,
@@ -43,7 +50,8 @@ func (s *ExamService) ListTemplates() ([]dto.ExamTemplateResp, error) {
 			Duration:      t.Duration,
 			TotalScore:    t.TotalScore,
 			Year:          t.Year,
-			QuestionCount: int(count),
+			QuestionType:  t.QuestionType,
+			QuestionCount: questionCount,
 		}
 	}
 	return resp, nil
@@ -60,6 +68,11 @@ func (s *ExamService) StartExam(userID, templateID uint) (*dto.StartExamResp, er
 		return nil, err
 	}
 	if pending != nil && pending.ID > 0 {
+		if int(time.Since(pending.StartedAt).Seconds()) >= template.Duration*60 {
+			if _, err := s.finishExam(userID, pending.ID); err != nil {
+				return nil, err
+			}
+		}
 		return s.loadExam(pending.ID, userID, template)
 	}
 
@@ -67,11 +80,41 @@ func (s *ExamService) StartExam(userID, templateID uint) (*dto.StartExamResp, er
 	record := &model.ExamRecord{
 		UserID:     userID,
 		TemplateID: templateID,
-		TotalScore: template.TotalScore,
+		TotalScore: examPaperSize,
 		Status:     "pending",
 		StartedAt:  now,
 	}
 	if err := s.recordRepo.Create(record); err != nil {
+		return nil, err
+	}
+
+	// 论文卷每次随机抽 1 题，其余试卷随机抽 examPaperSize 道
+	limit := examPaperSize
+	if template.QuestionType == model.TypeEssay {
+		limit = 1
+	}
+	questions, err := s.questionRepo.FindRandomFiltered(template.SubjectID, "", template.QuestionType, limit)
+	if err != nil {
+		return nil, err
+	}
+	if len(questions) > 0 {
+		record.TotalScore = len(questions)
+	}
+	if err := s.recordRepo.Save(record); err != nil {
+		return nil, err
+	}
+
+	snapshot := make([]model.ExamRecordAnswer, 0, len(questions))
+	for _, q := range questions {
+		snapshot = append(snapshot, model.ExamRecordAnswer{
+			RecordID:   record.ID,
+			QuestionID: q.ID,
+			Answer:     "",
+			IsCorrect:  0,
+			Score:      0,
+		})
+	}
+	if err := s.recordRepo.CreateBatchAnswers(snapshot); err != nil {
 		return nil, err
 	}
 
@@ -87,31 +130,28 @@ func (s *ExamService) loadExam(recordID, userID uint, template *model.ExamTempla
 		return nil, ErrForbidden
 	}
 
-	tplQuestions, err := s.templateRepo.FindQuestionsByTemplate(template.ID)
+	answers, err := s.recordRepo.FindAnswersByRecord(recordID)
 	if err != nil {
 		return nil, err
 	}
 
-	questionIDs := make([]uint, len(tplQuestions))
-	scoreMap := make(map[uint]int)
-	for i, tq := range tplQuestions {
-		questionIDs[i] = tq.QuestionID
-		scoreMap[tq.QuestionID] = tq.Score
+	questionIDs := make([]uint, len(answers))
+	for i, a := range answers {
+		questionIDs[i] = a.QuestionID
 	}
 
 	questions, err := s.questionRepo.FindByIDs(questionIDs)
 	if err != nil {
 		return nil, err
 	}
-
 	qMap := make(map[uint]model.Question)
 	for _, q := range questions {
 		qMap[q.ID] = q
 	}
 
-	questionList := make([]dto.ExamQuesResp, 0, len(tplQuestions))
-	for _, tq := range tplQuestions {
-		q, ok := qMap[tq.QuestionID]
+	questionList := make([]dto.ExamQuesResp, 0, len(answers))
+	for i, a := range answers {
+		q, ok := qMap[a.QuestionID]
 		if !ok {
 			continue
 		}
@@ -121,15 +161,11 @@ func (s *ExamService) loadExam(recordID, userID uint, template *model.ExamTempla
 			Content:    q.Content,
 			Options:    q.Options,
 			Difficulty: q.Difficulty,
-			Score:      scoreMap[q.ID],
-			SortOrder:  tq.SortOrder,
+			Score:      1,
+			SortOrder:  i + 1,
 		})
 	}
 
-	answers, err := s.recordRepo.FindAnswersByRecord(recordID)
-	if err != nil {
-		return nil, err
-	}
 	answerMap := make(map[uint]string)
 	for _, a := range answers {
 		answerMap[a.QuestionID] = a.Answer
@@ -142,7 +178,7 @@ func (s *ExamService) loadExam(recordID, userID uint, template *model.ExamTempla
 		TemplateID:   template.ID,
 		TemplateName: template.Name,
 		Duration:     template.Duration,
-		TotalScore:   template.TotalScore,
+		TotalScore:   record.TotalScore,
 		Questions:    questionList,
 		Answers:      answerMap,
 		Elapsed:      elapsed,
@@ -167,22 +203,29 @@ func (s *ExamService) SubmitAnswer(userID, recordID uint, req dto.SubmitAnswerRe
 		return err
 	}
 
-	isCorrect := 0
-	if question.Answer == req.Answer {
-		isCorrect = 1
-	}
-
-	tplQuestions, err := s.templateRepo.FindQuestionsByTemplate(record.TemplateID)
+	snapshot, err := s.recordRepo.FindAnswersByRecord(recordID)
 	if err != nil {
 		return err
 	}
-	score := 0
-	for _, tq := range tplQuestions {
-		if tq.QuestionID == req.QuestionID {
-			if isCorrect == 1 {
-				score = tq.Score
-			}
+	inPaper := false
+	for _, a := range snapshot {
+		if a.QuestionID == req.QuestionID {
+			inPaper = true
 			break
+		}
+	}
+	if !inPaper {
+		return errors.New("题目不属于本次考试")
+	}
+
+	isCorrect := 0
+	score := 0
+	if question.Type != model.TypeEssay {
+		if question.Answer == req.Answer {
+			isCorrect = 1
+		}
+		if isCorrect == 1 {
+			score = 1
 		}
 	}
 
@@ -197,6 +240,10 @@ func (s *ExamService) SubmitAnswer(userID, recordID uint, req dto.SubmitAnswerRe
 }
 
 func (s *ExamService) SubmitExam(userID, recordID uint) (*dto.ExamResultResp, error) {
+	return s.finishExam(userID, recordID)
+}
+
+func (s *ExamService) finishExam(userID, recordID uint) (*dto.ExamResultResp, error) {
 	record, err := s.recordRepo.FindByID(recordID)
 	if err != nil {
 		return nil, ErrNotFound
@@ -212,16 +259,28 @@ func (s *ExamService) SubmitExam(userID, recordID uint) (*dto.ExamResultResp, er
 	if err != nil {
 		return nil, err
 	}
+
 	totalScore := 0
 	correctCount := 0
+	totalQuestions := 0
 	for _, a := range answers {
 		totalScore += a.Score
 		if a.IsCorrect == 1 {
 			correctCount++
 		}
+		if a.Score > 0 {
+			totalQuestions++
+		}
+	}
+
+	accuracy := float64(0)
+	if totalQuestions > 0 {
+		accuracy = math.Round(float64(correctCount)/float64(totalQuestions)*10000) / 100
 	}
 
 	record.Score = totalScore
+	record.CorrectCount = correctCount
+	record.Accuracy = accuracy
 	record.Status = "finished"
 	record.FinishedAt = time.Now()
 	record.Duration = int(time.Since(record.StartedAt).Seconds())
@@ -241,14 +300,15 @@ func (s *ExamService) GetResult(userID, recordID uint) (*dto.ExamResultResp, err
 		return nil, ErrForbidden
 	}
 
-	template, err := s.templateRepo.FindByID(record.TemplateID)
-	if err != nil {
-		return nil, err
-	}
-
 	answers, err := s.recordRepo.FindAnswersByRecord(recordID)
 	if err != nil {
 		return nil, err
+	}
+	totalQuestions := 0
+	for _, a := range answers {
+		if a.Score > 0 {
+			totalQuestions++
+		}
 	}
 
 	questionIDs := make([]uint, len(answers))
@@ -265,35 +325,53 @@ func (s *ExamService) GetResult(userID, recordID uint) (*dto.ExamResultResp, err
 		qMap[q.ID] = q
 	}
 
+	// 构建模板相关字段：支持 AI 考试 (TemplateID=0) 和普通模板考试
+	templateName := "AI 智能组卷"
+	templateSubjectID := uint(0)
+	templateTotalScore := record.TotalScore
+
+	if record.TemplateID != 0 {
+		if template, err := s.templateRepo.FindByID(record.TemplateID); err == nil {
+			templateName = template.Name
+			templateSubjectID = template.SubjectID
+			templateTotalScore = template.TotalScore
+		}
+	} else if len(questions) > 0 {
+		templateSubjectID = questions[0].SubjectID
+	}
+
 	correctCount := 0
 	sectionMap := make(map[string]*dto.SectionAccuracyResp)
 	details := make([]dto.AnswerDetailResp, 0, len(answers))
 	for _, a := range answers {
-		if a.IsCorrect == 1 {
-			correctCount++
+		if a.Score > 0 {
+			if a.IsCorrect == 1 {
+				correctCount++
+			}
+			q := qMap[a.QuestionID]
+			sec := sectionMap[q.Type]
+			if sec == nil {
+				sec = &dto.SectionAccuracyResp{Type: q.Type}
+				sectionMap[q.Type] = sec
+			}
+			sec.TotalCount++
+			if a.IsCorrect == 1 {
+				sec.CorrectCount++
+			}
 		}
+
 		q := qMap[a.QuestionID]
-
-		sec := sectionMap[q.Type]
-		if sec == nil {
-			sec = &dto.SectionAccuracyResp{Type: q.Type}
-			sectionMap[q.Type] = sec
-		}
-		sec.TotalCount++
-		if a.IsCorrect == 1 {
-			sec.CorrectCount++
-		}
-
 		details = append(details, dto.AnswerDetailResp{
-			QuestionID: a.QuestionID,
-			Type:       q.Type,
-			Content:    q.Content,
-			Options:    q.Options,
-			YourAnswer: a.Answer,
-			CorrectAns: q.Answer,
-			IsCorrect:  a.IsCorrect,
-			Score:      a.Score,
-			Analysis:   q.Analysis,
+			QuestionID:   a.QuestionID,
+			ExamAnswerID: a.ID,
+			Type:         q.Type,
+			Content:      q.Content,
+			Options:      q.Options,
+			YourAnswer:   a.Answer,
+			CorrectAns:   q.Answer,
+			IsCorrect:    a.IsCorrect,
+			Score:        a.Score,
+			Analysis:     q.Analysis,
 		})
 	}
 
@@ -306,15 +384,21 @@ func (s *ExamService) GetResult(userID, recordID uint) (*dto.ExamResultResp, err
 	}
 	sort.Slice(sectionAcc, func(i, j int) bool { return sectionAcc[i].Type < sectionAcc[j].Type })
 
+	accuracy := float64(0)
+	if totalQuestions > 0 {
+		accuracy = math.Round(float64(correctCount)/float64(totalQuestions)*10000) / 100
+	}
+
 	return &dto.ExamResultResp{
 		RecordID:        recordID,
-		TemplateName:    template.Name,
-		SubjectID:       template.SubjectID,
+		TemplateName:    templateName,
+		SubjectID:       templateSubjectID,
 		Score:           record.Score,
-		TotalScore:      template.TotalScore,
+		TotalScore:      templateTotalScore,
 		Duration:        record.Duration,
 		CorrectCount:    correctCount,
-		TotalCount:      len(answers),
+		TotalCount:      totalQuestions,
+		Accuracy:        accuracy,
 		Status:          record.Status,
 		StartedAt:       formatTime(record.StartedAt),
 		FinishedAt:      formatTime(record.FinishedAt),
@@ -333,7 +417,13 @@ func (s *ExamService) ListRecords(userID uint) ([]dto.ExamRecordResp, error) {
 	for _, r := range records {
 		templateName := ""
 		subjectID := r.TemplateID
-		if t, err := s.templateRepo.FindByID(r.TemplateID); err == nil {
+		if r.TemplateID == 0 {
+			// AI 考试：从答卷关联的题目中获取科目
+			if sub, err := s.getAISubjectID(r); err == nil {
+				subjectID = sub
+			}
+			templateName = "AI 智能组卷"
+		} else if t, err := s.templateRepo.FindByID(r.TemplateID); err == nil {
 			templateName = t.Name
 			subjectID = t.SubjectID
 		}
@@ -345,6 +435,8 @@ func (s *ExamService) ListRecords(userID uint) ([]dto.ExamRecordResp, error) {
 			Score:        r.Score,
 			TotalScore:   r.TotalScore,
 			Duration:     r.Duration,
+			CorrectCount: r.CorrectCount,
+			Accuracy:     r.Accuracy,
 			Status:       r.Status,
 			StartedAt:    formatTime(r.StartedAt),
 			FinishedAt:   formatTime(r.FinishedAt),
@@ -352,6 +444,23 @@ func (s *ExamService) ListRecords(userID uint) ([]dto.ExamRecordResp, error) {
 		})
 	}
 	return resp, nil
+}
+
+// getAISubjectID 通过 AI 考试成绩记录的题目，反查科目 ID
+func (s *ExamService) getAISubjectID(record model.ExamRecord) (uint, error) {
+	answers, err := s.recordRepo.FindAnswersByRecord(record.ID)
+	if err != nil || len(answers) == 0 {
+		return 0, ErrNotFound
+	}
+	questionIDs := make([]uint, len(answers))
+	for i, a := range answers {
+		questionIDs[i] = a.QuestionID
+	}
+	questions, err := s.questionRepo.FindByIDs(questionIDs)
+	if err != nil || len(questions) == 0 {
+		return 0, ErrNotFound
+	}
+	return questions[0].SubjectID, nil
 }
 
 func formatTime(t time.Time) string {

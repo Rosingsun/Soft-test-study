@@ -112,33 +112,33 @@ func (s *UserService) buildUserInfo(user *model.User) *dto.UserInfo {
 	return info
 }
 
-func (s *UserService) Register(req *dto.RegisterReq) error {
+func (s *UserService) Register(req *dto.RegisterReq) (*dto.LoginResp, error) {
 	if err := validateUsername(req.Username); err != nil {
-		return err
+		return nil, err
 	}
 	if err := validatePassword(req.Password); err != nil {
-		return err
+		return nil, err
 	}
 	if req.Password != req.ConfirmPassword {
-		return errors.New("两次密码输入不一致")
+		return nil, errors.New("两次密码输入不一致")
 	}
 	if err := s.validateSubjectLevel(req.LevelID, req.SubjectID); err != nil {
-		return err
+		return nil, err
 	}
 
 	existing, _ := s.repo.FindByUsername(req.Username)
 	if existing != nil && existing.ID > 0 {
-		return errors.New("用户名已被注册")
+		return nil, errors.New("用户名已被注册")
 	}
 
 	existing, _ = s.repo.FindByEmail(req.Email)
 	if existing != nil && existing.ID > 0 {
-		return errors.New("邮箱已被注册")
+		return nil, errors.New("邮箱已被注册")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.New("密码加密失败")
+		return nil, errors.New("密码加密失败")
 	}
 
 	user := &model.User{
@@ -151,7 +151,21 @@ func (s *UserService) Register(req *dto.RegisterReq) error {
 		SubjectID:    req.SubjectID,
 		Difficulty:   req.Difficulty,
 	}
-	return s.repo.Create(user)
+	if err := s.repo.Create(user); err != nil {
+		return nil, errors.New("注册失败，请稍后重试")
+	}
+
+	expiresIn := time.Duration(s.jwtExpires) * time.Hour
+	tokenStr, err := jwtutil.Generate(s.jwtSecret, user.ID, expiresIn)
+	if err != nil {
+		return nil, errors.New("Token 签发失败")
+	}
+
+	return &dto.LoginResp{
+		AccessToken: tokenStr,
+		ExpiresIn:   s.jwtExpires * 3600,
+		UserInfo:    *s.buildUserInfo(user),
+	}, nil
 }
 
 func (s *UserService) Login(req *dto.LoginReq) (*dto.LoginResp, error) {

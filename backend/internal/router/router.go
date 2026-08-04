@@ -26,6 +26,8 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	wrongRepo := repository.NewWrongQuestionRepo(db)
 	examTemplateRepo := repository.NewExamTemplateRepo(db)
 	examRecordRepo := repository.NewExamRecordRepo(db)
+	aiRepo := repository.NewAiRepo(db)
+	essayScoreRepo := repository.NewEssayScoreRepo(db)
 
 	userSvc := service.NewUserService(userRepo, examLevelRepo, subjectRepo, cfg.JWTSecret, cfg.JWTExpiresIn)
 	examLevelSvc := service.NewExamLevelService(examLevelRepo)
@@ -39,6 +41,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	examSvc := service.NewExamService(examTemplateRepo, examRecordRepo, questionRepo)
 	statsRepo := repository.NewStatsRepo(db)
 	statsSvc := service.NewStatsService(statsRepo, subjectRepo)
+	aiSvc := service.NewAiService(aiRepo, questionRepo, subjectRepo, chapterRepo, examRecordRepo, essayScoreRepo, practiceRecordRepo)
 
 	userH := handler.NewUserHandler(userSvc)
 	examLevelH := handler.NewExamLevelHandler(examLevelSvc)
@@ -51,6 +54,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	wrongH := handler.NewWrongQuestionHandler(wrongSvc)
 	examH := handler.NewExamHandler(examSvc)
 	statsH := handler.NewStatsHandler(statsSvc)
+	aiH := handler.NewAiHandler(aiSvc)
 
 	rateLimiter := middleware.RateLimit(5, time.Minute)
 
@@ -65,6 +69,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	api.GET("/questions", questionH.ListByChapter)
 	api.GET("/questions/:id", questionH.GetByID)
 	api.GET("/exam-templates", examH.ListTemplates)
+	api.GET("/ai/providers", aiH.GetProviders)
 
 	auth := api.Group("")
 	auth.Use(middleware.Auth(cfg.JWTSecret))
@@ -101,5 +106,12 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 		auth.GET("/stats/calendar", statsH.Calendar)
 		auth.GET("/stats/subject-progress", statsH.SubjectProgress)
 		auth.GET("/stats/chapter-progress", statsH.ChapterProgress)
+
+		aiRateLimiter := middleware.RateLimit(10, time.Minute)
+		auth.POST("/ai/generate", aiRateLimiter, aiH.GenerateQuestions)
+		auth.POST("/ai/analyze", aiRateLimiter, aiH.Analyze)
+		auth.POST("/ai/exam/start", aiRateLimiter, aiH.StartExam)
+		auth.POST("/ai/essay-score", aiRateLimiter, aiH.EssayScore)
+		auth.GET("/ai/essay-score/check", aiH.CheckEssayScore)
 	}
 }

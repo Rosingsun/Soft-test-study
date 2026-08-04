@@ -239,6 +239,54 @@ func seedExamTemplates(db *gorm.DB) {
 		db.Model(&template).Update("total_score", totalScore)
 		fmt.Printf("已创建试卷: %s（%d 题，%d 分）\n", templateName, len(questions), totalScore)
 	}
+
+	seedEssayTemplates(db)
+}
+
+// seedEssayTemplates 为含论文题的科目生成「论文写作卷」（幂等）。
+func seedEssayTemplates(db *gorm.DB) {
+	var subjects []model.Subject
+	db.Find(&subjects)
+
+	for _, subject := range subjects {
+		var essayQuestions []model.Question
+		db.Where("subject_id = ? AND type = ? AND status = 1", subject.ID, model.TypeEssay).
+			Order("year asc").Find(&essayQuestions)
+		if len(essayQuestions) == 0 {
+			continue
+		}
+
+		templateName := fmt.Sprintf("%s论文写作卷", subject.Name)
+		var existing model.ExamTemplate
+		err := db.Where("subject_id = ? AND name = ?", subject.ID, templateName).First(&existing).Error
+		if err == nil {
+			continue
+		}
+
+		template := model.ExamTemplate{
+			SubjectID:    subject.ID,
+			Name:         templateName,
+			Duration:     150,
+			TotalScore:   1,
+			QuestionType: model.TypeEssay,
+			IsPublic:     1,
+			Year:         2024,
+			Status:       1,
+		}
+		if err := db.Create(&template).Error; err != nil {
+			log.Printf("创建论文卷失败: %v", err)
+			continue
+		}
+		for i, q := range essayQuestions {
+			db.Create(&model.ExamTemplateQuestion{
+				TemplateID: template.ID,
+				QuestionID: q.ID,
+				SortOrder:  i + 1,
+				Score:      1,
+			})
+		}
+		fmt.Printf("已创建论文卷: %s（%d 题）\n", templateName, len(essayQuestions))
+	}
 }
 
 func questionScore(qtype string) int {

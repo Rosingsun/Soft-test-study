@@ -57,8 +57,15 @@ func (r *ExamRecordRepo) SaveAnswer(answer *model.ExamRecordAnswer) error {
 	return r.db.Save(&existing).Error
 }
 
+func (r *ExamRecordRepo) CreateBatchAnswers(answers []model.ExamRecordAnswer) error {
+	if len(answers) == 0 {
+		return nil
+	}
+	return r.db.CreateInBatches(answers, 100).Error
+}
+
 func (r *ExamRecordRepo) FindAnswersByRecord(recordID uint) ([]model.ExamRecordAnswer, error) {
 	var list []model.ExamRecordAnswer
-	err := r.db.Where("record_id = ?", recordID).Find(&list).Error
+	err := r.db.Where("record_id = ?", recordID).Order("id asc").Find(&list).Error
 	return list, err
 }

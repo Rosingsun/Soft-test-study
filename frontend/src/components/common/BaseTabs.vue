@@ -16,12 +16,12 @@ watch(active, v => emit('update:modelValue', v))
 </script>
 
 <template>
-  <div class="flex gap-1 rounded-lg bg-gray-100 p-1">
+  <div class="flex gap-1 rounded-xl bg-gray-100 p-1">
     <button
       v-for="tab in tabs"
       :key="tab.value"
-      class="flex-1 cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-all"
-      :class="active === tab.value ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+      class="flex-1 cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200"
+      :class="active === tab.value ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800'"
       @click="active = tab.value"
     >
       {{ tab.label }}

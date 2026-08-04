@@ -72,7 +72,7 @@ const typeBadges: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'de
       <BaseLoading />
     </div>
 
-    <div v-else-if="error" class="rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div v-else-if="error" class="rounded-xl border border-gray-100 bg-white shadow-sm">
       <BaseEmpty title="加载失败" :description="error">
         <template #action>
           <BaseButton type="secondary" size="sm" class="mt-4" @click="loadWrongQuestions">
@@ -82,7 +82,7 @@ const typeBadges: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'de
       </BaseEmpty>
     </div>
 
-    <div v-else-if="list.length === 0" class="rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div v-else-if="list.length === 0" class="rounded-xl border border-gray-100 bg-white shadow-sm">
       <BaseEmpty title="暂无错题" description="继续保持，错误会越来越少">
         <template #action>
           <BaseButton type="secondary" size="sm" class="mt-4" @click="router.push('/practice/random')">

@@ -68,11 +68,12 @@ func (h *UserHandler) Register(c *gin.Context) {
 		response.Error(c, 10002, translateBindingError(err))
 		return
 	}
-	if err := h.svc.Register(&req); err != nil {
+	resp, err := h.svc.Register(&req)
+	if err != nil {
 		response.Error(c, 10001, err.Error())
 		return
 	}
-	response.Success(c, nil)
+	response.Success(c, resp)
 }
 
 func (h *UserHandler) Login(c *gin.Context) {

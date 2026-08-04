@@ -1,24 +1,31 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { startExam, submitAnswer, submitExam } from '@/api/exam'
+import { useExamStore } from '@/stores/exam'
 import { sanitizeHtml } from '@/utils/sanitize'
 import { parseOptions, typeLabel } from '@/utils/question'
+import { showToast } from '@/utils/toast'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import BaseLoading from '@/components/common/BaseLoading.vue'
 import type { StartExamResp, ExamQuesResp } from '@/types/exam'
 
 const route = useRoute()
 const router = useRouter()
+const examStore = useExamStore()
 const examData = ref<StartExamResp | null>(null)
+const isAiMode = computed(() => route.query.source === 'ai')
 const currentIndex = ref(0)
 const loading = ref(true)
 const error = ref('')
 const showCard = ref(false)
 const submitting = ref(false)
+const submitted = ref(false)
 const confirmDialog = ref<InstanceType<typeof ConfirmDialog> | null>(null)
 const remainingSeconds = ref(0)
 let timer: number | null = null
+let deadline = 0
+let lastSaveErrorAt = 0
 
 const current = computed((): ExamQuesResp => examData.value?.questions[currentIndex.value] as ExamQuesResp)
 const total = computed(() => examData.value?.questions.length || 0)
@@ -34,13 +41,25 @@ const timeColor = computed(() => {
 })
 
 onMounted(async () => {
+  window.addEventListener('beforeunload', handleBeforeUnload)
   try {
-    const id = Number(route.params.id)
-    examData.value = await startExam(id)
+    if (isAiMode.value) {
+      const data = examStore.getAndClearAiExamData()
+      if (!data) {
+        error.value = 'AI 考试数据丢失，请重新组卷'
+        return
+      }
+      examData.value = data
+    } else {
+      const id = Number(route.params.id)
+      examData.value = await startExam(id)
+    }
     if (examData.value.answers) answers.value = { ...examData.value.answers }
     const elapsed = examData.value.elapsed || 0
     remainingSeconds.value = examData.value.duration * 60 - elapsed
     if (examData.value.status === 'finished') {
+      submitted.value = true
+      showToast('考试时间已到，系统已自动交卷')
       router.replace(`/exam/${examData.value.record_id}/result`)
       return
     }
@@ -52,16 +71,34 @@ onMounted(async () => {
   }
 })
 
-onUnmounted(stopTimer)
+onUnmounted(() => {
+  stopTimer()
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+})
+
+onBeforeRouteLeave(() => {
+  if (submitted.value || submitting.value) return true
+  return window.confirm('考试尚未交卷，离开后将无法继续本次考试，确定离开吗？')
+})
+
+function handleBeforeUnload(e: BeforeUnloadEvent) {
+  if (submitted.value || submitting.value) return
+  e.preventDefault()
+  e.returnValue = ''
+}
 
 function startTimer() {
-  timer = window.setInterval(() => {
-    remainingSeconds.value--
-    if (remainingSeconds.value <= 0) {
-      stopTimer()
-      handleSubmit()
-    }
-  }, 1000)
+  deadline = Date.now() + remainingSeconds.value * 1000
+  tick()
+  timer = window.setInterval(tick, 1000)
+}
+
+function tick() {
+  remainingSeconds.value = Math.max(0, Math.round((deadline - Date.now()) / 1000))
+  if (remainingSeconds.value <= 0) {
+    stopTimer()
+    handleSubmit()
+  }
 }
 
 function stopTimer() {
@@ -102,7 +139,13 @@ function selectAnswer(questionId: number, value: string) {
 
 function saveAnswer(questionId: number, answer: string) {
   if (!examData.value) return
-  submitAnswer(examData.value.record_id, { question_id: questionId, answer }).catch(() => {})
+  submitAnswer(examData.value.record_id, { question_id: questionId, answer }).catch(() => {
+    const now = Date.now()
+    if (now - lastSaveErrorAt > 3000) {
+      lastSaveErrorAt = now
+      showToast('答案保存失败，请检查网络后重试')
+    }
+  })
 }
 
 function isSelected(questionId: number, value: string) {
@@ -124,9 +167,11 @@ async function handleSubmit() {
   stopTimer()
   try {
     await submitExam(examData.value.record_id)
+    submitted.value = true
     router.replace(`/exam/${examData.value.record_id}/result`)
-  } catch {
+  } catch (e) {
     submitting.value = false
+    showToast((e as Error).message || '交卷失败，请重试')
   }
 }
 </script>
@@ -137,94 +182,145 @@ async function handleSubmit() {
       <BaseLoading />
     </div>
 
-    <div v-else-if="error" class="rounded-lg bg-white p-6 shadow-sm">
-      <p class="text-red-500">{{ error }}</p>
-      <button class="mt-4 text-sm text-indigo-600 hover:underline" @click="router.push('/exam')">返回试卷列表</button>
+    <div v-else-if="error" class="rounded-xl border border-red-100 bg-red-50 p-6">
+      <p class="text-sm text-red-600">{{ error }}</p>
+      <button class="mt-4 cursor-pointer text-sm font-medium text-indigo-600 hover:underline" @click="router.push('/exam')">返回试卷列表</button>
     </div>
 
-    <div v-else-if="!examData" class="rounded-lg bg-white p-6 shadow-sm">
-      <p class="text-gray-500">试卷加载失败</p>
+    <div v-else-if="!examData" class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <p class="text-sm text-gray-500">试卷加载失败</p>
     </div>
 
     <template v-else>
-      <!-- 顶部状态栏 -->
-      <div class="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div class="flex min-w-0 items-center gap-3">
-            <button
-              class="cursor-pointer rounded-lg p-1.5 text-gray-500 hover:bg-gray-100"
-              title="返回列表"
-              @click="router.push('/exam')"
-            >
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <span class="truncate text-sm font-medium text-gray-800">{{ examData.template_name }}</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <div class="hidden items-center gap-1.5 sm:flex">
-              <div class="h-1.5 w-24 overflow-hidden rounded-full bg-gray-100">
-                <div class="h-full rounded-full bg-indigo-500 transition-all duration-300" :style="{ width: progressPct + '%' }" />
-              </div>
-              <span class="text-xs text-gray-400">{{ answeredCount }}/{{ total }}</span>
+      <!-- 顶部：状态栏 + 导航（粘性） -->
+      <div class="sticky top-0 z-20 mb-4 space-y-2">
+        <div class="rounded-xl border border-gray-100 bg-white/95 p-3 shadow-sm backdrop-blur">
+          <div class="flex items-center justify-between">
+            <div class="flex min-w-0 items-center gap-3">
+              <button
+                class="cursor-pointer rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                title="返回列表"
+                @click="router.push('/exam')"
+              >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <span class="truncate text-sm font-semibold text-gray-800">{{ examData.template_name }}</span>
             </div>
-            <span class="font-mono text-sm font-bold" :class="timeColor">{{ formatTime(remainingSeconds) }}</span>
-            <button
-              class="cursor-pointer rounded-lg border px-2.5 py-1 text-xs lg:hidden"
-              :class="showCard ? 'border-indigo-300 bg-indigo-50 text-indigo-600' : 'border-gray-300 bg-white text-gray-600'"
-              @click="showCard = !showCard"
-            >
-              答题卡
-            </button>
-            <button
-              class="cursor-pointer rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600 disabled:opacity-50"
-              :disabled="submitting"
-              @click="askSubmit"
-            >
-              {{ submitting ? '提交中…' : '交卷' }}
-            </button>
+            <div class="flex items-center gap-3">
+              <div class="hidden items-center gap-2 sm:flex">
+                <div class="h-1.5 w-24 overflow-hidden rounded-full bg-gray-100">
+                  <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-300" :style="{ width: progressPct + '%' }" />
+                </div>
+                <span class="text-xs text-gray-400">{{ answeredCount }}/{{ total }}</span>
+              </div>
+              <span
+                class="inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1 font-mono text-sm font-bold ring-1 ring-inset ring-gray-200"
+                :class="timeColor"
+              >
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ formatTime(remainingSeconds) }}
+              </span>
+              <button
+                class="cursor-pointer rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors lg:hidden"
+                :class="showCard ? 'border-indigo-300 bg-indigo-50 text-indigo-600' : 'border-gray-200 bg-white text-gray-600'"
+                @click="showCard = !showCard"
+              >
+                答题卡
+              </button>
+              <button
+                class="cursor-pointer rounded-lg bg-red-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:bg-red-600 hover:shadow-md active:scale-[0.98] disabled:opacity-50"
+                :disabled="submitting"
+                @click="askSubmit"
+              >
+                {{ submitting ? '提交中…' : '交卷' }}
+              </button>
+            </div>
           </div>
+        </div>
+
+        <!-- 顶部导航：上一题 / 下一题 / 已答 -->
+        <div class="flex items-center justify-between rounded-xl border border-gray-100 bg-white/95 px-3 py-2 shadow-sm backdrop-blur">
+          <button
+            class="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-3.5 py-1.5 text-sm font-medium text-gray-600 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-30"
+            :disabled="currentIndex === 0"
+            @click="goTo(currentIndex - 1)"
+          >
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            上一题
+          </button>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-400">已答 <span class="font-bold text-indigo-600">{{ answeredCount }}</span> / {{ total }}</span>
+            <span class="hidden text-xs text-gray-400 sm:inline">· 答案已自动保存</span>
+          </div>
+          <button
+            class="bg-brand-gradient flex cursor-pointer items-center gap-1 rounded-lg px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:brightness-110 disabled:opacity-30 disabled:shadow-none"
+            :disabled="currentIndex === total - 1"
+            @click="goTo(currentIndex + 1)"
+          >
+            下一题
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       </div>
 
       <div class="flex flex-col gap-4 lg:flex-row">
         <!-- 题目区 -->
         <div class="min-w-0 flex-1">
-          <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <div class="mb-4 flex flex-wrap items-center gap-2">
-              <span class="rounded-lg bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-600">
+          <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
+            <div class="mb-5 flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-600 ring-1 ring-inset ring-indigo-600/20">
                 {{ currentIndex + 1 }} / {{ total }} · {{ typeLabel(current.type) }}
               </span>
-              <span class="text-xs text-gray-400">{{ current.score }} 分</span>
+              <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                {{ current.score }} 分
+              </span>
             </div>
 
-            <div class="mb-6 text-base leading-relaxed text-gray-800" v-html="sanitizeHtml(current.content)" />
+            <div class="mb-6 text-[15px] leading-7 text-gray-800" v-html="sanitizeHtml(current.content)" />
 
-            <div v-if="current.type === 'single' || current.type === 'multi'" class="space-y-2">
+            <div v-if="current.type === 'single' || current.type === 'multi'" class="space-y-2.5">
+              <p v-if="current.type === 'multi'" class="mb-1 text-xs text-gray-400">本题为多选题，可选择多个选项</p>
               <button
                 v-for="opt in parseOptions(current.options)"
                 :key="opt.label"
-                class="flex w-full cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm transition-colors"
-                :class="isSelected(current.id, opt.label) ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-300'"
+                class="flex w-full cursor-pointer items-center gap-3.5 rounded-xl border-2 px-4 py-3.5 text-left text-sm transition-all duration-200"
+                :class="isSelected(current.id, opt.label)
+                  ? 'border-indigo-500 bg-indigo-50/70 shadow-sm'
+                  : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-sm'"
                 @click="selectAnswer(current.id, opt.label)"
               >
                 <span
-                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-medium"
-                  :class="isSelected(current.id, opt.label) ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-gray-300'"
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors"
+                  :class="isSelected(current.id, opt.label) ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-gray-300 text-gray-500'"
                 >{{ opt.label }}</span>
-                <span>{{ opt.text }}</span>
+                <span class="leading-6">{{ opt.text }}</span>
               </button>
             </div>
 
-            <div v-else-if="current.type === 'judge'" class="flex gap-4">
+            <div v-else-if="current.type === 'judge'" class="grid grid-cols-2 gap-3">
               <button
                 v-for="val in ['正确', '错误']"
                 :key="val"
-                class="flex-1 cursor-pointer rounded-lg border px-6 py-3 text-center text-sm font-medium transition-colors"
-                :class="isSelected(current.id, val) ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 hover:border-indigo-300'"
+                class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 px-6 py-4 text-sm font-semibold transition-all duration-200"
+                :class="isSelected(current.id, val)
+                  ? 'border-indigo-500 bg-indigo-50/70 text-indigo-700 shadow-sm'
+                  : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-sm'"
                 @click="selectAnswer(current.id, val)"
               >
+                <svg v-if="val === '正确'" class="h-5 w-5" :class="isSelected(current.id, val) ? 'text-indigo-500' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <svg v-else class="h-5 w-5" :class="isSelected(current.id, val) ? 'text-indigo-500' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 {{ val }}
               </button>
             </div>
@@ -232,60 +328,46 @@ async function handleSubmit() {
             <div v-else>
               <textarea
                 :value="answers[current.id] || ''"
-                rows="3"
-                class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="请输入答案"
+                :rows="current.type === 'essay' ? 14 : 4"
+                class="w-full rounded-xl border border-gray-300 bg-gray-50/50 px-4 py-3 text-sm leading-6 transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                :placeholder="current.type === 'essay' ? '请在此撰写论文正文…' : '请输入答案'"
                 @input="selectAnswer(current.id, ($event.target as HTMLTextAreaElement).value)"
               />
+              <p v-if="current.type === 'essay'" class="mt-2 text-xs text-gray-400">论文题无标准答案，作答后仅记录提交内容，不自动判分。</p>
             </div>
-          </div>
-
-          <div class="mt-4 flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-            <button
-              class="cursor-pointer rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-30"
-              :disabled="currentIndex === 0"
-              @click="goTo(currentIndex - 1)"
-            >
-              ← 上一题
-            </button>
-            <span class="text-xs text-gray-400">答案已自动保存</span>
-            <button
-              class="cursor-pointer rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-30"
-              :disabled="currentIndex === total - 1"
-              @click="goTo(currentIndex + 1)"
-            >
-              下一题 →
-            </button>
           </div>
         </div>
 
         <!-- 答题卡（桌面常驻 / 移动端抽屉） -->
         <div
-          class="shrink-0 rounded-lg border border-gray-200 bg-white p-4 shadow-sm lg:w-64"
+          class="h-fit shrink-0 rounded-xl border border-gray-100 bg-white p-4 shadow-sm lg:sticky lg:top-32 lg:w-64"
           :class="showCard ? 'block' : 'hidden lg:block'"
         >
           <div class="mb-3 flex items-center justify-between">
             <h3 class="text-sm font-semibold text-gray-800">答题卡</h3>
-            <button class="cursor-pointer text-xs text-gray-400 lg:hidden" @click="showCard = false">收起</button>
+            <button class="cursor-pointer text-xs text-gray-400 hover:text-gray-600 lg:hidden" @click="showCard = false">收起</button>
           </div>
-          <div class="mb-3 flex flex-wrap gap-1.5 text-[10px] text-gray-400">
-            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded bg-indigo-500" />已答</span>
-            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded bg-gray-200" />未答</span>
+          <div class="mb-3 flex flex-wrap gap-2 text-[10px] text-gray-400">
+            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-full bg-indigo-500" />已答</span>
+            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-full bg-gray-200" />未答</span>
           </div>
           <div class="grid grid-cols-8 gap-1.5 lg:grid-cols-5">
             <button
               v-for="(q, idx) in examData.questions"
               :key="q.id"
-              class="flex h-8 w-8 cursor-pointer items-center justify-center rounded text-xs font-medium transition-colors"
+              class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-xs font-medium transition-all duration-150 hover:scale-105"
               :class="[statusClass(q.id), { 'ring-2 ring-indigo-400 ring-offset-1': idx === currentIndex }]"
               @click="goTo(idx)"
             >
               {{ idx + 1 }}
             </button>
           </div>
-          <div class="mt-3 rounded-lg bg-gray-50 p-3 text-center">
+          <div class="mt-3 rounded-xl bg-gray-50 p-3 text-center">
             <p class="text-xs text-gray-500">已答 <span class="font-bold text-indigo-600">{{ answeredCount }}</span> / {{ total }}</p>
-            <p class="mt-0.5 text-[10px] text-gray-400">{{ Math.round(progressPct) }}% 完成</p>
+            <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200">
+              <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-300" :style="{ width: progressPct + '%' }" />
+            </div>
+            <p class="mt-1.5 text-[10px] text-gray-400">{{ Math.round(progressPct) }}% 完成</p>
           </div>
         </div>
       </div>

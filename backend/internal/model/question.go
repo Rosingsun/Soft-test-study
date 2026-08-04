@@ -2,6 +2,17 @@ package model
 
 import "time"
 
+// 题型常量
+const (
+	TypeSingle       = "single"
+	TypeMulti        = "multi"
+	TypeJudge        = "judge"
+	TypeFill         = "fill"
+	TypeShort        = "short"
+	TypeComprehensive = "comprehensive"
+	TypeEssay        = "essay"
+)
+
 type Question struct {
 	ID           uint      `gorm:"primarykey"`
 	SubjectID    uint      `gorm:"column:subject_id;not null;index"`
@@ -14,6 +25,7 @@ type Question struct {
 	Answer       string    `gorm:"column:answer;type:text;not null"`
 	Analysis     string    `gorm:"column:analysis;type:text"`
 	Year         int       `gorm:"column:year"`
+	Source       string    `gorm:"column:source;type:varchar(100);default:''"`
 	Status       int       `gorm:"column:status;default:0"`
 	CreatedAt    time.Time `gorm:"column:created_at"`
 	UpdatedAt    time.Time `gorm:"column:updated_at"`

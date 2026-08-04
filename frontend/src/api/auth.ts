@@ -6,7 +6,7 @@ export function login(data: LoginReq) {
 }
 
 export function register(data: RegisterReq) {
-  return post<null>('/auth/register', data)
+  return post<LoginResp>('/auth/register', data)
 }
 
 export function getUserInfo() {

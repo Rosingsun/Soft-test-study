@@ -21,7 +21,7 @@ const model = defineModel<string | number | null>({ default: '' })
       :type="type"
       :placeholder="placeholder"
       :disabled="disabled"
-      class="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-800 transition-colors placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:bg-gray-100 disabled:text-gray-400"
+      class="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-800 shadow-sm transition-colors placeholder:text-gray-400 hover:border-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:bg-gray-100 disabled:text-gray-400"
     />
     <p v-if="error" class="mt-1 text-xs text-red-500">{{ error }}</p>
   </div>

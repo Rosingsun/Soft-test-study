@@ -46,12 +46,12 @@ function goBack() {
       <BaseLoading />
     </div>
 
-    <div v-else-if="error" class="rounded-lg bg-white p-6 shadow-sm">
-      <p class="text-red-500">{{ error }}</p>
+    <div v-else-if="error" class="rounded-xl border border-red-100 bg-red-50 p-6">
+      <p class="text-sm text-red-600">{{ error }}</p>
       <BaseButton type="secondary" size="sm" class="mt-4" @click="goBack">返回</BaseButton>
     </div>
 
-    <div v-else-if="questions.length === 0" class="rounded-lg bg-white shadow-sm">
+    <div v-else-if="questions.length === 0" class="rounded-xl border border-gray-100 bg-white shadow-sm">
       <BaseEmpty title="该章节暂无题目" description="请稍后再来试试">
         <template #action>
           <BaseButton type="secondary" size="sm" class="mt-4" @click="goBack">返回</BaseButton>

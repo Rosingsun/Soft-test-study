@@ -194,15 +194,16 @@ CREATE TABLE `wrong_questions` (
 -- 12. 考试模板表
 -- =============================================================
 CREATE TABLE `exam_templates` (
-  `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `subject_id`  BIGINT UNSIGNED NOT NULL COMMENT '所属科目ID',
-  `name`        VARCHAR(200)    NOT NULL COMMENT '试卷名称',
-  `duration`    INT             NOT NULL COMMENT '考试时长(分钟)',
-  `total_score` INT             NOT NULL COMMENT '总分',
-  `is_public`   INT             DEFAULT 1 COMMENT '是否公开: 1=是 0=否',
-  `year`        INT             DEFAULT NULL COMMENT '考试年份',
-  `status`      INT             DEFAULT 1 COMMENT '状态: 1=启用 0=禁用',
-  `created_at`  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `subject_id`    BIGINT UNSIGNED NOT NULL COMMENT '所属科目ID',
+  `name`          VARCHAR(200)    NOT NULL COMMENT '试卷名称',
+  `duration`      INT             NOT NULL COMMENT '考试时长(分钟)',
+  `total_score`   INT             NOT NULL COMMENT '总分',
+  `question_type` VARCHAR(20)     DEFAULT '' COMMENT '题目类型过滤: 空=不限 essay=仅论文',
+  `is_public`     INT             DEFAULT 1 COMMENT '是否公开: 1=是 0=否',
+  `year`          INT             DEFAULT NULL COMMENT '考试年份',
+  `status`        INT             DEFAULT 1 COMMENT '状态: 1=启用 0=禁用',
+  `created_at`    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_subject_id` (`subject_id`),
   CONSTRAINT `fk_et_subject` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE CASCADE

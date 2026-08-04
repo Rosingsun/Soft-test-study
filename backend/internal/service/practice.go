@@ -29,7 +29,7 @@ func (s *PracticeService) Submit(userID uint, req dto.PracticeSubmitReq) (*dto.P
 	}
 
 	isCorrect := 0
-	if question.Answer == req.Answer {
+	if question.Type != model.TypeEssay && question.Answer == req.Answer {
 		isCorrect = 1
 	}
 
@@ -45,8 +45,8 @@ func (s *PracticeService) Submit(userID uint, req dto.PracticeSubmitReq) (*dto.P
 		return nil, err
 	}
 
-	// 答错自动收录错题本
-	if isCorrect == 0 {
+	// 答错自动收录错题本（论文题不判分，不收录）
+	if isCorrect == 0 && question.Type != model.TypeEssay {
 		if err := s.wrongRepo.Upsert(userID, req.QuestionID); err != nil {
 			log.Printf("错题本收录失败 user_id=%d question_id=%d: %v", userID, req.QuestionID, err)
 		}

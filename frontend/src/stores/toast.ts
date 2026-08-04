@@ -1,13 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+export type ToastType = 'success' | 'error' | 'info'
+
 export const useToastStore = defineStore('toast', () => {
   const message = ref('')
+  const type = ref<ToastType>('info')
   const visible = ref(false)
   let timer: number | null = null
 
-  function show(msg: string) {
+  function show(msg: string, t: ToastType = 'info') {
     message.value = msg
+    type.value = t
     visible.value = true
     if (timer !== null) {
       clearTimeout(timer)
@@ -17,5 +21,5 @@ export const useToastStore = defineStore('toast', () => {
     }, 3000)
   }
 
-  return { message, visible, show }
+  return { message, type, visible, show }
 })

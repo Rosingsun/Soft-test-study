@@ -28,3 +28,9 @@ func (r *ChapterRepo) FindBySubjectID(subjectID uint) ([]model.Chapter, error) {
 		Find(&chapters).Error
 	return chapters, err
 }
+
+func (r *ChapterRepo) FindByID(id uint) (*model.Chapter, error) {
+	var chapter model.Chapter
+	err := r.db.First(&chapter, id).Error
+	return &chapter, err
+}

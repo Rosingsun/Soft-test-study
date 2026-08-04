@@ -91,6 +91,16 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/exam/ExamResult.vue'),
       },
       {
+        path: 'ai/config',
+        name: 'AIConfig',
+        component: () => import('@/views/ai/AIConfig.vue'),
+      },
+      {
+        path: 'ai/practice',
+        name: 'AIPractice',
+        component: () => import('@/views/ai/AIPractice.vue'),
+      },
+      {
         path: 'progress',
         name: 'Progress',
         component: () => import('@/views/progress/StudyProgress.vue'),

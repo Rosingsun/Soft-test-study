@@ -24,7 +24,7 @@ const started = ref(false)
 const loading = ref(false)
 const error = ref('')
 
-const typeOptions = ['single', 'multi', 'judge', 'fill', 'short', 'comprehensive']
+const typeOptions = ['single', 'multi', 'judge', 'fill', 'short', 'comprehensive', 'essay']
 const difficultyOptions = [
   { value: '', label: '全部难度' },
   { value: 'easy', label: '简单' },
@@ -75,27 +75,27 @@ function reset() {
 
     <!-- 配置面板 -->
     <div v-if="!started" class="mx-auto max-w-2xl">
-      <div class="rounded-lg bg-white p-6 shadow-sm">
-        <div class="mb-5 flex items-start gap-3">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
-            <svg class="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+      <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
+        <div class="mb-6 flex items-start gap-3.5">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+            <svg class="h-5.5 w-5.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           </div>
           <div>
-            <h2 class="text-base font-semibold text-gray-900">题型专项训练</h2>
+            <h2 class="text-base font-semibold tracking-tight text-gray-900">题型专项训练</h2>
             <p class="mt-0.5 text-sm text-gray-500">选择科目与题型，按需强化训练</p>
           </div>
         </div>
 
-        <div v-if="error" class="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{{ error }}</div>
+        <div v-if="error" class="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-sm text-red-600">{{ error }}</div>
 
-        <div class="space-y-4">
+        <div class="space-y-5">
           <div>
             <label class="mb-1.5 block text-sm font-medium text-gray-700">选择科目</label>
             <select
               v-model="subjectId"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              class="w-full cursor-pointer rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm shadow-sm transition-colors hover:border-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             >
               <option v-for="s in subjectsForLevel" :key="s.id" :value="s.id">{{ s.name }}</option>
             </select>
@@ -106,10 +106,10 @@ function reset() {
               <button
                 v-for="t in typeOptions"
                 :key="t"
-                class="cursor-pointer rounded-lg border px-3 py-1.5 text-sm transition-colors"
+                class="cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200"
                 :class="type === t
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-600'
-                  : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'"
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:text-emerald-600'"
                 @click="type = t"
               >
                 {{ typeLabel(t) }}
@@ -122,10 +122,10 @@ function reset() {
               <button
                 v-for="opt in difficultyOptions"
                 :key="opt.value"
-                class="cursor-pointer rounded-lg border px-3 py-1.5 text-sm transition-colors"
+                class="cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200"
                 :class="difficulty === opt.value
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-600'
-                  : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'"
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:text-emerald-600'"
                 @click="difficulty = opt.value"
               >
                 {{ opt.label }}
@@ -138,10 +138,10 @@ function reset() {
               <button
                 v-for="n in [5, 10, 15, 20]"
                 :key="n"
-                class="cursor-pointer rounded-lg border px-3 py-1.5 text-sm transition-colors"
+                class="cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200"
                 :class="count === n
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-600'
-                  : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'"
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:text-emerald-600'"
                 @click="count = n"
               >
                 {{ n }} 题
@@ -150,7 +150,7 @@ function reset() {
           </div>
         </div>
 
-        <div class="mt-6 flex justify-end gap-2">
+        <div class="mt-7 flex justify-end gap-2 border-t border-gray-50 pt-5">
           <BaseButton type="secondary" @click="router.push('/practice/random')">随机练习</BaseButton>
           <BaseButton type="success" @click="start">开始训练</BaseButton>
         </div>

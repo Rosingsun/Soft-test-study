@@ -1,0 +1,6632 @@
+[
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】所有计算机都连接到一个中心节点上，传输数据时，节点首先将数据传输到中心节点上，然后由中心节点转发到目的节点的网络拓扑结构是（\n）。",
+  "options": {
+   "A": "网状结构",
+   "B": "环形结构",
+   "C": "星型结构",
+   "D": "总线结构"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】某电商平台使用分布式锁解决高并发秒杀场景下的超卖问题，最可能采用的锁实现是（\n）。",
+  "options": {
+   "A": "Java的synchronized关键字",
+   "B": "Redis的SETNX命令",
+   "C": "数据库行级锁",
+   "D": "文件系统互斥锁"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】机器学习模型中，用于图像分类任务的典型算法是（\n）。",
+  "options": {
+   "A": "支持向量机",
+   "B": "主成分分析",
+   "C": "线性回归",
+   "D": "K均值聚类"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】某银行系统在遭受DDoS攻击后，在尽量不影响现有业务条件下，应采取的措施是（ ）。",
+  "options": {
+   "A": "通知客户暂停服务",
+   "B": "检查内部系统漏洞",
+   "C": "启动流量清洗服务",
+   "D": "立即关闭所有服务器"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】数据库的脏读（Dirty Read）是指（ ）。",
+  "options": {
+   "A": "读取了未提交的数据",
+   "B": "读取了其他事务插入的数据",
+   "C": "读取了其他事务删除的数据",
+   "D": "同一事务内多次读取结果不一致"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】UML图中，用于描述系统动态行为的是（ ）。",
+  "options": {
+   "A": "组件图（Component Diagram）",
+   "B": "部署图（Deployment Diagram）",
+   "C": "序列图（Sequence Diagram）",
+   "D": "类图（Class Diagram）"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】设计模式中，单例模式属于（ ）。",
+  "options": {
+   "A": "组合型模式",
+   "B": "创建型模式",
+   "C": "结构型模式",
+   "D": "行为型模式"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】软件开发中，实现代码重用的方式包括（ ）。",
+  "options": {
+   "A": "变量、常量、函数、模块、子程序",
+   "B": "函数、对象、模块、类、算法",
+   "C": "接口、函数、模块、文件、项目",
+   "D": "属性、行为、对象、模块、构件"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】电子商务技术可以划分为（ ）等技术。",
+  "options": {
+   "A": "完全电子商务和非完全电子商务",
+   "B": "企业对消费者、企业对企业、消费者对消费者",
+   "C": "交易协议、支付方式、安全机制、签名与鉴别、记录的核查与保留",
+   "D": "网络数据通信、电子数据交换、安全、电子支付和数据库"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】软件工程三要素不包括（ ）。",
+  "options": {
+   "A": "过程",
+   "B": "方法",
+   "C": "工具",
+   "D": "管理"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】需求跟踪矩阵的主要作用是（ ）。",
+  "options": {
+   "A": "记录用户反馈",
+   "B": "测试系统功能",
+   "C": "跟踪需求状态与变更",
+   "D": "生成系统设计文档"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】设x，y满足约束条件：3x-y≤6，x-y+2≥0，x≥0，y≥0，若目标函数z=ax+by （a＞0，b＞0）的最大值为12，则2a+3b=（ ）。",
+  "options": {
+   "A": "6",
+   "B": "12",
+   "C": "5",
+   "D": "7"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】电子政务是利用计算机技术、网络技术和远程通信技术，在网络上实现政府组织结构和工作流程的优化重组。按照参与交易的对象分类，电子政务不包括（\n）。",
+  "options": {
+   "A": "政府对企业（Government to Business，G2B）",
+   "B": "公务员对公众（Employee to Citizen，E2C）",
+   "C": "政府对政府（Government to Government，G2G）",
+   "D": "政府对公务员（Government to Employee，G2E）"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】假设某计算机主存的读/写时间为100ns，有一个指令和数据合一的Cache，已知该Cache的读/写时间为20ns，取指令的命中率为98%，取数的命中率为95%。在执行某类程序时，约有1/5指令需要存/取一个操作数。假设指令流水线在任何时刻都不阻塞，则设置Cache后，每条指令的平均访存时间约为（\n）。",
+  "options": {
+   "A": "26.4ns",
+   "B": "32ns",
+   "C": "14.7ns",
+   "D": "18.6ns"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】某金融系统要求交易记录不可篡改，最可能采用的技术是（ ）。",
+  "options": {
+   "A": "对称加密算法",
+   "B": "数据库事务回滚",
+   "C": "区块链哈希链",
+   "D": "数字签名"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】数据库的CAP理论中，分布式系统无法同时满足（ ）。",
+  "options": {
+   "A": "一致性和分区容忍性",
+   "B": "分区容忍性和一致性",
+   "C": "一致性和可用性",
+   "D": "可用性和分区容忍性"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】某系统使用信号量实现进程互斥访问共享资源，信号量的初始值应设置为（ ）。",
+  "options": {
+   "A": "1",
+   "B": "2",
+   "C": "0",
+   "D": "-1"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】某团队开发了一个文件上传模块和一个数据库存储模块，分别单独测试通过。但集成后发现上传的文件无法正确存入数据库。此时最需要进行的测试是（\n）。  【考友回忆版】某团队开发了一个文件上传模块和一个数据库存储模块，分别单独测试通过。但集成后发现上传的文件无法正确存入数据库。此时最需要进行的测试是（\n）。",
+  "options": {
+   "A": "单元测试（Unit Testing）",
+   "B": "验收测试（Acceptance Testing）",
+   "C": "集成测试（Integration Testing）",
+   "D": "冒烟测试（Smoke Testing）"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】（ ）违反了“开放-封闭原则”（Open-Closed\nPrinciple）。",
+  "options": {
+   "A": "通过继承扩展类功能",
+   "B": "修改已有代码来实现新功能",
+   "C": "使用接口隔离不同模块",
+   "D": "通过配置文件调整系统行为"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】 操作系统关心的问题不包括（\n）。",
+  "options": {
+   "A": "管理计算机系统资源",
+   "B": "提供高级语言的编译",
+   "C": "提供用户程序与硬件系统的界面",
+   "D": "管理应用软件的运行"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2025,
+  "half": "上半年",
+  "paper": "2025年 上半年 综合知识",
+  "type": "single",
+  "content": "【考友回忆版】常见的企业信息化方法包括（\n）。",
+  "options": {
+   "A": "企业战略规划、业务流程重组、核心业务应用、资源管理",
+   "B": "企业战略规划、业务流程重组、主题数据库、资源管理",
+   "C": "企业战略规划、核心业务应用、建设信息系统、主题数据库",
+   "D": "业务流程重组、核心业务应用、建设信息系统、主题数据库"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "IT服务持续改进过程中，需要对服务进行测量，()是服务技术测量的内容。",
+  "options": {
+   "A": "问题设计分析",
+   "B": "监理点和阈值统计",
+   "C": "时间统计分析",
+   "D": "变更与发布统计"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "服务台运营中，对磁盘进行管理、创建账号等行为属于()职能。",
+  "options": {
+   "A": "运营任务",
+   "B": "故障排除",
+   "C": "发布信息",
+   "D": "基础监控"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "知识转移内容不包括()。",
+  "options": {
+   "A": "监控日志报警",
+   "B": "历史运维资料",
+   "C": "业务问题与FAQ",
+   "D": "应用安装配置手册"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "IT服务风险识别输入不包括()。",
+  "options": {
+   "A": "风险管理计划",
+   "B": "风险记录",
+   "C": "范围说明书",
+   "D": "SLA"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "团队成员之间已经形成一定配合关系，团队价值也基本定型，团队成员形成关系愿景，目前该团队出于团队建设的",
+  "options": {
+   "A": "组建",
+   "B": "风暴",
+   "C": "表现",
+   "D": "规范"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "IT服务团队建设过程中，相比其他阶段，人员沟通在()显得尤为重要。",
+  "options": {
+   "A": "规范",
+   "B": "组建",
+   "C": "表现",
+   "D": "风暴"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "面向对象分析与设计过程中，()不属于对应的基本要素。",
+  "options": {
+   "A": "对象行为",
+   "B": "对象标识",
+   "C": "对象关系",
+   "D": "对象状态"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "服务方案中技术要素的设计活动不包括()。",
+  "options": {
+   "A": "发现问题的技术",
+   "B": "技术研发",
+   "C": "技术专利的申报",
+   "D": "解决问题的技术"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "T服务部署实施中，知识库管理员批准接受知识内容依据建设内容做出的调整后，将被批准的知识条目记录到知识库，该部分工作属于知识库的()。",
+  "options": {
+   "A": "审核",
+   "B": "发布",
+   "C": "共享",
+   "D": "来源"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "IT服务营销管理过程中，在()阶段，需要进行服务产品的说明。",
+  "options": {
+   "A": "能力展示",
+   "B": "调研交流",
+   "C": "启动准备",
+   "D": "服务达成"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "在IT服务运营管理中，发现80%的服务人员绩效或者成绩较低，适合考虑从()入手进行解决。",
+  "options": {
+   "A": "团队调整",
+   "B": "项目外包",
+   "C": "管理改进",
+   "D": "降低客户期望"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "在监督管理中针对机遇可以有多种应对策略，分配更多好的资源给该服务，使之可以提供比原计划更好的成果，采用是()应对策略。",
+  "options": {
+   "A": "分享",
+   "B": "减轻",
+   "C": "转移",
+   "D": "开拓"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "在IT服务改进过程中，通过周期观察服务人员储备的使用情况合理调整各级别人员储备比例。该活动属于()",
+  "options": {
+   "A": "服务改进策划",
+   "B": "服务改进与验证",
+   "C": "服务改进设计",
+   "D": "服务改进实施"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "一家企业开展的战略规划、新产品开发、产品设计、采购供应、生产制造配送的过程，属于()管理级范畴。",
+  "options": {
+   "A": "经验",
+   "B": "运营",
+   "C": "服务",
+   "D": "运维"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "IT服务规划设计过程中，通过对()服务模式和服务方案的具体设计，最终形成服务级别协议(SLA)。",
+  "options": {
+   "A": "服务需求",
+   "B": "服务要素",
+   "C": "服务战略",
+   "D": "服务合同"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "TT服务部署实施的目标是服务的()。",
+  "options": {
+   "A": "指标化和规范化",
+   "B": "指标化和流程化",
+   "C": "标准化和规范化",
+   "D": "数字化和标准化"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "国家标准在实施周期达()年需要进行复审。",
+  "options": {
+   "A": "8年",
+   "B": "5年",
+   "C": "3年",
+   "D": "1年"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "在运维服务质量管理过程中，质量人员按照计划定期对SLA达成情况进行检查，该活动属于()。",
+  "options": {
+   "A": "管理评审",
+   "B": "营造质量文化氛围",
+   "C": "满意度调查",
+   "D": "实施项目质量保证工作"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "衡量IT服务的核心指标是()指标的达成与否。",
+  "options": {
+   "A": "效率提升率",
+   "B": "客户满意度",
+   "C": "投诉处理率",
+   "D": "成本结余率"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "合同是平等主体的自然人、法人其他组织之间设立、并更、终止()权利义务关系的协议。",
+  "options": {
+   "A": "刑事",
+   "B": "经济",
+   "C": "社会",
+   "D": "民事"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "IT服务运营管理中，对磁盘进行管理、创建账号登行为属于服务台的()",
+  "options": {
+   "A": "故障排除",
+   "B": "发布信息",
+   "C": "运营任务",
+   "D": "基础设施监控"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "把握高层拜访时机，已使让高层了解服务价值、挖掘进一步需求，面向客户高层拜访可以公司高管共同参与，属于客户关系管理的()。",
+  "options": {
+   "A": "增值服务",
+   "B": "满意度调查",
+   "C": "投诉管理",
+   "D": "日常沟通"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "将知识分为客户关系管理、财务管理、流程管理、研发管理，是依据()对知识进行分类",
+  "options": {
+   "A": "浏览量",
+   "B": "知识地图",
+   "C": "知识评分",
+   "D": "业务"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "IT服务部署实施中，知识库管理员批准接受知识内容，依据建设内容做出的调整后，将被批准的知识条目记录到知识库，该部分工作属于知识库的()。",
+  "options": {
+   "A": "审核",
+   "B": "发布",
+   "C": "共享",
+   "D": "来源"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "服务回顾时，与客户回题的内容不包括()。",
+  "options": {
+   "A": "服务目标达成情况",
+   "B": "服务中存在的问题及行动规划",
+   "C": "满意度调查",
+   "D": "本周期内工程师KPI总结"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "在IT服务营销管理过程中，IT服务预算便于形成资金使用计划，()不属于服务预算的目的。",
+  "options": {
+   "A": "总结项目所有收入和支出",
+   "B": "便于项目资源分配",
+   "C": "便于交流资金使用规划意图",
+   "D": "协调资金使用活动"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "IT服务团队在组建期中有4个关键步骤:了解现状、稳定核心成员、确定目标和()",
+  "options": {
+   "A": "信任与尊重",
+   "B": "建立团队价值观",
+   "C": "建立信任",
+   "D": "自我管理"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "我国()发布代号由国标委公布，其归口部门是行业主管部门。",
+  "options": {
+   "A": "地方标准",
+   "B": "行业标准",
+   "C": "企业标准",
+   "D": "国家标准"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "IT服务部署实施的目标是服务的()",
+  "options": {
+   "A": "指标化和规范化",
+   "B": "指标化和流程化",
+   "C": "标准化和规范化",
+   "D": "数字化和标准化"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "从IT服务管理的价值体现来看，()工作是服务持续改进的一个重要环节。",
+  "options": {
+   "A": "满意度和投诉管理",
+   "B": "事件与问题管理",
+   "C": "风险与应急管理",
+   "D": "服务需求管理"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "在运营管理关键考核指标中，SLA达成率(SLA达成率之和/事件总数)*100%属于()要素的考核指标。",
+  "options": {
+   "A": "资源",
+   "B": "过程",
+   "C": "人员",
+   "D": "技术"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "在系统组成部件中，()是经过结构化、规范化组织的事实和信息的集合",
+  "options": {
+   "A": "软件",
+   "B": "硬件",
+   "C": "数据库",
+   "D": "存储设备"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "服务需求识别的关键成功因素不包括()。",
+  "options": {
+   "A": "明确服务范围、服务内容和服务目标",
+   "B": "识别可用性、连续性、信息安全等需求，以便进行规划设计",
+   "C": "跟踪客户需求的变化，以便及时调整服务模式",
+   "D": "与需方进行充分的沟通，全面了解明确的和隐含的服务需求"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "质量控制的关键是使所有质量过程和活动始终处于完全受控状态，在IT服务评价中()不是为了测最可靠性。",
+  "options": {
+   "A": "首次请求就得到应答及解决的比率",
+   "B": "运行维护服务过程记录是否可追溯",
+   "C": "信息技术服务供方对服务请求的响应速度电。",
+   "D": "是否有重大事故发生"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "依据GB/T1.1，()为产品、过程或服务规定需要满足的要求并且描述用于判定该要求是否得到满足的证实方法。",
+  "options": {
+   "A": "规范",
+   "B": "规程",
+   "C": "指南",
+   "D": "流程"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "()不属于服务级别设定的活动内容。 ①了解服务内容 ②确定服务范围 ③明确双方职责 ④定义服务级别目标 ⑤服务可用性设计和连续性设计",
+  "options": {
+   "A": "①②③④",
+   "B": "①②③⑤",
+   "C": "①②④⑤",
+   "D": "①③④⑤"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "常见的IT服务模式包括() ①电话服务 ②咨询服务 ③现场服务 ①知识流程外包(KPO)服务 ⑤)基础设施服务 ⑥业务流程外包(BPO)服务",
+  "options": {
+   "A": "①③④⑤",
+   "B": "①②④⑥",
+   "C": "①③④⑥",
+   "D": "③④⑤⑥"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "IT服务运营管理过程中，以下人员连续性管理活动中，()属于预防性活动。",
+  "options": {
+   "A": "岗位互备及轮岗",
+   "B": "岗位交接及培训",
+   "C": "供应商接口关系变更",
+   "D": "人员更换说明"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "It is a model used to illustrate the relationship and transformation process between data, ( ),( ) and wisdom",
+  "options": {
+   "A": "knowledge、value",
+   "B": "information、knowledge",
+   "C": "knowledge、information",
+   "D": "infomnation、value"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "Any one or any group of activities utilizing resources to transfer input into output can be viewed as a()",
+  "options": {
+   "A": "system",
+   "B": "structure",
+   "C": "procedure",
+   "D": "process"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "部署实施的()阶段的目的是取得交付物的认可，部署实施的()阶段的目的是有利于监控和变更开展的行动。",
+  "options": {
+   "A": "验收，执行",
+   "B": "计划，执行",
+   "C": "执行，计划",
+   "D": "执行，验收"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "IT治理是()的责任，是企业治理的一个有机组成部分，它由领导阶层、组织结构和流程组成，确保组织内部的IT系统持续支持和拓展组织的()和目标。",
+  "options": {
+   "A": "最高管理层和执行管理层，战略",
+   "B": "最高管理层和执行管理层，战术",
+   "C": "执行管理层和执行层，战术",
+   "D": "执行管理层和执行层，战略"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "The implementation of overall change control is determined based on ( )",
+  "options": {
+   "A": "change log",
+   "B": "change requests",
+   "C": "change process",
+   "D": "change response"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "核算的目的和意义不正确的是()。",
+  "options": {
+   "A": "随时掌挥项目收入、开支情况及项目盈亏状态",
+   "B": "形成及时调整项目资源分配的依据",
+   "C": "寻找对成本开支控制的改进方法",
+   "D": "形成资金使用计划，交流资金使用规划意图"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "下半年",
+  "paper": "2024年 下半年 综合知识",
+  "type": "single",
+  "content": "供应商关系管理的目标是() ①整合资源，共同开拓保持客户 ②)建立互信、有效的协作关系 ③服务并管理好客户需求 ④与供应商建立长期、紧密的业务关系 ⑤实现与供应商的合作共赢",
+  "options": {
+   "A": "①②③④⑤",
+   "B": "①②④⑤",
+   "C": "①②③④",
+   "D": "①②③⑤"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "文件传输协议(File Transport Protocol，FTP)是网络上两台计算机传送文件的协议，运行在 ( )\n之上，是通过Internet将文件从一台计算机传输到另一台计算机的一种途径。",
+  "options": {
+   "A": "网络接口层",
+   "B": "IP",
+   "C": "UDP",
+   "D": "TCP"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "以下有关IPSec协议的说法中， ( )\n是不正确的。",
+  "options": {
+   "A": "IPSec在IP层提供安全服务",
+   "B": "IPSec是─种基于端对端的安全模式",
+   "C": "IPSec是一个工业标准网络安全协议",
+   "D": "IPSec仅针对IPv4"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "不属于局域网的网络拓扑结构是 ( )\n。",
+  "options": {
+   "A": "点对点结构",
+   "B": "星型结构",
+   "C": "总线型结构",
+   "D": "环型结构"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "信道容量是指在信道上进行无差错传输的最大传输速率。若一个信道带宽为2MHz，信噪比为30dB，则信道容量C约为 ( )\n。",
+  "options": {
+   "A": "100Mbps",
+   "B": "50Mbps",
+   "C": "20Mbps",
+   "D": "10Mbps"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "产生死锁的必要条件不包括 ( )\n。",
+  "options": {
+   "A": "不可剥夺条件",
+   "B": "共享条件",
+   "C": "环路条件",
+   "D": "互斥条件"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "如果页面的访问顺序为（0，0，1，1，3，1，2），有2个页帧可供程序使用，按照先进先出页面置换算法，共产生 ( )\n缺页中断。",
+  "options": {
+   "A": "4次",
+   "B": "2次",
+   "C": "3次",
+   "D": "5次"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "编译后的目标程序在内存中的地址称为 ( )\n。",
+  "options": {
+   "A": "逻辑地址",
+   "B": "绝对地址",
+   "C": "物理地址",
+   "D": "实际地址"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "在单处理机系统中，某个时刻只能有一个进程处于 ( )\n。",
+  "options": {
+   "A": "阻塞状态",
+   "B": "睡眠状态",
+   "C": "运行状态",
+   "D": "就绪状态"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "Windows和UNIX系统通常采用 ( )\n目录结构对文件进行组织和管理。",
+  "options": {
+   "A": "多级树形",
+   "B": "顺序",
+   "C": "二级",
+   "D": "一级"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "( )\n依赖于操作系统内核，由内核的内部需求进行创建和撤销。",
+  "options": {
+   "A": "用户线程",
+   "B": "内核线程",
+   "C": "应用线程",
+   "D": "轻权进程"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "( )\n是指在给定的时间内，系统所能处理（输入、加工、输出）的任务数量。",
+  "options": {
+   "A": "吞吐量",
+   "B": "峰值",
+   "C": "并发数",
+   "D": "生产率"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "寄存器间接寻址方式中，操作数被存放在 ( )\n。",
+  "options": {
+   "A": "主存单元",
+   "B": "程序计数器",
+   "C": "通用寄存器",
+   "D": "外部存储单元"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "计算机系统组成中， ( )\n负责将程序指令从主存取到CPU进行执行。",
+  "options": {
+   "A": "控制器",
+   "B": "高速缓存",
+   "C": "算术逻辑单元",
+   "D": "数据通路"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "( )\n是一种基于行业标准的串行硬件驱动器接口，该接口需要硬件芯片的支持，优势是支持热插拔、传输速度快、执行效率高。",
+  "options": {
+   "A": "SATA",
+   "B": "RS-232",
+   "C": "IDE",
+   "D": "ATA"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "总线是一组能为多个部件分时共享的公共信息传送线路。如按总线功能来划分，则不包含 ( )\n总线。",
+  "options": {
+   "A": "控制",
+   "B": "地址",
+   "C": "服务",
+   "D": "数据"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "数据通路的功能是实现CPU内部的运算器和寄存器，以及寄存器之间的 ( )\n。",
+  "options": {
+   "A": "数据交换",
+   "B": "控制信号交换",
+   "C": "数据存储",
+   "D": "控制信号存储"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "以下有关RISC的说法中， ( )\n是不正确的。",
+  "options": {
+   "A": "指令数量少",
+   "B": "指令的寻址方式少",
+   "C": "指令简单",
+   "D": "指令长度不固定"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "在企业战略与信息化战略集成中， ( )\n是一种以业务为导向的、全面的IT管理咨询实施方法论。",
+  "options": {
+   "A": "业务与IT整合",
+   "B": "业务架构",
+   "C": "业务与IT架构",
+   "D": "企业IT架构"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "内聚用来度量一个模块内部各个元素彼此结合的紧密程度，内聚程度最高的是 ( )\n。",
+  "options": {
+   "A": "功能内聚",
+   "B": "通信内聚",
+   "C": "时间内聚",
+   "D": "逻辑内聚"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "服务建模可以分为服务发现、服务规约和服务实现三个阶段。在服务发现阶段， ( )\n是从业务着手进行分析，将业务进行领域分解、流程分解和变化分析。",
+  "options": {
+   "A": "中间对齐的方式",
+   "B": "业务目标建模",
+   "C": "自上而下的方式",
+   "D": "资产分析"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "Web3.0以 ( )\n为基础构筑信任科技体系，打造价值互联网信任根基。",
+  "options": {
+   "A": "人工智能",
+   "B": "隐私计算",
+   "C": "区块链",
+   "D": "数据治理"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "密钥管理处理密钥自产生到销毁整个过程中的问题。其中， ( )\n是适用于封闭网，以传统的密钥管理中心为代表的机制。",
+  "options": {
+   "A": "PKI",
+   "B": "KMI",
+   "C": "LPK",
+   "D": "CPK"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "三位专家给10幅画作投票，每位专家有5票可以投给其中的5幅画作。凡是得3票的画作评为A等，得2票的画作评为B等，得1票的画作评为C等。投票结果，每幅画作都有得票。据此，以下叙述中只有 ( )\n是正确的。",
+  "options": {
+   "A": "A等最多可有5幅",
+   "B": "A等比C等少5幅",
+   "C": "B等与C等共7幅",
+   "D": "A等与B等共6幅"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "从油田S到大城市T经过五个中转站A、B、C、D、E的输油管道网络如下图。图中每段管道旁的数字注明了该段管道的输油能力（每天输油万吨数）。根据该图，从S到F的总输油能力为 ( )\n万吨/天。",
+  "options": {
+   "A": "18",
+   "B": "19",
+   "C": "17",
+   "D": "20"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "( )\n是指一个事务的执行不能被其他事务干扰，即使有多个事务并行执行，但看上去每个事务按串行调度执行一样。",
+  "options": {
+   "A": "一致性",
+   "B": "隔离性",
+   "C": "持久性",
+   "D": "原子性"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "在以下元组演算公式中，与P1∨P2等价的是 ( )\n。",
+  "options": {
+   "A": "┐（┐P1∨┐P2）",
+   "B": "┐P1∨┐P2",
+   "C": "┐（┐P1∧┐P2）",
+   "D": "┐P1∧┐P2"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "从关系R中抽取出满足给定限制条件记录的操作称为 ( )\n。",
+  "options": {
+   "A": "选择",
+   "B": "连接",
+   "C": "除",
+   "D": "投影"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "数据分片将数据库整体逻辑结构分解为合适的逻辑片段，下列选项中， ( )\n不属于数据分片的原则。",
+  "options": {
+   "A": "相交性",
+   "B": "不相交性",
+   "C": "重构性",
+   "D": "完整性"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2024,
+  "half": "上半年",
+  "paper": "2024年 上半年 综合知识",
+  "type": "single",
+  "content": "对称加密算法中， ( )\n的明文和密文都是64位，密钥长度为128位。",
+  "options": {
+   "A": "IDEA",
+   "B": "3DES",
+   "C": "DES",
+   "D": "RSA"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "信息系统的构成包括（ ）。",
+  "options": {
+   "A": "计算机硬件、计算机软件、网络和通信设备、系统分析人员、系统设计人员、系统开发人员",
+   "B": "计算机硬件、计算机软件、系统分析人员、系统设计人员、系统开发人员",
+   "C": "计算机硬件、计算机软件、系统设计人员、系统开发人员、信息用户",
+   "D": "计算机硬件、计算机软件、网络和通信设备、 信息资源、信息用户和规章制度"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "诺兰阶段模型总结了管理信息系统发展的经验和规律，将信息系统的发展路线\n划分为六个阶段，包括：（ ）。",
+  "options": {
+   "A": "初始阶段、扩展阶段、控制阶段、统一阶段、数据管理阶段、成熟阶段",
+   "B": "初始阶段、控制阶段、统一阶段、数据管理阶段、测试阶段、成熟阶段",
+   "C": "初始阶段、控制阶段、统一阶段、项目管理阶段、测试阶段、成熟阶段",
+   "D": "初始阶段、同一阶段、数据管理阶段、测试阶段、成熟阶段、完善阶段"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "进行数据流图的正确性检查时，以下说法不正确的是（ ）。",
+  "options": {
+   "A": "任何一个处理至少有一个输入数据流",
+   "B": "任何一个处理至少有一个输出数据流",
+   "C": "任何一个数据流的两端都必须存在相应的处理",
+   "D": "任何一个数据存储都必定有流入的数据流和流出的数据流"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "业务流程重组强调以业务流程为改造对象、以（ ）为目标、 对现有的业务流程进行再造，利用先进的制造技术、信息技术以及现代的管理手段、最大限度地实现技术上的功能集成和管理上的职能重建，以打破传统的职能型组织结构，建立全新的过程型组织结构，从而实现企业经营在成本、质量、服务和速度等方面的突破性改善。",
+  "options": {
+   "A": "客户的需求和满意度",
+   "B": "系统的质量",
+   "C": "企业的高收益",
+   "D": "企业的经营成本"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "以下关于系统测试原则的说法中，不正确的是（ ）。",
+  "options": {
+   "A": "应尽早地和不断地进行测试",
+   "B": "测试用例仅由测试输入数据组成",
+   "C": "设计测试用例时，不仅应当包括合理的测试输入数据，还应包括不合理的测试输入数据",
+   "D": "系统测试需开展非功能性测试"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "Modem 的主要作用是（ ）。",
+  "options": {
+   "A": "数模转换",
+   "B": "路由转发",
+   "C": "认证",
+   "D": "地址转换"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "在我国商用密码算法体系中：（ ）属于摘要算法。",
+  "options": {
+   "A": "SM2",
+   "B": "SM3",
+   "C": "SM4",
+   "D": "SM9"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "在 OSI 参考模型中，负责对应用层消息进行压缩、加密的层次是（ ）。",
+  "options": {
+   "A": "传输层",
+   "B": "会话层",
+   "C": "表示层",
+   "D": "应用层"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "下面用于收取电子邮件的协议是（ ）。",
+  "options": {
+   "A": "SMTP",
+   "B": "SNMP",
+   "C": "ICMP",
+   "D": "POP3"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "以下关于知识产权特点的说法中，错误的是（ ）。",
+  "options": {
+   "A": "无形性，知识产权是一种没有形体的精神财富",
+   "B": "地域性，知识产权具有严格的地域性特点",
+   "C": "时间性，知识产权具有法定的保护期限.",
+   "D": "双重性，知识产权都具有财产权和人身权属性"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "著作权中，（ ）的保护期不受期限限制。",
+  "options": {
+   "A": "发表权",
+   "B": "发行权",
+   "C": "展览权",
+   "D": "署名权"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "以下关于计算机软件著作权的叙述中，错误的是（ ）。",
+  "options": {
+   "A": "软件著作权人可以许可他人行使其软件者作权，并有权获得报酬",
+   "B": "软件著作权人可以全部或者部分转让其软件著作权，并有权获得报酬",
+   "C": "软件著作权属于自然人的，该自然人死亡后，在软件著作权的保护期内。继承人将继承到软件著作权的所有权利",
+   "D": "以学习和研究软件内含的设计思想和原理为目的，通过安装或存储软件方式使用软件的，可以不经软件著作权人许可，不向其支付报酬"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "目前国际上为保护计算机软件知识产权不受侵犯所采用的主要方式是实施（ ）。",
+  "options": {
+   "A": "合同法",
+   "B": "物权法",
+   "C": "版权法",
+   "D": "刑法"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n与单核处理器相比，多核处理器在（ ）设计等方面面临看巨大的挑战，但也蕴含着巨大的潜能。CMP（单芯片多处理器）和 SMT（同步多线程处理器）是目前较为流行的两种多核体系结构，CMP 相对 SMT 的最大优势还在于其（ ）设计的简洁性。",
+  "options": {
+   "A": "体系结构、硬件、软件和封装",
+   "B": "体系结构、硬件、安全性和封装",
+   "C": "体系结构、软件、功耗和安全性",
+   "D": "硬件、软件、功耗和安全性"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n与单核处理器相比，多核处理器在（ ）设计等方面面临看巨大的挑战，但也蕴含着巨大的潜能。CMP（单芯片多处理器）和 SMT（同步多线程处理器）是目前较为流行的两种多核体系结构，CMP 相对 SMT 的最大优势还在于其（ ）设计的简洁性。",
+  "options": {
+   "A": "集成化",
+   "B": "模块化",
+   "C": "综合化",
+   "D": "构件化"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "嵌入式系统是一种以应用为中心，以计算机技术为基础，可以适应不同应用对功能、可靠性、成本、体积、功耗严格要求的专用计算机系统。集可配置可裁剪的软、硬件于一体的专用计算机系统。嵌入式系统通常是通过外部接口采集相关输入信息或人机接口输入的命令，在嵌入式计算机中( ) ,控制受控对象.",
+  "options": {
+   "A": "对输入数据进行加工、 计算，并将计算结果通过外部接口输出",
+   "B": "对输入数据进行加工、计算然后将结果进行比对",
+   "C": "对输入数据镜像卡尔曼滤波，并将卡尔曼滤波结果通过拟合后输出",
+   "D": "对人机输入的命令镜像处理并输出至屏幕"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "某软件系统投入运行 15 天，计划运行时间为每早 8 点至晚 6 点。第二天上午发生一次失效，故障恢复用了 1 个小时，第 4 天上午发生一次失效，故障恢复用了 4 个小时，第 9 天上午发生一次失效，故障恢复用了 2 个小时，除此之外系统一直正常运行。那么，该软件系统的可用性约为( )。",
+  "options": {
+   "A": "94. 5%",
+   "B": "98.3%",
+   "C": "100%",
+   "D": "95.3%"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "麒麟操作系统是国产服务器操作系统重安全性较高的产品，其特点是内核与应用一体化的安全体系设计，它实现了内核的 KYSEC 安全框架。以下关于 KYSEC安全框架的描述中，正确的是( )。",
+  "options": {
+   "A": "KYSEC 是内核模块的一个安全框架，使用文件名作为安全标签，系统管理员通过将每个程序与一个安全配置文件关联，从而限制程序的功能",
+   "B": "KYSEC 基于 KYSEC 安全标记对执行程序、脚本文件、共享库、内核模块进行保护的一种安全机制",
+   "C": "KYSEC 通过给系统所有户、进程、文件分别赋予一个安全标记，通过安全策略规则来实施安全控制",
+   "D": "KYSEC 安全框架的接入控制是 DAC ，其特点是资源的拥有者可以对他进行任何操作(读、写、执行)"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "区块链是按照时间顺序，将数据区块以顺序相连的方式组合成的链式数据结构，是以密码学方式保证的不可篡改和不可伪造的分布式账本。以下选项中( ) 不是区块链具有的特征",
+  "options": {
+   "A": "去中心化",
+   "B": "开放性",
+   "C": "依赖性",
+   "D": "匿名性"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "国密 SSL 证书采用( )公钥算法体系，支持 SM2，SM3，SM4 等国密算法安全协拟，国密 SSL 证书可以满足政府机构、事业单位、大型国企、金融银行等行业客户的国产化改造和国密算法合规需求。",
+  "options": {
+   "A": "SM1",
+   "B": "SM2",
+   "C": "SM3",
+   "D": "SM4"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n数据治理模型包括三个框架，显示了数据治理内部的逻辑关系，其中，范围展示了具体应该关注什么，( ) 是数据治理的推动因素，( )体现了如何实现治理的方法。",
+  "options": {
+   "A": "使用类型",
+   "B": "安全因素",
+   "C": "用户访间",
+   "D": "促成因素"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n数据治理模型包括三个框架，显示了数据治理内部的逻辑关系，其中，范围展示了具体应该关注什么，( ) 是数据治理的推动因素，( )体现了如何实现治理的方法。",
+  "options": {
+   "A": "用户使用",
+   "B": "执行及评估",
+   "C": "使用策略",
+   "D": "管理方式"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "基于统一的( )， 数字化转型和云化转型能够把数字化转型工作重心放在业务应用上，从而使得数学化换转型的目标重新回归到业务应用本身，通过云原生来提升业务应用的送代速度，促进业务创新。",
+  "options": {
+   "A": "基础平台、软件架构、开发流程",
+   "B": "基础平合、软件架构、管理模式",
+   "C": "基础平台、服务架构、管理模式",
+   "D": "软件架构、服务架构、管理模式"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "数字孪生是形成物理世界中某一生产流程的模型及其在数字世界中的数字化镜像的过程和方法。数字孪生有五大驱动要素，包括物理世界的传感器、( )、集成、分析和促动器，以及持续更新的数字孪生应用程序。",
+  "options": {
+   "A": "数据",
+   "B": "接口",
+   "C": "消息",
+   "D": "需求"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "( )是企业数字化运营的统一数据能力平台，能够按照规范汇聚和治理全局数据，为各个业务部门提供标准的数据能力和数据工具。",
+  "options": {
+   "A": "大数据平台",
+   "B": "传输数据仓库",
+   "C": "分布式数据库平台",
+   "D": "数据中台"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "数字化转型成熟度模型由成熟度等级和评价域构成，其中，成熟度等级包括( )。",
+  "options": {
+   "A": "初始级、规范级、场景级、领域级、平台级",
+   "B": "初始级、规范级、场景级、领域级、生态级",
+   "C": "规范级、场景级、 领域级、平台级、生态级",
+   "D": "初始级、规范级、领域级、平台级、 生态级"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n在事件系统体系架构风格中，构件不直接调用一个过程，而是触发或广播一个或多个事件。在这种风格中，构件间交互的连接件往往是以过程之间的( )来实现的。该风格的主要优点是为软件的( )提供了强大的支持，其缺点是( )。",
+  "options": {
+   "A": "显式调用",
+   "B": "隐式调用",
+   "C": "显式调用或隐式调用",
+   "D": "注册"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n在事件系统体系架构风格中，构件不直接调用一个过程，而是触发或广播一个或多个事件。在这种风格中，构件间交互的连接件往往是以过程之间的( )来实现的。该风格的主要优点是为软件的( )提供了强大的支持，其缺点是( )。",
+  "options": {
+   "A": "复用",
+   "B": "可靠性",
+   "C": "可能性",
+   "D": "高性能"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\n在事件系统体系架构风格中，构件不直接调用一个过程，而是触发或广播一个或多个事件。在这种风格中，构件间交互的连接件往往是以过程之间的( )来实现的。该风格的主要优点是为软件的( )提供了强大的支持，其缺点是( )。",
+  "options": {
+   "A": "构件放弃了对系统计算的控制",
+   "B": "难以管理大量构件",
+   "C": "构件依赖关系复杂",
+   "D": "缺乏事件派遣机制的设计策略"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\nSOA 是一种全新的系统架构，为了支持其特性，相关技术规范不推出。( )定义了服务请求者和服务提供者之前的消息传输规范；( )提供了一种服务发布、查找和定位的方法，是服务的信息注册规范，以便被需要该服务的用户发现和使用它。",
+  "options": {
+   "A": "WSDL",
+   "B": "REST",
+   "C": "SOAP",
+   "D": "SCA"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\nSOA 是一种全新的系统架构，为了支持其特性，相关技术规范不推出。( )定义了服务请求者和服务提供者之前的消息传输规范；( )提供了一种服务发布、查找和定位的方法，是服务的信息注册规范，以便被需要该服务的用户发现和使用它。",
+  "options": {
+   "A": "WSDL",
+   "B": "UDDI",
+   "C": "XML",
+   "D": "RDF"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n软件架构评估是软件设计阶段最重要的活动之一，目前存在多种软件架构评估方式，其中，其中架构权衡分析法(Architecture Trade off Analysis Method,ATAM)属于基于( )的方式,在该方法的架构评估中，( )是解释或描述项目干系人怎样引发与系统的交互部分。",
+  "options": {
+   "A": "场景",
+   "B": "度量",
+   "C": "仿真",
+   "D": "调查问卷"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n软件架构评估是软件设计阶段最重要的活动之一，目前存在多种软件架构评估方式，其中，其中架构权衡分析法(Architecture Trade off Analysis Method,ATAM)属于基于( )的方式,在该方法的架构评估中，( )是解释或描述项目干系人怎样引发与系统的交互部分。",
+  "options": {
+   "A": "环境",
+   "B": "刺激",
+   "C": "响应",
+   "D": "制品"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "软件产品线(Sofware Product Line)是一个产品集合，这些产品共享一个公共的、 可管理的特征集，这个特征集能满足特定领域的特定需求。软件产品线主要由两部分组成，其中，( )是领域工程的所有结果的集合，产品线中产品构造的基础。",
+  "options": {
+   "A": "核心资源",
+   "B": "产品集合",
+   "C": "构件",
+   "D": "算法和数据结构"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "信息化战略从企业战略出发，服务于企业战略，同时又影响和促进企业战略。业务与 IT 整合(Business-IT Alignment,，BITA)是企业战略与信息化战略集成的主要方法之一。BITA 的主要步骤是评估和分析企业当前业务和 IT 不一致的领域， 整理出企业的业务远景和未来战略，建立( )，提出达到未来目标的转变过程建议和初步计划，以及执行计划。",
+  "options": {
+   "A": "企业标准",
+   "B": "企业架构",
+   "C": "业务模型",
+   "D": "IT 技术栈"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n结构化方法属于( )\n的开发方法。它是目前最成熟、应用较广泛的一种工程化方法。但与此同时，该方法也存在着一定的局限性。 ( )\n不属于结构化方法的主要不足和局限性。",
+  "options": {
+   "A": "自底向上",
+   "B": "敏捷",
+   "C": "自顶向下",
+   "D": "数据驱动"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n结构化方法属于( )\n的开发方法。它是目前最成熟、应用较广泛的一种工程化方法。但与此同时，该方法也存在着一定的局限性。 ( )\n不属于结构化方法的主要不足和局限性。",
+  "options": {
+   "A": "开发周期长",
+   "B": "难以适应需求变化",
+   "C": "很少考虑数据结构",
+   "D": "不适合于数据处理领域的问题"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "在软件开发模型中，( )要针对事先不能完整定义需求的软件开发，是在快速开发一个原型的基础上,根据用户在调用原型的过程中提出的反馈意见和建议，对原型进行改进，获得原型的新版本,复这一过程，直到形成最终的软件产品。",
+  "options": {
+   "A": "演化模型",
+   "B": "螺旋模型",
+   "C": "喷泉模型",
+   "D": "瀑布模型"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "软件能力成熟度模型(Capability Maturity Model, CMM)是一个概念模型， 模型框架和表示是刚性的，不能随意改变，但模型的解释和实现有一定弹性。CMM提了一个软件能力成熟度的框架，它将软件过程改进的步骤组织成 5 个成熟度等级，为软件过程不断改进奠定了一个循序渐进的基础。其中，( )是规则化的过程，软件过程已建立了基本的项目管理过程，可用于对成本、进度和功能特性进行跟踪。对类似的应用项目，有可循并能重复以往所取得的成功。",
+  "options": {
+   "A": "初始级",
+   "B": "可重复级",
+   "C": "已定义级",
+   "D": "已管理级"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "在数据库的安全机制中，通过建立( )使用户只能看到部分数据，从而保护了其它数据的安全性。",
+  "options": {
+   "A": "索引",
+   "B": "视图",
+   "C": "触发器",
+   "D": "存储过程"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "事务的( )是指“当多个事务并发执行时，任一事务的更新操作直到其成功提交的整个过程，对其他事务都是不可见的\"。",
+  "options": {
+   "A": "原子性",
+   "B": "一致性",
+   "C": "隔离性",
+   "D": "持久性"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "给定关系模式 R(U, F),其中 U 为属性集, U={X, Y, Z}, F 是 U 上的一组函数依赖。函数依赖的公理系统(Armstrong 公理系统)中的( )是指“若 X→Y，X→Z,则 X→YZ 为 F 所蕴涵”。",
+  "options": {
+   "A": "自反率",
+   "B": "传递率",
+   "C": "增广律",
+   "D": "合并规则"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n在关系 R(A1, A2, A3)和 S(A1, A2, A3)上进行关系运算的 4 个等价的表达式E1、E2、E3 和 E4 如下所示：\n如果严格按照表达式运算顺序，则查询效率最高的是( )，将该查询转换价的SQL 语句为: SELECT A1, A4 FROM R，S WHERE( )。",
+  "options": {
+   "A": "E1",
+   "B": "E2",
+   "C": "E3",
+   "D": "E4"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n在关系 R(A1, A2, A3)和 S(A1, A2, A3)上进行关系运算的 4 个等价的表达式E1、E2、E3 和 E4 如下所示：\n如果严格按照表达式运算顺序，则查询效率最高的是( )，将该查询转换价的SQL 语句为: SELECT A1, A4 FROM R，S WHERE( )。",
+  "options": {
+   "A": "R.A2 <2022' OR S.A4 <95'",
+   "B": "R.A2 <'2022' AND S. A4 <95'",
+   "C": "R.A2 <'2022' OR S.A4 <95' OR R.A3=S.A3",
+   "D": "R.A2 <2022 AND S.A4 <95' AND R.A3=S.A3"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "某银行信息管理系统采用分布式数据库系统，以便对本地储户的存储业务能够在本地正常进行而不依赖于其他场地的数据库，这种情况称为分布式数据库的( )。",
+  "options": {
+   "A": "分布性",
+   "B": "共享性",
+   "C": "可用性",
+   "D": "自治性"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "某系统中有 6 个并发进程竞争资源 R。假设每个进程都需要 3 个 R，那么最少需要有( )个 R，才能保证系统不会发生死锁。",
+  "options": {
+   "A": "12",
+   "B": "13",
+   "C": "15",
+   "D": "16"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "某系统采用请求页式存储管理方案，假设进程 P 有 6 个页面，系统给 P 分配了4 个存储块，其页面变换表如下表所示。表中的状态位等于 1/0 分别表示页面在内存/不在内存。当 P 访问的页面 2 不在内存时，应该淘汰表中页号为( )的页面",
+  "options": {
+   "A": "0",
+   "B": "3",
+   "C": "4",
+   "D": "5"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "在嵌入式操作系统中，通常采用硬件抽象层( Hardware Abstraction Level,HAL )和板级支撑包( Board Support Package,BSP )的底层设计技术，目的是为了提高操作系统的( )。",
+  "options": {
+   "A": "可定制",
+   "B": "实时性",
+   "C": "可靠性",
+   "D": "可移植性"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n进程 P1、P2、P3、P4、P5 和 P6 的前趋图如下所示：\n若用 PV 操作控制这 6 个进程的同步与互斥的程序如下，那么程序中的空①和空②分别为( )\n; 空③和空④处应分别为( )\n; 空⑤和空⑥处应分别为( )\n。",
+  "options": {
+   "A": "V(SI)和 V(S3)V(S4)",
+   "B": "P(S1)和 V(S3)V(S4)",
+   "C": "V(SI)和 P(S3)P(S4)",
+   "D": "P(SI)和 P(S3)P(S4)"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n进程 P1、P2、P3、P4、P5 和 P6 的前趋图如下所示：\n若用 PV 操作控制这 6 个进程的同步与互斥的程序如下，那么程序中的空①和空②分别为( )\n; 空③和空④处应分别为( )\n; 空⑤和空⑥处应分别为( )\n。",
+  "options": {
+   "A": "V(S3)和 V(S5)",
+   "B": "P(S3)和 V(S5)",
+   "C": "V(S3)和 P(S5)",
+   "D": "P(S3)和 P(S5)"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\n进程 P1、P2、P3、P4、P5 和 P6 的前趋图如下所示：\n若用 PV 操作控制这 6 个进程的同步与互斥的程序如下，那么程序中的空①和空②分别为( )\n; 空③和空④处应分别为( )\n; 空⑤和空⑥处应分别为( )\n。",
+  "options": {
+   "A": "P（S5)P(S6)和 P(S7)",
+   "B": "V(S5)V(S6）和 V(S7)",
+   "C": "P(S5)P(S6)和 V(S7)",
+   "D": "V(S5)V(S6)和 P(S7)"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "运用数学模型来描述实际事物的主要优点不包括 ( )。",
+  "options": {
+   "A": "可以对决策进行事前分析，尽量避免决策失误造成损失。",
+   "B": "可以对决策进行事后评价，便于总结经验改进管理工作",
+   "C": "有利于对事物做更好的描述和理解，便于人们互相交流",
+   "D": "便于研究事物之间的共性，使模型更具简洁性和适应性"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "线性规划模型的特点不包括( )。",
+  "options": {
+   "A": "用一组未知的决策变量来表示所需求解的决策方案。",
+   "B": "用若干条直线段来描述项目内各个作业所需持续的时间",
+   "C": "在决策变量之间存在若干个线性约束条件(等式或不等式",
+   "D": "有决策变量的线性目标函数，要求其达到极小值或极大值"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n某项目共有 A-G 七道工序，各道工序所需的时间(天数)以及工序之间的运行关系如下表。该项目计划的最短工期为( )天。假设每道工序只需要一人做，都可以做所有各道工序，但不能同时做多道工序，那么该项目至少需要( )。",
+  "options": {
+   "A": "11",
+   "B": "19",
+   "C": "22",
+   "D": "24"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n某项目共有 A-G 七道工序，各道工序所需的时间(天数)以及工序之间的运行关系如下表。该项目计划的最短工期为( )天。假设每道工序只需要一人做，都可以做所有各道工序，但不能同时做多道工序，那么该项目至少需要( )。",
+  "options": {
+   "A": "1",
+   "B": "2",
+   "C": "3",
+   "D": "4"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "企业从部门中选择四个部门下月做甲、乙、丙、丁四项工作，每个部门做一项工作。已知每个部门做每项工作所需的成本(单位:万元)\n在总成本最低的方案中，( )。",
+  "options": {
+   "A": "选择部门 A、B、C、D 做工作，安排部门 A 做工作甲",
+   "B": "选择部门 A、B、D、E 做工作，安排部门 A 做工作乙",
+   "C": "选择部门 A、B、C、E 做工作，安排部门 A 做工作丙",
+   "D": "选择部门 B、C、D、E 做工作，安排部门 B 做工作甲"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "某企业有三种方案 A1, A2, A3 可供选择，各种方案面对三种可能的市场状态S1，S2, S3 可以获得的利润 F(Ai, Sj)如下表所示(单位:负值表示损额)：暂缺企业应依据合适的决策准则来选择方案。以下对决策过程的叙述中，( )并正确：",
+  "options": {
+   "A": "根据乐观准则 maxmaxF(Ai，Sj), 应选择方案 A3",
+   "B": "根据保守准则 maxminF(Ai，Sj), 应选择方案 A2",
+   "C": "根据市场状态等可能性准则，应选择期望利润最大的方案 A1",
+   "D": "根据市场状态折衷准则（乐观系数 0.6, 保守系数 0.4)，应选择方案 A2"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n面向对象方法是企业信息系统的主流开发方法，该访法可分为多个阶段，其中面向对象的( )\n阶段的任务是了解问题域所涉及的对象，对象间的关系和操作，然后构造问题的对象模型。面向对象的( )\n阶段的任务是在对象模型的基础上,设计出各个对象、对象之间的关系和通信方式等。",
+  "options": {
+   "A": "需求",
+   "B": "分析",
+   "C": "设计",
+   "D": "实现"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n面向对象方法是企业信息系统的主流开发方法，该访法可分为多个阶段，其中面向对象的( )阶段的任务是了解问题域所涉及的对象，对象间的关系和操作，然后构造问题的对象模型。面向对象的( )阶段的任务是在对象模型的基础上,设计出各个对象、对象之间的关系和通信方式等。",
+  "options": {
+   "A": "需求",
+   "B": "分析",
+   "C": "设计",
+   "D": "实现"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n面向服务的信息系统开发方法有三个主要的抽象级别，其中操作级别代表单个逻辑单元的事务，事务触发后通常会导致读、写或修改一个或多个持久性数据；（ ）级别代表操作的逻辑分组；最高层的（ ）是为了实现特定业务目标而执行的一长期运行的动作或活动，包括依据一组业务规则按照有序序列执行的一系列操作。",
+  "options": {
+   "A": "对象",
+   "B": "功能",
+   "C": "流程",
+   "D": "服务"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n面向服务的信息系统开发方法有三个主要的抽象级别，其中操作级别代表单个逻辑单元的事务，事务触发后通常会导致读、写或修改一个或多个持久性数据；（ ）级别代表操作的逻辑分组；最高层的（ ）是为了实现特定业务目标而执行的一长期运行的动作或活动，包括依据一组业务规则按照有序序列执行的一系列操作。",
+  "options": {
+   "A": "对象",
+   "B": "功能",
+   "C": "流程",
+   "D": "服务"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n在 Linux 操作系统中通常使用( )作为 Web 服务器，其默认的 Web 站点的目录为( )。",
+  "options": {
+   "A": "IIS",
+   "B": "Apache",
+   "C": "NFS",
+   "D": "MySQL"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n在 Linux 操作系统中通常使用( )作为 Web 服务器，其默认的 Web 站点的目录为( )。",
+  "options": {
+   "A": "/etc/httpd",
+   "B": "/var/log/httpd",
+   "C": "/etc/home",
+   "D": "/home/httpd"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\nFTP 服务可以开启匿名登录功能，其用户名是( )，若要上传文件，应使用( )命令。",
+  "options": {
+   "A": "root",
+   "B": "user",
+   "C": "guest",
+   "D": "anonymous"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\nFTP 服务可以开启匿名登录功能，其用户名是( )，若要上传文件，应使用( )命令。",
+  "options": {
+   "A": "copy",
+   "B": "paste",
+   "C": "put",
+   "D": "get"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "邮件客户端使用( )\n协议同步服务器和客户端之间的邮件列表。",
+  "options": {
+   "A": "POP",
+   "B": "SMTP",
+   "C": "IMAP",
+   "D": "SSL"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "路由器收到一个目标地址为 201.46.17.4 的数据包，应将该数据包发往（ ）\n网。",
+  "options": {
+   "A": "201.46.0.0/21",
+   "B": "201.46.16.0/20",
+   "C": "201.46.8.0/22",
+   "D": "201.46.20.0/22"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\nSafety cntical systos are syste me in which failures may affect the environment of the esem ard cwse injury or desth to the people in that environment. The principal conce of sntty specificetion is to fdentily requir ements that will minimize the probability that sueetem fhiur es will occur. Safely requirements are primarily protection requirements and are es oorcened with nome1 system operation. They may specify that the system should be shu deym so that wafely is maintained. in deriving safety requirements. you.therefore, need to fin at acceptable balance between safety and functionality and avoid overprotection. There is auint in banking a very safe system if it does not operate in a cost-effective way.Safery specification is usually focused on the hazards that may arise in a given situation, and the events that can lead to these\nhazards. The activities in the general risk -based ication process. map onto the safety specification process as follows.\n1.( ).In safery specification, this is the hazard identification process that identifies hazards that may threaten the system.\n2.( ).This is a process of hazard assessment to decide which hazards are the most dangerous and or the most likely to occur. These should be prioritized when deriving safety regurements.\n3.( ).This process is concerned with discovering the events that can lead to the accurrence of a hazard. In safety specific ation, the process is known as hazard analysis.\n4.( ).This process is based on the outcome of ( 75 ) and leads to identification of safety requirements. These may be concer ned with ensuring that a hazard does not arise or iead to an accident or that if an accident does occur.the associated damage is minimized.",
+  "options": {
+   "A": "Risk decomposition",
+   "B": "Risk analysis",
+   "C": "Risk reduction",
+   "D": "Risk identification"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\nSafety cntical systos are syste me in which failures may affect the environment of the esem ard cwse injury or desth to the people in that environment. The principal conce of sntty specificetion is to fdentily requir ements that will minimize the probability that sueetem fhiur es will occur. Safely requirements are primarily protection requirements and are es oorcened with nome1 system operation. They may specify that the system should be shu deym so that wafely is maintained. in deriving safety requirements. you.therefore, need to fin at acceptable balance between safety and functionality and avoid overprotection. There is auint in banking a very safe system if it does not operate in a cost-effective way.Safery specification is usually focused on the hazards that may arise in a given situation, and the events that can lead to these\nhazards. The activities in the general risk -based ication process. map onto the safety specification process as follows.\n1.( ).In safery specification, this is the hazard identification process that identifies hazards that may threaten the system.\n2.( ).This is a process of hazard assessment to decide which hazards are the most dangerous and or the most likely to occur. These should be prioritized when deriving safety regurements.\n3.( ).This process is concerned with discovering the events that can lead to the accurrence of a hazard. In safety specific ation, the process is known as hazard analysis.\n4.( ).This process is based on the outcome of ( 75 ) and leads to identification of safety requirements. These may be concer ned with ensuring that a hazard does not arise or iead to an accident or that if an accident does occur.the associated damage is minimized.",
+  "options": {
+   "A": "Risk decomposition",
+   "B": "Risk analysis",
+   "C": "Risk reduction",
+   "D": "Risk identificatio"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\nSafety cntical systos are syste me in which failures may affect the environment of the esem ard cwse injury or desth to the people in that environment. The principal conce of sntty specificetion is to fdentily requir ements that will minimize the probability that sueetem fhiur es will occur. Safely requirements are primarily protection requirements and are es oorcened with nome1 system operation. They may specify that the system should be shu deym so that wafely is maintained. in deriving safety requirements. you.therefore, need to fin at acceptable balance between safety and functionality and avoid overprotection. There is auint in banking a very safe system if it does not operate in a cost-effective way.Safery specification is usually focused on the hazards that may arise in a given situation, and the events that can lead to these\nhazards. The activities in the general risk -based ication process. map onto the safety specification process as follows.\n1.( ).In safery specification, this is the hazard identification process that identifies hazards that may threaten the system.\n2.( ).This is a process of hazard assessment to decide which hazards are the most dangerous and or the most likely to occur. These should be prioritized when deriving safety regurements.\n3.( ).This process is concerned with discovering the events that can lead to the accurrence of a hazard. In safety specific ation, the process is known as hazard analysis.\n4.( ).This process is based on the outcome of ( 75 ) and leads to identification of safety requirements. These may be concer ned with ensuring that a hazard does not arise or iead to an accident or that if an accident does occur.the associated damage is minimized.",
+  "options": {
+   "A": "Risk decomposition",
+   "B": "Risk specification",
+   "C": "Risk reduction",
+   "D": "Risk identification"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第4空)\nSafety cntical systos are syste me in which failures may affect the environment of the esem ard cwse injury or desth to the people in that environment. The principal conce of sntty specificetion is to fdentily requir ements that will minimize the probability that sueetem fhiur es will occur. Safely requirements are primarily protection requirements and are es oorcened with nome1 system operation. They may specify that the system should be shu deym so that wafely is maintained. in deriving safety requirements. you.therefore, need to fin at acceptable balance between safety and functionality and avoid overprotection. There is auint in banking a very safe system if it does not operate in a cost-effective way.Safery specification is usually focused on the hazards that may arise in a given situation, and the events that can lead to these\nhazards. The activities in the general risk -based ication process. map onto the safety specification process as follows.\n1.( ).In safery specification, this is the hazard identification process that identifies hazards that may threaten the system.\n2.( ).This is a process of hazard assessment to decide which hazards are the most dangerous and or the most likely to occur. These should be prioritized when deriving safety regurements.\n3.( ).This process is concerned with discovering the events that can lead to the accurrence of a hazard. In safety specific ation, the process is known as hazard analysis.\n4.( ).This process is based on the outcome of ( 75 ) and leads to identification of safety requirements. These may be concer ned with ensuring that a hazard does not arise or iead to an accident or that if an accident does occur.the associated damage is minimized.",
+  "options": {
+   "A": "Risk decomposition",
+   "B": "Risk analysis",
+   "C": "Risk reduction",
+   "D": "Risk identification"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2023,
+  "half": "上半年",
+  "paper": "2023年 上半年 综合知识",
+  "type": "single",
+  "content": "(第5空)\nSafety cntical systos are syste me in which failures may affect the environment of the esem ard cwse injury or desth to the people in that environment. The principal conce of sntty specificetion is to fdentily requir ements that will minimize the probability that sueetem fhiur es will occur. Safely requirements are primarily protection requirements and are es oorcened with nome1 system operation. They may specify that the system should be shu deym so that wafely is maintained. in deriving safety requirements. you.therefore, need to fin at acceptable balance between safety and functionality and avoid overprotection. There is auint in banking a very safe system if it does not operate in a cost-effective way.Safery specification is usually focused on the hazards that may arise in a given situation, and the events that can lead to these\nhazards. The activities in the general risk -based ication process. map onto the safety specification process as follows.\n1.( ).In safery specification, this is the hazard identification process that identifies hazards that may threaten the system.\n2.( ).This is a process of hazard assessment to decide which hazards are the most dangerous and or the most likely to occur. These should be prioritized when deriving safety regurements.\n3.( ).This process is concerned with discovering the events that can lead to the accurrence of a hazard. In safety specific ation, the process is known as hazard analysis.\n4.( ).This process is based on the outcome of ( 75 ) and leads to identification of safety requirements. These may be concer ned with ensuring that a hazard does not arise or iead to an accident or that if an accident does occur.the associated damage is minimized.",
+  "options": {
+   "A": "hazard identification",
+   "B": "hazard assessment",
+   "C": "safety specification",
+   "D": "hazard analysis"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "( )\n是从系统的应用领域而不是从系统用户的特定需要中得出的，它们可以是新的功能性需求，或者是对已有功能性需求的约束，或者是陈述特定的计算必须遵守的要求。",
+  "options": {
+   "A": "功能性需求",
+   "B": "用户需求",
+   "C": "产品需求",
+   "D": "领域需求"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "对于安全关键系统，需要额外的安全保证、软件验证以及系统分析过程。( )\n是检查系统是否安全运行的一组活动，包含在软件开发过程的所有阶段中，记录了所进行的分析以及负责分析的相关人员。",
+  "options": {
+   "A": "软件测试",
+   "B": "安全保证",
+   "C": "软件验证",
+   "D": "系统分析"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "模型驱动的体系结构是一种关注模型的软件设计和实现方法，使用了UML模型的子集描述系统，创建不同抽象层次上的模型，其中不包括( )\n。",
+  "options": {
+   "A": "计算无关模型",
+   "B": "计算相关模型",
+   "C": "平台无关模型",
+   "D": "平台相关模型"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "敏捷软件开发方法是一种增量式开发方法，它将( )\n视为软件过程的中心活动，将其他开发活动融入其中。",
+  "options": {
+   "A": "可行性分析",
+   "B": "需求分析和设计",
+   "C": "设计和实现",
+   "D": "实现和测试"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "UML中的( )\n主要用于参与者与系统中对象之间的交互，以及这些对象之间交互的建模。",
+  "options": {
+   "A": "顺序图",
+   "B": "活动图",
+   "C": "用例图",
+   "D": "状态图"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "TCP/IP的四层模型中，每一层都提供了安全协议，下列属于网络层安全协议的是( )\n。",
+  "options": {
+   "A": "HTTPS",
+   "B": "SSH",
+   "C": "IPSec",
+   "D": "Socks"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "( )\n不属于基于生物特征的认证技术。",
+  "options": {
+   "A": "指纹识别",
+   "B": "人脸识别",
+   "C": "口令",
+   "D": "虹膜识别"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "( )\n属于公钥加密算法。",
+  "options": {
+   "A": "AES",
+   "B": "RSA",
+   "C": "MD5",
+   "D": "DES"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "确保计算机系统机密性的方法不包括( )\n。",
+  "options": {
+   "A": "加密",
+   "B": "认证",
+   "C": "授权",
+   "D": "备份"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "以下商标注册申请、经审查，不能获取注册的是( )\n。",
+  "options": {
+   "A": "青铜",
+   "B": "华山",
+   "C": "湖北",
+   "D": "麒麟"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "下列关于计算机软件著作权的叙述，错误的是( )\n。",
+  "options": {
+   "A": "为了学习和研究软件内涵的设计思想和原理，通过安装、传输或存储软件等方式使用软件，可以不经软件著作权人许可，不向其支付报酬",
+   "B": "软件著作权属于自然人的，该自然人死亡后，在软件著作权的保护期内，软件著作权的继承人可以继承各项软件著作权",
+   "C": "软件著作权人可以许可他人行使其软件著作权，并有权获得报酬",
+   "D": "软件著作权人可以全部或部分转让其软件著作权，并有权获得报酬"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "郭一在单位运营管理部工作，负责经营报表和统计分析，为便于及时、准确完成报表，郭一利用自身软件开发基础，在下班后的业余时间与家人共同开发了一个统计软件。以下说法中，正确的是( )\n。",
+  "options": {
+   "A": "该软件没有商业用途，没有著作权的问题",
+   "B": "郭一在开发软件的过程中，没有利用企业的物质技术条件，该软件的著作权属于郭一",
+   "C": "按照软件著作权归属的一般原则，该软件的著作权归属于郭一",
+   "D": "该软件的著作权属于企业，因其是郭一为完成本职工作而产生的结果"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "韩国甲公司生产的平板电脑在其本国享有“Upad“注册商标专用权，但未在中国申请注册。中国乙公司生产的平板电脑也使用“Upad”商标，并享有中国注册商标专用权，但未在韩国申请注册。甲公司与乙公司生产的平板电脑都在中国市场上销售，此情形下，依据中国商标法，( )\n。",
+  "options": {
+   "A": "甲公司侵犯了乙公司的商标权",
+   "B": "甲公司未侵犯乙公司的商标权",
+   "C": "乙公司侵犯了甲公司的商标权",
+   "D": "甲公司与乙公司均未侵犯商标权"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n嵌入式系统已被广泛应用到各行各业。嵌入式系统是一个内置于设备中，对设备的各种传感器进行管理与控制的系统。通常，根据系统对时间的敏感程度可将嵌入式系统划分为( )\n两种，而实时系统又可分为强实时(Hard Real-Time)系统和弱实时(Weak Real-Time)系统；如果从安全性要求看，嵌入式系统还可分为( )\n。",
+  "options": {
+   "A": "嵌入式系统和嵌入式实时系统",
+   "B": "控制系统和业务系统",
+   "C": "安全攸关系统和非安全攸关系统",
+   "D": "CPS系统和非CPS系统"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n嵌入式系统已被广泛应用到各行各业。嵌入式系统是一个内置于设备中，对设备的各种传感器进行管理与控制的系统。通常，根据系统对时间的敏感程度可将嵌入式系统划分为( )\n两种，而实时系统又可分为强实时(Hard Real-Time)系统和弱实时(Weak Real-Time)系统；如果从安全性要求看，嵌入式系统还可分为( )\n。",
+  "options": {
+   "A": "高可靠系统和高安全系统",
+   "B": "实时系统和强实时系统",
+   "C": "安全攸关系统和非安全攸关系统",
+   "D": "网络系统和分布式系统"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "嵌入式软件开发方法与传统软件开发方法存在较大差异，( )\n的说法对嵌入式软件开发而言是错误的。",
+  "options": {
+   "A": "嵌入式软件开发的结果通常需要固化在目标系统的储存器或处理器内部储存器资源中",
+   "B": "嵌入式软件的开发一般需要专门的开发工具、目标系统和测试设备",
+   "C": "嵌入式软件对安全性和可靠性的要求较高",
+   "D": "嵌入式软件开发不用考虑代码的规模"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "由于处理器芯片在不同领域应用时，需要考虑对环境的适应性。通常，我们把芯片分为民用级、工业级和军用级。( )\n分别是民用级、工业级和军用级芯片的标准工作温度范围。",
+  "options": {
+   "A": "-10℃ ~+70℃ 、-40℃~+80℃ 、-50℃+150℃",
+   "B": "0℃~+70℃、-30℃~+85℃、-60℃~+150℃",
+   "C": "0℃~+70℃、-40℃~+85℃、-55℃~+150℃",
+   "D": "10℃~+60℃、-40℃~+90℃、 -55℃~+150℃"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "嵌入式实时系统存在许多调度算法。如果调度程序根据任务的紧急程度确定该任务的优先级，任务紧急程度高，被赋予的优先级就高，可被优先执行。这种调度算法称之为( )\n。",
+  "options": {
+   "A": "最早截止时间优先(Earliest Deadline First, EDF)算法",
+   "B": "最低松弛度优先(Least Laxity First, LLF)算法",
+   "C": "单调速率调度(Rate Monotonic Scheduling, RMS)算法",
+   "D": "抢占式优先级调度(Preemptive Priority Scheduling, PPS)算法"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "企业信息化工程是将( )\n相结合，改善企业的经营、管理、产品开发和生产等各个环节，提高生产效率、产品质量和企业的创新能力，从而实现产品设计制造和企业管理的信息化、生产过程的智能化、制造装备的数控化以及咨询服务的网络化，全面提高我国企业的竞争力。",
+  "options": {
+   "A": "信息技术、自动化技术、现代管理技术、制造技术",
+   "B": "信息技术、自动化技术、现代管理技术、建模技术",
+   "C": "信息技术、测试技术、现代管理技术、制造技术",
+   "D": "需求分析技术、建模技术、测试技术、现代管理技术"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "数据中台依据企业特有的业务模式和组织架构，通过有形的产品和实施方法论支撑，构建了一套持续不断将数据变成资产并服务于业务的机制。数据中台需要具备的4个核心能力为( )\n，让企业员工、客户、伙伴能够方便地应用数据。",
+  "options": {
+   "A": "据汇聚整合、数据清洗、数据加密、数据建模",
+   "B": "数据汇聚整合、数据清洗、数据加密、数据分发",
+   "C": "数据汇聚整合、数据提纯加工、数据服务可视化、数据价值变现",
+   "D": "数据清洗、数据加密、数据解密、数据建模"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "云计算可以按需提供弹性资源，它的体系结构由5部分组成。其中，( )\n为用户提供对资源层的各项云计算服务的封装，帮助用户构建所需的应用。",
+  "options": {
+   "A": "应用层",
+   "B": "平台层",
+   "C": "用户访问层",
+   "D": "管理层"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "相比传统SOA的服务实现方式，微服务更具有灵活性、可实施性以及可扩展性，其强调的是一种( )\n的软件架构模式。",
+  "options": {
+   "A": "联合测试、独立部署、独立运行",
+   "B": "联合测试、独立部署、集中运行",
+   "C": "独立测试、独立部署、独立运行",
+   "D": "独立测试、独立部署、集中运行"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "TOGAF框架是一个多视图的体系结构，它由企业的业务架构、信息架构、应用架构和技术架构共同构成。企业信息架构是将企业业务实体抽象成为信息对象，将企业的业务运作模式抽象为信息对象的属性和方法，建立面向对象的企业信息模型。企业信息架构实现了从( )\n。\n ①业务模式向信息模型的转变\n ②业务需求向信息功能的映射\n ③企业基础数据向企业信息的抽象\n ④业务逻辑向功能逻辑的演化",
+  "options": {
+   "A": "①②③",
+   "B": "①②④",
+   "C": "①③④",
+   "D": "②③④"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n智能制造系统架构从生命周期、系统层级和智能特征3个维度对智能制造所涉及的活动、装备、特征等内容进行描述，主要用于明确智能制造的( )\n，指导国家智能制造标准体系建设。其中，系统层级是对与企业生产活动相关的组织结构的层级划分，包括( )\n。",
+  "options": {
+   "A": "标准化需求、业务和对象",
+   "B": "标准化需求、对象和范围",
+   "C": "标准化需求、业务和流程",
+   "D": "标准化需求、流程和范围"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n智能制造系统架构从生命周期、系统层级和智能特征3个维度对智能制造所涉及的活动、装备、特征等内容进行描述，主要用于明确智能制造的( )\n，指导国家智能制造标准体系建设。其中，系统层级是对与企业生产活动相关的组织结构的层级划分，包括( )\n。",
+  "options": {
+   "A": "设备层、单元层、车间层、企业层和应用层",
+   "B": "设备层、单元层、传输层、企业层和应用层",
+   "C": "设备层、单元层、传输层、企业层和协同层",
+   "D": "设备层、单元层、车间层、企业层和协同层"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "基于模型的系统工程作为一种( )\n，为了应对基于文档的传统系统工程工作模式在复杂产品和系统研发时面临的挑战，以逻辑连贯一致的多视角系统模型为桥梁和框架，实现跨领域模型的可追踪、可验证和动态关联，驱动人工系统生存周期内各阶段和各层级内的系统工程过程和活动，使其可管理、可复现、可重用，进而打破专业壁垒，破解设计和工艺、研发和制造、研制和使用维护的分离，极大地提高沟通协同效率，实现以模型驱动的方法来采集、捕获和提炼数据、信息和知识。",
+  "options": {
+   "A": "形式化的建模方法学",
+   "B": "非形式化的建模方法学",
+   "C": "结构化建模方法学",
+   "D": "面向对象建模方法学"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "ISO 9000定义业务过程(Business Process)为一组将输入转化为输出的相互关联或相互作用的活动。该过程包括6个基本要素，分别是( )\n、活动、活动的相互作用、输出结果、用户和价值。",
+  "options": {
+   "A": "输入资源",
+   "B": "需求说明",
+   "C": "活动环境",
+   "D": "活动前提"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "工作流管理系统(Workflow Management System，WFMS)通过软件定义、创建工作流并管理其执行。其中，监控和管理进度完成情况和数据所处状态、工作分配与均衡情况等执行中的业务，体现着工作流管理系统( )\n的基本功能。",
+  "options": {
+   "A": "工作流执行",
+   "B": "业务过程的设计和实现",
+   "C": "业务过程管理和分析",
+   "D": "对工作流进行建模"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n工作流参考模型(Workflow Reference Model，WRM)包含6个基本模块，分别是( )\n、工作流引擎、流程定义工具、( )\n、调用应用和管理监控工具。",
+  "options": {
+   "A": "工作流执行服务",
+   "B": "流程服务引擎",
+   "C": "服务标准引擎",
+   "D": "流程设计工具"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n工作流参考模型(Workflow Reference Model，WRM)包含6个基本模块，分别是( )\n、工作流引擎、流程定义工具、( )\n、调用应用和管理监控工具。",
+  "options": {
+   "A": "客户端应用",
+   "B": "服务端应用",
+   "C": "部署端应用",
+   "D": "网络端应用"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n在面向对象方法中，一个子类有多个父类，可以从多个父类中继承特性，这种继承称为( )\n。 对于两个类A和B，如果A是B的子类，则B是A的( )\n。",
+  "options": {
+   "A": "多重继承",
+   "B": "单一继承",
+   "C": "多例继承",
+   "D": "单例继承"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n在面向对象方法中，一个子类有多个父类，可以从多个父类中继承特性，这种继承称为( )\n。 对于两个类A和B，如果A是B的子类，则B是A的( )\n。",
+  "options": {
+   "A": "聚合",
+   "B": "泛化",
+   "C": "聚类",
+   "D": "耦合"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n结构化设计 (Structured Design, SD)是一种面向数据流的方法，可进一步细分为( )\n两个阶段，它根据( )\n和系统结构准则，将DFD转换为系统结构图，用系统结构图来建立系统的物理模型，描述系统分层次的模块结构，以及模块之间的通信与控制关系。",
+  "options": {
+   "A": "概要设计和详细设计",
+   "B": "数据库设计和架构设计",
+   "C": "概要设计和架构设计",
+   "D": "模块设计和数据设计"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n结构化设计 (Structured Design, SD)是一种面向数据流的方法，可进一步细分为( )\n两个阶段，它根据( )\n和系统结构准则，将DFD转换为系统结构图，用系统结构图来建立系统的物理模型，描述系统分层次的模块结构，以及模块之间的通信与控制关系。",
+  "options": {
+   "A": "模块耦合性原则",
+   "B": "模块独立性原则",
+   "C": "自顶向下原则",
+   "D": "自底向上原则"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "信息化规划与企业战略规划总是互相影响、互相促进的。当财务部门提出财务电算化的需求，生产部门提出库房管理的需求时，IT部门根据不同部门的需求分别独立实施，以此形成一个完全基于企业组织与业务流程的信息系统结构， 其中各个信息系统分别对应于特定部门或特定业务流程。这表明( )\n。",
+  "options": {
+   "A": "企业处在信息化的初级阶段",
+   "B": "企业处在信息化的中级阶段",
+   "C": "企业处在信息化的高级阶段",
+   "D": "企业处在信息化的完成阶段"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n在企业信息化中，( )\n的主要方法有业务与IT整合和企业IT架构构建。下面关于上述两种方法的说法中，不正确的是( )\n。",
+  "options": {
+   "A": "信息架构继承",
+   "B": "企业战略与信息化战略集成",
+   "C": "信息化规划与业务整合",
+   "D": "信息化规划与企业战略规划"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n在企业信息化中，( )\n的主要方法有业务与IT整合和企业IT架构构建。下面关于上述两种方法的说法中，不正确的是( )\n。",
+  "options": {
+   "A": "业务与IT整合和企业IT架构两种方法不存在任何领域的重叠",
+   "B": "务与IT整合是一种以业务为导向的、全面的IT管理咨询实施方法论",
+   "C": "企业IT架构帮助企业制订IT战略，并对其投资决策进行指导",
+   "D": "企业IT架构适用于现有信息系统和IT基础架构不一致、不兼容和缺乏统一的整体管理的企业"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n在软件逆向工程的相关概念中，( )\n是指借助工具从已有程序中抽象出有关数据设计、总体结构设计和过程设计等方面的信息；( )\n指不仅从现有系统中恢复设计信息，而且使用该信息去改变或重构现有系统，以改善其整体质量。",
+  "options": {
+   "A": "设计恢复",
+   "B": "正向工程",
+   "C": "设计重构",
+   "D": "重构"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n在软件逆向工程的相关概念中，( )\n是指借助工具从已有程序中抽象出有关数据设计、总体结构设计和过程设计等方面的信息；( )\n指不仅从现有系统中恢复设计信息，而且使用该信息去改变或重构现有系统，以改善其整体质量。",
+  "options": {
+   "A": "再工程",
+   "B": "需求工程",
+   "C": "正向工程",
+   "D": "逆向工程"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "在数据库设计的需求分析、概念结构设计、逻辑结构设计和物理结构设计的四个阶段中，基本E-R图是( )\n。",
+  "options": {
+   "A": "需求分析阶段形成的文档，并作为概念结构设计阶段的设计依据",
+   "B": "逻辑结构设计阶段形成的文档，并作为概念结构设计阶段的设计依据",
+   "C": "概念结构设计阶段形成的文档，并作为逻辑结构设计阶段的设计依据",
+   "D": "概念结构设计阶段形成的文档，并作为物理设计阶段的设计依据"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "高校信息系统采用分布式数据库系统，该系统中“当某一场地故障时，系统可以使用其它场地上的副本而不至于使整个系统瘫痪”和“数据在不同场地上的存储”分别称为分布式数据库的( )\n。",
+  "options": {
+   "A": "共享性和分布性",
+   "B": "自治性和分布性",
+   "C": "自治性和可用性",
+   "D": "可用性和分布性"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "给定关系R(A，B，C，D，E)和关系S(D，E，F，G)，对其进行自然连接运算R ??S后其结果集的属性列为( )\n。",
+  "options": {
+   "A": "R.A，R.B，R.C，R.D，R.E，S.D，S.E",
+   "B": "R.A，R.B，R.C，R.D，R.E，S.F，S.G",
+   "C": "R.A，R.B，R.C，R.D，R.E，S.E，S.F",
+   "D": "R.A，R.B，R.C，R.D，R.E，S.D，S.E，S.F，S.G"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n给定关系模式R(U，F)，U={A1，A2，A3，A4}， F={A1→A2A3， A2A3→A4}，那么在关系R中( )\n。以下说法错误的是( )\n。",
+  "options": {
+   "A": "有1个候选关键字A1",
+   "B": "有1个候选关键字A2A3",
+   "C": "有2个候选关键字A2和A3",
+   "D": "有2个候选关键字A2和A3"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n给定关系模式R(U，F)，U={A1，A2，A3，A4}， F={A1→A2A3， A2A3→A4}，那么在关系R中( )\n。以下说法错误的是( )\n。",
+  "options": {
+   "A": "根据F中“A1→A2A3”，可以得出“A1→A2”",
+   "B": "根据F中“A1→A2A3”，可以得出“A1→A3”",
+   "C": "根据F中“A2A3→A4”，可以得出“A2→A4，A3→A4”",
+   "D": "根据F中“A1→A2A3，A2A3→A4”，可以得出“A2→A4”"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "在数据库的安全机制中，通过提供( )\n供第三方开发人员调用进行数据更新，从而保证数据库的关系模式不被第三方所获取。",
+  "options": {
+   "A": "索引",
+   "B": "视图",
+   "C": "触发器",
+   "D": "储存过程"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "某系统中有5个并发进程竞争资源R。假设每个进程都需要3个R，那么最少需要有( )\n个R，才能保证系统不会发生死锁。",
+  "options": {
+   "A": "10",
+   "B": "11",
+   "C": "12",
+   "D": "13"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n某文件管理系统在磁盘上建立了位示图(bitmap)，记录磁盘的使用情况。若磁盘上物理块的编号依次为：0 、1、2、……；系统中的字长为32位，字的编号依次为： 0 、1、2，字中的一位对应文件存储器上的一个物理块，取值0表示该物理块空闲，取值1表示该物理块占用，如下图所示。\n 假设操作系统将256号物理块分配给某文件，那么该物理块的使用情况在位示图中编号为( )\n的字中描述；系统应该将( )\n。",
+  "options": {
+   "A": "5",
+   "B": "6",
+   "C": "7",
+   "D": "8"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n某文件管理系统在磁盘上建立了位示图(bitmap)，记录磁盘的使用情况。若磁盘上物理块的编号依次为：0 、1、2、……；系统中的字长为32位，字的编号依次为： 0 、1、2，字中的一位对应文件存储器上的一个物理块，取值0表示该物理块空闲，取值1表示该物理块占用，如下图所示。\n 假设操作系统将256号物理块分配给某文件，那么该物理块的使用情况在位示图中编号为( )\n的字中描述；系统应该将( )\n。",
+  "options": {
+   "A": "该字的位号32的位置“1”",
+   "B": "该字的位号0的位置“1”",
+   "C": "该字的位号32的位置“0”",
+   "D": "该字的位号0的位置“0”"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n程P1、P2、P3、P4、P5和P6的前趋图如下所示：\n 若用PV操作控制进程PI、P2、P3、P4、P5和P6并发执行的过程，则需要设置7个信号量S1、S2、S3、S4、S5、S6和S7， 且信号量S1~S7的初值都等于零。如下的进程执行图中，a和b处应分别填写( )\n；c和 d处应分别填写( )\n，e和f处应分别填写( )\n。",
+  "options": {
+   "A": "P(S1)和V(S2)V(S3)",
+   "B": "V(S1)和P(S2)V(S3)",
+   "C": "P(S1)和P(S2)V(S3)",
+   "D": "V(S1)和V(S2)V(S3)"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n程P1、P2、P3、P4、P5和P6的前趋图如下所示：\n 若用PV操作控制进程PI、P2、P3、P4、P5和P6并发执行的过程，则需要设置7个信号量S1、S2、S3、S4、S5、S6和S7， 且信号量S1~S7的初值都等于零。如下的进程执行图中，a和b处应分别填写( )\n；c和 d处应分别填写( )\n，e和f处应分别填写( )\n。",
+  "options": {
+   "A": "V(S4)和P(S3)P(S4)",
+   "B": "P(S4)和P(S3)P(S4)",
+   "C": "P(S3)和V(S4)V(S5)",
+   "D": "V(S4)V(S5)和P(S3)P(S4)"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\n程P1、P2、P3、P4、P5和P6的前趋图如下所示：\n 若用PV操作控制进程PI、P2、P3、P4、P5和P6并发执行的过程，则需要设置7个信号量S1、S2、S3、S4、S5、S6和S7， 且信号量S1~S7的初值都等于零。如下的进程执行图中，a和b处应分别填写( )\n；c和 d处应分别填写( )\n，e和f处应分别填写( )\n。",
+  "options": {
+   "A": "P(S6)和V(S7)",
+   "B": "V(S6)和P(S6)",
+   "C": "V(S7)和P(S7)",
+   "D": "V(S6)和V(S7)"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "各种线性规划模型都可以将其标准化。线性规划模型标准形式的特点不包括( )\n。",
+  "options": {
+   "A": "目标函数达到最大化(或最小化)",
+   "B": "约束条件都是线性等式",
+   "C": "约束条件中的常数系数均为非负",
+   "D": "所有的决策变量均为非负"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n某项目有8个作业A~H，每个作业的紧前作业、所需天数和所需人数见下表。由于整个项目团队总共只有10人，各个作业都必须连续进行，中途不能停止，因此需要适当安排施工方案，使该项目能尽快在( )\n内完工。在该方案中，作业A应安排在( )\n内进行。",
+  "options": {
+   "A": "10天",
+   "B": "11天",
+   "C": "12天",
+   "D": "13天"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n某项目有8个作业A~H，每个作业的紧前作业、所需天数和所需人数见下表。由于整个项目团队总共只有10人，各个作业都必须连续进行，中途不能停止，因此需要适当安排施工方案，使该项目能尽快在( )\n内完工。在该方案中，作业A应安排在( )\n内进行。",
+  "options": {
+   "A": "第1~5天",
+   "B": "第3~7天",
+   "C": "第5~9天",
+   "D": "第8~12天"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n某乡有7个小山村A~G，村与村之间原有小路可加宽修建公路的线路如下图所示(路边的数字表示路长的公里数)。为实现村村通公路，修建公路总长至少( )\n公里。若在( )\n村新建一所中学，则可以使人们从离它最远的村到该校所走的优化路程最短。",
+  "options": {
+   "A": "13.8",
+   "B": "14.3",
+   "C": "14.8",
+   "D": "15.3"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n某乡有7个小山村A~G，村与村之间原有小路可加宽修建公路的线路如下图所示(路边的数字表示路长的公里数)。为实现村村通公路，修建公路总长至少( )\n公里。若在( )\n村新建一所中学，则可以使人们从离它最远的村到该校所走的优化路程最短。",
+  "options": {
+   "A": "A",
+   "B": "C",
+   "C": "D",
+   "D": "E"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "某地天然气输送管线网络图如下，每段管线旁的数字表示输气能力(单位：万立方米/小时)。根据该图，从源S到目的地T的最大输气能力为( )\n万立方米/小时。",
+  "options": {
+   "A": "4",
+   "B": "8",
+   "C": "9",
+   "D": "10"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "根据历史数据和理论推导可知，某应用中，随机变量s的分布密度函数为f（x）=3x2，（0( )\n来模拟该随机变量，其中，r1.r2.r3...为计算机逐个产生的、均匀分布在（0，1）区间内的互相独立的伪随机数。",
+  "options": {
+   "A": "max(r1，r2，r3)",
+   "B": "min(r1，r2，r3)",
+   "C": "r1*r2*r3",
+   "D": "(r1+r2+r3)/3"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n计算机系统性能评估中，( )\n通常采用加法指令的运算速度来衡量计算机的速度。( )\n首先计算出处理部件每个计算单元的有效计算率，再按不同字长加以调整，得出该计算单元的理论性能，所有组成该处理部件的计算单元的理论性能之和即为最终的计算机性能。",
+  "options": {
+   "A": "指令执行速度法",
+   "B": "等效指令速度法",
+   "C": "综合理论性能法",
+   "D": "基准程序法"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n计算机系统性能评估中，( )\n通常采用加法指令的运算速度来衡量计算机的速度。( )\n首先计算出处理部件每个计算单元的有效计算率，再按不同字长加以调整，得出该计算单元的理论性能，所有组成该处理部件的计算单元的理论性能之和即为最终的计算机性能。",
+  "options": {
+   "A": "指令执行速度法",
+   "B": "等效指令速度法",
+   "C": "综合理论性能法",
+   "D": "基准程序法"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n信息系统的安全是一个复杂的综合体，涉及系统的方方面面， 其中( )\n是指保护计算机设备、设施和其他媒体免遭地震、水灾、火灾、有害气体和其他环境事故(例如，电磁辐射等)破坏的措施和过程。( )\n是计算机信息系统安全的重要环节，其实质是保证系统的正常运行，不因偶然的或恶意的侵扰而遭到破坏，使系统可靠、连续地运行，服务不被中断。",
+  "options": {
+   "A": "信息安全",
+   "B": "人员安全",
+   "C": "运行安全",
+   "D": "实体安全"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n信息系统的安全是一个复杂的综合体，涉及系统的方方面面， 其中( )\n是指保护计算机设备、设施和其他媒体免遭地震、水灾、火灾、有害气体和其他环境事故(例如，电磁辐射等)破坏的措施和过程。( )\n是计算机信息系统安全的重要环节，其实质是保证系统的正常运行，不因偶然的或恶意的侵扰而遭到破坏，使系统可靠、连续地运行，服务不被中断。",
+  "options": {
+   "A": "信息安全",
+   "B": "人员安全",
+   "C": "运行安全",
+   "D": "实体安全"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n遗留系统 (Legacy System)是指任何基本上不能进行修改和演化以满足新的业务需求变化的信息系统。针对遗留系统的再利用问题，通常从技术水平和业务价值两个维度进行考量，对于高水平、低价值的遗留系统，通常采用( )\n策略；对于高水平、高价值的遗留系统，通常采用( )\n策略。",
+  "options": {
+   "A": "淘汰",
+   "B": "继承",
+   "C": "改造",
+   "D": "集成"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n遗留系统 (Legacy System)是指任何基本上不能进行修改和演化以满足新的业务需求变化的信息系统。针对遗留系统的再利用问题，通常从技术水平和业务价值两个维度进行考量，对于高水平、低价值的遗留系统，通常采用( )\n策略；对于高水平、高价值的遗留系统，通常采用( )\n策略。",
+  "options": {
+   "A": "淘汰",
+   "B": "继承",
+   "C": "改造",
+   "D": "集成"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "下列协议中， 可以用于文件安全传输的是( )\n。",
+  "options": {
+   "A": "FTP",
+   "B": "SFTP",
+   "C": "TFTP",
+   "D": "ICMP"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "DNS协议的功能是( )\n。",
+  "options": {
+   "A": "将域名解析为IP地址",
+   "B": "将MAC地址解析为IP地址",
+   "C": "将IP地址解析为MAC地址",
+   "D": "将主机名解析为IP地址"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "下列协议中，不属于电子邮件收发协议的是( )\n。",
+  "options": {
+   "A": "SMTP",
+   "B": "POP",
+   "C": "IMAP",
+   "D": "FTP"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "某信息系统不断受到SQL注入攻击，应部署( )\n进行安全防护，实时阻断攻击行为。",
+  "options": {
+   "A": "防火墙",
+   "B": "WEB防火墙",
+   "C": "入侵检测系统",
+   "D": "堡垒机"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "IP地址10.10.33.66/16的网络地址是( )\n。",
+  "options": {
+   "A": "10.10.0.0",
+   "B": "10.0.0.0",
+   "C": "10.10.33.0",
+   "D": "10.10.33.1"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "IP报文首部不包含( )\n。",
+  "options": {
+   "A": "版本号",
+   "B": "源目的MAC",
+   "C": "生存时间",
+   "D": "源/目的IP"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\nRequirements validation is the process of checking that requirements actually define the system that the customer really wants. It overlaps with analysis as it is concerned with finding problems with the requirements. Requirements validation is important because errors in a requirements document can lead to extensive rework costs when these problems are discovered during development or after the system is in service. The cost of fixing a requirements problem by making a system change is usually much greater than repairing design or coding errors. The reason for this is that a change to the requirements usually means that the system design and implementation must also be changed. Furthermore, the system must then be re-tested.\n During the requirements validation process, different types of checks should be carried out on the requirements in the requirements document. These checks include:\n 1.( )\n: A user may think that a system is needed to perform certain function. However, further thought and analysis may identify additional or different functions that are required. Systems have diverse stakeholders with different needs and any set of requirements is inevitably a compromise across the stakeholder community.\n 2.( )\n: Requirements in the document should not conflict. That is, there should not be contradictory constraints or different descriptions of the same system function.\n 3.( )\n: The requirements document should include requirements that define all functions and the constraints intended by the system user.\n 4. Realism checks: Using knowledge of existing technology, the requirements should be checked to ensure that they can actually be implemented. These checks should also take account of the( )\nfor the system development.\n 5. Verifiability: To reduce the potential for dispute between customer and contractor, system requirements should always be written so that they are verifiable. This means that you should be able to write a set of tests that can demonstrate that the delivered system meets each specified( )\n.",
+  "options": {
+   "A": "Security checks",
+   "B": "Validity checks",
+   "C": "Consistency checks",
+   "D": "Completeness checks"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\nRequirements validation is the process of checking that requirements actually define the system that the customer really wants. It overlaps with analysis as it is concerned with finding problems with the requirements. Requirements validation is important because errors in a requirements document can lead to extensive rework costs when these problems are discovered during development or after the system is in service. The cost of fixing a requirements problem by making a system change is usually much greater than repairing design or coding errors. The reason for this is that a change to the requirements usually means that the system design and implementation must also be changed. Furthermore, the system must then be re-tested.\n During the requirements validation process, different types of checks should be carried out on the requirements in the requirements document. These checks include:\n 1.( )\n: A user may think that a system is needed to perform certain function. However, further thought and analysis may identify additional or different functions that are required. Systems have diverse stakeholders with different needs and any set of requirements is inevitably a compromise across the stakeholder community.\n 2.( )\n: Requirements in the document should not conflict. That is, there should not be contradictory constraints or different descriptions of the same system function.\n 3.( )\n: The requirements document should include requirements that define all functions and the constraints intended by the system user.\n 4. Realism checks: Using knowledge of existing technology, the requirements should be checked to ensure that they can actually be implemented. These checks should also take account of the( )\nfor the system development.\n 5. Verifiability: To reduce the potential for dispute between customer and contractor, system requirements should always be written so that they are verifiable. This means that you should be able to write a set of tests that can demonstrate that the delivered system meets each specified( )\n.",
+  "options": {
+   "A": "Security checks",
+   "B": "Safety checks",
+   "C": "Consistency checks",
+   "D": "Usability checks"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\nRequirements validation is the process of checking that requirements actually define the system that the customer really wants. It overlaps with analysis as it is concerned with finding problems with the requirements. Requirements validation is important because errors in a requirements document can lead to extensive rework costs when these problems are discovered during development or after the system is in service. The cost of fixing a requirements problem by making a system change is usually much greater than repairing design or coding errors. The reason for this is that a change to the requirements usually means that the system design and implementation must also be changed. Furthermore, the system must then be re-tested.\n During the requirements validation process, different types of checks should be carried out on the requirements in the requirements document. These checks include:\n 1.( )\n: A user may think that a system is needed to perform certain function. However, further thought and analysis may identify additional or different functions that are required. Systems have diverse stakeholders with different needs and any set of requirements is inevitably a compromise across the stakeholder community.\n 2.( )\n: Requirements in the document should not conflict. That is, there should not be contradictory constraints or different descriptions of the same system function.\n 3.( )\n: The requirements document should include requirements that define all functions and the constraints intended by the system user.\n 4. Realism checks: Using knowledge of existing technology, the requirements should be checked to ensure that they can actually be implemented. These checks should also take account of the( )\nfor the system development.\n 5. Verifiability: To reduce the potential for dispute between customer and contractor, system requirements should always be written so that they are verifiable. This means that you should be able to write a set of tests that can demonstrate that the delivered system meets each specified( )\n.",
+  "options": {
+   "A": "Consistency checks",
+   "B": "Usability checks",
+   "C": "Operational checks",
+   "D": "Completeness checks"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第4空)\nRequirements validation is the process of checking that requirements actually define the system that the customer really wants. It overlaps with analysis as it is concerned with finding problems with the requirements. Requirements validation is important because errors in a requirements document can lead to extensive rework costs when these problems are discovered during development or after the system is in service. The cost of fixing a requirements problem by making a system change is usually much greater than repairing design or coding errors. The reason for this is that a change to the requirements usually means that the system design and implementation must also be changed. Furthermore, the system must then be re-tested.\n During the requirements validation process, different types of checks should be carried out on the requirements in the requirements document. These checks include:\n 1.( )\n: A user may think that a system is needed to perform certain function. However, further thought and analysis may identify additional or different functions that are required. Systems have diverse stakeholders with different needs and any set of requirements is inevitably a compromise across the stakeholder community.\n 2.( )\n: Requirements in the document should not conflict. That is, there should not be contradictory constraints or different descriptions of the same system function.\n 3.( )\n: The requirements document should include requirements that define all functions and the constraints intended by the system user.\n 4. Realism checks: Using knowledge of existing technology, the requirements should be checked to ensure that they can actually be implemented. These checks should also take account of the( )\nfor the system development.\n 5. Verifiability: To reduce the potential for dispute between customer and contractor, system requirements should always be written so that they are verifiable. This means that you should be able to write a set of tests that can demonstrate that the delivered system meets each specified( )\n.",
+  "options": {
+   "A": "tools",
+   "B": "tests",
+   "C": "models",
+   "D": "budget and schedule"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2022,
+  "half": "上半年",
+  "paper": "2022年 上半年 综合知识",
+  "type": "single",
+  "content": "(第5空)\nRequirements validation is the process of checking that requirements actually define the system that the customer really wants. It overlaps with analysis as it is concerned with finding problems with the requirements. Requirements validation is important because errors in a requirements document can lead to extensive rework costs when these problems are discovered during development or after the system is in service. The cost of fixing a requirements problem by making a system change is usually much greater than repairing design or coding errors. The reason for this is that a change to the requirements usually means that the system design and implementation must also be changed. Furthermore, the system must then be re-tested.\n During the requirements validation process, different types of checks should be carried out on the requirements in the requirements document. These checks include:\n 1.( )\n: A user may think that a system is needed to perform certain function. However, further thought and analysis may identify additional or different functions that are required. Systems have diverse stakeholders with different needs and any set of requirements is inevitably a compromise across the stakeholder community.\n 2.( )\n: Requirements in the document should not conflict. That is, there should not be contradictory constraints or different descriptions of the same system function.\n 3.( )\n: The requirements document should include requirements that define all functions and the constraints intended by the system user.\n 4. Realism checks: Using knowledge of existing technology, the requirements should be checked to ensure that they can actually be implemented. These checks should also take account of the( )\nfor the system development.\n 5. Verifiability: To reduce the potential for dispute between customer and contractor, system requirements should always be written so that they are verifiable. This means that you should be able to write a set of tests that can demonstrate that the delivered system meets each specified( )\n.",
+  "options": {
+   "A": "requirement",
+   "B": "model",
+   "C": "design",
+   "D": "implementation"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "结构化分析方法以数据字典为核心，有三个维度的模型，分别是(1)。",
+  "options": {
+   "A": "数据模型、功能模型、架构模型",
+   "B": "功能模型、状态模型、行为模型",
+   "C": "数据模型、功能模型、行为模型",
+   "D": "数据模型、状态模型、架构模型"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "如果一个用例包含了两种或两种以上的不同场景，则可以通过(2)表示。",
+  "options": {
+   "A": "扩展关系",
+   "B": "包含关系",
+   "C": "泛化关系",
+   "D": "组合关系"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "数据字典中有6类条目，不同类型的条目有不同的属性描述。其中，(3)是数据的最小组成单位;(4)用来描述数据之间的组合关系;(5)是数据流的来源或去向。",
+  "options": {
+   "A": "数据类型",
+   "B": "数据流",
+   "C": "数据模型",
+   "D": "数据元素"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "数据字典中有6类条目，不同类型的条目有不同的属性描述。其中，(3)是数据的最小组成单位;(4)用来描述数据之间的组合关系;(5)是数据流的来源或去向。",
+  "options": {
+   "A": "数据坝",
+   "B": "数据结构",
+   "C": "数据表",
+   "D": "数据仔储"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "数据字典中有6类条目，不同类型的条目有不同的属性描述。其中，(3)是数据的最小组成单位;(4)用来描述数据之间的组合关系;(5)是数据流的来源或去向。",
+  "options": {
+   "A": "数据库",
+   "B": "数据存储",
+   "C": "外部实体",
+   "D": "输入输出"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "光信号在单模光纤中是以(6)方式传输。",
+  "options": {
+   "A": "直线传输",
+   "B": "渐变反射",
+   "C": "突变反射",
+   "D": "无线收发"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在浏览器地址栏输入 192.168.1.1访问网页时，首先执行的操作是(7)。",
+  "options": {
+   "A": "域名解析",
+   "B": "解释执行",
+   "C": "发送页面请求报立",
+   "D": "建立 TCP 连接"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "使用(8)格式的文件存储视频动画数据可以提高网页内容的载入速度",
+  "options": {
+   "A": ".jpg",
+   "B": ".avi",
+   "C": ".gif",
+   "D": ".rm"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "对一个新的 QoS 通信流进行网络资源预留，以确保有足够的资源来处理所请求的 QoS流，该规则属于 IntServ 规定的4种用于提供 QoS 传输规则中的(9)规则。",
+  "options": {
+   "A": "准入控制",
+   "B": "路由选择",
+   "C": "排队",
+   "D": "丢弃策略"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "下列关于计算机程序的智力成果中，能取得专利权的是(10)",
+  "options": {
+   "A": "计算机程序算法",
+   "B": "计算机程序代码",
+   "C": "计算机编程规则",
+   "D": "程序代码的测试用例"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "以下著作权权利中，(11)的保护期受时间限制。",
+  "options": {
+   "A": "署名权",
+   "B": "修改权",
+   "C": "发表权",
+   "D": "保护作品完整权"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "某软件公司参与开发管理系统软件的程序员丁某，辞职到另一公司任职，该公司项目负责人将管理系统软件的开发者署名替换为王某，该项目负责人的行为(12)。",
+  "options": {
+   "A": "不构成侵权，因为丁某不是软件著作权人",
+   "B": "只是行使管理者的权利，不构成侵权",
+   "C": "侵犯了开发者丁某的署名权",
+   "D": "不构成侵权，因为丁某已离职"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "孙某是A物流公司的信息化系统管理员。在任职期间，孙某根据公司的业务要求开发了“物资进销存系统”，并由 A 公司使用。后来 A 公司将该软件申请了计算机软件著作权，并取得《计算机软件著作登记证书》。证书明确软件著作名称为“物资进销存系统 V1.0”，以下说法正确的是(13)。",
+  "options": {
+   "A": "物资进销存系统 V1.0 著作权属于 A物流公司",
+   "B": "物资进销存系统 V1.0 著作权属于孙某",
+   "C": "物资进销存系统 V1.0的著作权属于孙某和 A 物流公司",
+   "D": "物资进销存系统的软件登记公告以及有关登记文件不予公开"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在嵌入式系统中，板上通信接口是指用于将各种集成电路与其他外围设备交互连接的电路或总线。常用的板上通信接口包括 I2C、SPI、UART 等。其中，I2C 总线通常被用于多主机场景。以下关于 I2C 总线不正确的说法是(14)。",
+  "options": {
+   "A": "I2C 总线是一种同步、双向、半双工的两线式串行接口总线",
+   "B": "I2C总线由两条总线组成:串行时钟总线SCL和串行数据总线 SDA",
+   "C": "I2C 总线是一种同步、双向、全双工的4线式串行接口总线",
+   "D": "I2C 最初的设计目标是为微处理器/微控制器系统与电视机外围芯片之间的连接提供简单的方法"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在一个具有 72MHz 的 Cortex-M3/M4 系统下，使用中断模式来接收串口数据，其波特率为 115200。假设该系统的串行接口没有硬件 FIFO，波特率是 115200，数据格式采用“1 起始位+1 终止位+无校验位+8 数据位”，则其最大允许屏蔽中断的时间约是(15)。",
+  "options": {
+   "A": "11.5 μS",
+   "B": "87uS",
+   "C": "23.4 μS",
+   "D": "17 uS"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在多核与多处理技术融合的系统中，对调试问题提出许多新挑战。其主要原因是由于系统的复杂度在不断增加，需要通过优化硬件和软件来充分发挥系统的性能潜力。以下对调试难点问题的描述，不正确的是(16)",
+  "options": {
+   "A": "在多核、多电路板和多操作系统环境中对操作系统和应用代码进行调试",
+   "B": "调试单一芯片中的同构和异构调试方法，进而实现整个系统的协同调试",
+   "C": "有效利用 JTAG 与基于代理调试方法，确保不同调试工具之间的顺畅协同",
+   "D": "在多核环境中调试应用程序不需考虑同步机制"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在安全关键系统设计活动中，需求获取是项目开发成功的主要影响因素。需求获取的任务是获取分配给软件的系统需求以及其他利益相关方需求，确定软件的范围。以下关于需求获取过程活动的描述，不正确的是(17)。",
+  "options": {
+   "A": "评审和完全理解系统需求和安全需求",
+   "B": "和客户、系统工程师、领域专家进行会谈，回答系统需求中的问题",
+   "C": "复用过去相关项目的需求，并考查这些项目的问题报告",
+   "D": "需求获取过程的活动可能引入失效模式到软件中，开展失效分析"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在信息物理系统(CPS)设计时，风险分析工作贯穿在整个系统生命周期的各个阶段。通常，风险分为基本风险和特定风险。特定风险是指与人为因素或物理环境因素突变有关的事件，可能便系统进人个安全状态，进而导致系统故障。大于风而大系招坏中，不患于特定风险的是(18)。",
+  "options": {
+   "A": "CPS 是集人机交互、物理过程和计算过程于一体的安全关键嵌入式系统，彼此之间相互融合，不可分割。由于 CPS 要处于不同的恶劣环境，因此，在计算系统设计时，由于环境变化所引发芯片失效的风险应作为特定风险加以考虑",
+   "B": "人为因素需要考虑触发及参与 CPS 运行的执行者，以及执行者为完成具体任务针对 CPS 所做的一系列动作",
+   "C": "物理因素的行为是一个随着时间变化的连续过程。外界的物理变化通过传感器被监测、感知，进一步将监测的信号发送给计算系统。当外界物理参数随着时间变化到某一数值会影响传感器的正常运行，从而导致系统发生状态的变迁",
+   "D": "环境中的冰雹、冰、雪、雷击、单粒子事件效应、温度和振动等因素都属于特定风险，其自然现象因素都有可能引起 CPS 系统的失效"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "企业信息化规划涉及多个领域的融合，它是企业战略、管理规划、业务流程重组等内容的综合规划活动。其中，(19)规划是评价环境和企业现状，进而选择和确定企业的总体和长远目标，制定和抉择实现目标的行动方案。(20)战略规划关注如何通过信息系统来支撑业务流程的运作，进而实现企业的关键业务目标。",
+  "options": {
+   "A": "企业战略",
+   "B": "企业目标",
+   "C": "业务目标",
+   "D": "企业管理"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "企业信息化规划涉及多个领域的融合，它是企业战略、管理规划、业务流程重组等内容的综合规划活动。其中，(19)规划是评价环境和企业现状，进而选择和确定企业的总体和长远目标，制定和抉择实现目标的行动方案。(20)战略规划关注如何通过信息系统来支撑业务流程的运作，进而实现企业的关键业务目标。",
+  "options": {
+   "A": "业务流程",
+   "B": "业务目标",
+   "C": "信息系统",
+   "D": "信息技术"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "决策支持系统(DSS)是辅助决策者通过数据、模型和知识，以人机交互方式进行半结构化或非结构化决策的计算机应用系统。其中，(21)可以建立适当的算法产生决策方案，使决策方案得到较优解。DSS基本结构主要由四个部分组成，即数据库子系统、模型库子系统、推理部分和用户接口子系统。DSS用户是依靠(22)进行决策的。",
+  "options": {
+   "A": "结构化和半结构化决策",
+   "B": "半结构化决策",
+   "C": "非结构化决策",
+   "D": "半结构化和非结构化决策"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "决策支持系统(DSS)是辅助决策者通过数据、模型和知识，以人机交互方式进行半结构化或非结构化决策的计算机应用系统。其中，(21)可以建立适当的算法产生决策方案，使决策方案得到较优解。DSS基本结构主要由四个部分组成，即数据库子系统、模型库子系统、推理部分和用户接口子系统。DSS用户是依靠(22)进行决策的。",
+  "options": {
+   "A": "数据库中的数据",
+   "B": "模型库中的模型",
+   "C": "知识库中的方法",
+   "D": "人机交互界面"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "以下关于信息系统开发方法的描述，正确的是(23)",
+  "options": {
+   "A": "生命周期法是一种传统的信息系统开发方法，由结构化分析(SA)、结构化设计(SD)和结构化程序设计(SP)三部分组成。它是目前应用最成熟的开发方法，特别适合于数据处理领域的问题，适应于规模较大、比较复杂的系统开发",
+   "B": "面向对象(00)方法认为任何事物都是对象，每一个对象都有自己的运动规律和内部状态，都属于某个对象“类”，是该对象类的一个元素。结构化方法是自顶向下的，而 O0 方法则是自底向上，在信息系统开发中两者不可共存",
+   "C": "面向服务(SO)的系统不能使用面向对象设计(OOD)来构建单个服务",
+   "D": "原型法适用于技术层面难度不大、分析层面难度大的系统开发"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "信息系统战略规划方法中的战略一致性模型由(24)领域构成。",
+  "options": {
+   "A": "企业经营管理、组织与业务流程、信息系统战略",
+   "B": "企业经营战略、信息系统战略、组织与业务流程、IT基础架构",
+   "C": "企业战略、业务流程、信息系统、T 基础架构",
+   "D": "企业规划战略、组织与业务流程、信息系统战略"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "以下关于企业信息系统的描述，错误的是(25)。",
+  "options": {
+   "A": "客户关系管理(CRM)的支柱性功能是市场营销和客户服务，其根本要求是与客户建立一种互相学习的关系，并在此基础上提供完善的个性化服务",
+   "B": "供应链管理(SCM)整合并优化了供应商、制造商、零售商的业务效率，使商品以正确的数量、正确的品质、在正确的地点、以正确的时间、最佳的成本进行生产和销售。SCM 包括计划、采购、制造、配送、退货五大基本内容",
+   "C": "产品数据管理(PDM)的核心功能包括数据库和文档管理、产品结构与配置管理、生命周期管理和流程管理、集成开发接口，第二代PDM 产品建立在Internet平台、CORBA和Java技术基础之上",
+   "D": "可以说产品生命周期管理(PLM)包含了 PDM 的全部内容，PDM 功能是 PLM\r\n中的一个子集"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "业务流程重组(BPR)遵循的原则不包括(26)。",
+  "options": {
+   "A": "以流程为中心的原则",
+   "B": "利润最大化的原则",
+   "C": "以客户为导向的原则",
+   "D": "以人为本的原则"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在信息系统开发方法中，(27)假定待开发的系统是一个结构化的系统，其基本思想是将系统的生命周期划分为(28)、系统分析、系统设计、系统实施、系统维护等阶段。这种方法遵循系统工程原理，按照事先设计好的程序和步骤，使用一定的开发工具，完成规定的文档，以结构化和(29)的方式进行信息系统的开发工作。",
+  "options": {
+   "A": "结构化方法",
+   "B": "面向对象方法",
+   "C": "原型法",
+   "D": "面向服务方法"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在信息系统开发方法中，(27)假定待开发的系统是一个结构化的系统，其基本思想是将系统的生命周期划分为(28)、系统分析、系统设计、系统实施、系统维护等阶段。这种方法遵循系统工程原理，按照事先设计好的程序和步骤，使用一定的开发工具，完成规定的文档，以结构化和(29)的方式进行信息系统的开发工作。",
+  "options": {
+   "A": "系统规划",
+   "B": "系统定义",
+   "C": "需求定义",
+   "D": "实现定义"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在信息系统开发方法中，(27)假定待开发的系统是一个结构化的系统，其基本思想是将系统的生命周期划分为(28)、系统分析、系统设计、系统实施、系统维护等阶段。这种方法遵循系统工程原理，按照事先设计好的程序和步骤，使用一定的开发工具，完成规定的文档，以结构化和(29)的方式进行信息系统的开发工作。",
+  "options": {
+   "A": "对象化",
+   "B": "服务化",
+   "C": "模块化",
+   "D": "组件化"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "结构化方法属于(30)的开发方法，强调开发方法的结构合理性，以及所开发系统的结构合理性。而(31)是一种根据用户初步需求，利用系统开发工具，快速地建立一个系统模型展示给用户，在此基础上与用户交流，最终实现用户需求的信息系统快速开发的方法。",
+  "options": {
+   "A": "自底向上",
+   "B": "层次性",
+   "C": "自顶向下",
+   "D": "对象化"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "结构化方法属于(30)的开发方法，强调开发方法的结构合理性，以及所开发系统的结构合理性。而(31)是一种根据用户初步需求，利用系统开发工具，快速地建立一个系统模型展示给用户，在此基础上与用户交流，最终实现用户需求的信息系统快速开发的方法。",
+  "options": {
+   "A": "面向智能体方法",
+   "B": "原型化方法",
+   "C": "面向对象方法",
+   "D": "面向服务方法"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "ERP 是一种融合了企业最佳实践和先进信息技术的新型管理工具，它扩充了(32)和制造资源计划的管理范围，将(33)和企业内部的采购、生产、销售以及客户紧密联系起来，可对供应链上的所有环节进行有效管理，实现对企业的动态控制和各种资源的集成和优化，提升基础管理水平，追求企业资源的合理高效利用。ERP的作用是在协调与整合企业各方面资源运营的过程中，全面实现(34)和企业对市场变化的快速反应，降低市场波动给企业带来的经营风险，帮助企业以更少的资源投入获得更多的投资回报。",
+  "options": {
+   "A": "管理信息系统",
+   "B": "人力资源系统",
+   "C": "企业发展计划",
+   "D": "企业财务系统"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "ERP 是一种融合了企业最佳实践和先进信息技术的新型管理工具，它扩充了(32)和制造资源计划的管理范围，将(33)和企业内部的采购、生产、销售以及客户紧密联系起来，可对供应链上的所有环节进行有效管理，实现对企业的动态控制和各种资源的集成和优化，提升基础管理水平，追求企业资源的合理高效利用。ERP的作用是在协调与整合企业各方面资源运营的过程中，全面实现(34)和企业对市场变化的快速反应，降低市场波动给企业带来的经营风险，帮助企业以更少的资源投入获得更多的投资回报。",
+  "options": {
+   "A": "供应商",
+   "B": "开发商",
+   "C": "销售渠道",
+   "D": "建设商"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "ERP 是一种融合了企业最佳实践和先进信息技术的新型管理工具，它扩充了(32)和制造资源计划的管理范围，将(33)和企业内部的采购、生产、销售以及客户紧密联系起来，可对供应链上的所有环节进行有效管理，实现对企业的动态控制和各种资源的集成和优化，提升基础管理水平，追求企业资源的合理高效利用。ERP的作用是在协调与整合企业各方面资源运营的过程中，全面实现(34)和企业对市场变化的快速反应，降低市场波动给企业带来的经营风险，帮助企业以更少的资源投入获得更多的投资回报。",
+  "options": {
+   "A": "信息隐蔽",
+   "B": "信息重构",
+   "C": "信息共享",
+   "D": "信息更新"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "信息资源与人力、物力、财力和自然资源一样，都是企业的重要资源，信息资源管理(Information Resource Management，IRM)可通过企业内外信息流的畅通和信息资源的有效利用，来提高企业的效益和竞争力。IRM 包括强调对数据控制的(35)，和关心企业管理人员如何获取和处理信息的信息处理管理。IRM的起点和基础是(36)。",
+  "options": {
+   "A": "数据来源管理",
+   "B": "信息架构管理",
+   "C": "信息来源管理",
+   "D": "数据资源管理"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "信息资源与人力、物力、财力和自然资源一样，都是企业的重要资源，信息资源管理(Information Resource Management，IRM)可通过企业内外信息流的畅通和信息资源的有效利用，来提高企业的效益和竞争力。IRM 包括强调对数据控制的(35)，和关心企业管理人员如何获取和处理信息的信息处理管理。IRM的起点和基础是(36)。",
+  "options": {
+   "A": "建立信息架构",
+   "B": "建立信息资源目录",
+   "C": "业务与 IT 整合",
+   "D": "信息与业务整合"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "电子商务是指买卖双方利用现代开放的 Intemnet 网络，按照一定的标准所进行的各类商业活动。电子商务可具有不同的模式，其中个人工作者给消费者提供服务属于(37)。",
+  "options": {
+   "A": "B2B",
+   "B": "C2C",
+   "C": "B2C",
+   "D": "C2B"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在软件逆向工程的相关概念中,(38)是指借助工具从已有程序中抽象出有关数据设计、总体结构设计和过程设计等方面的信息;(39)是指不仅从现有系统中恢复设计信息，而且使用该信息去改变或重构现有系统，以改善其整体质量。",
+  "options": {
+   "A": "设计恢复",
+   "B": "正向工程",
+   "C": "设计重构",
+   "D": "设计方案评估"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在软件逆向工程的相关概念中,(38)是指借助工具从已有程序中抽象出有关数据设计、总体结构设计和过程设计等方面的信息;(39)是指不仅从现有系统中恢复设计信息，而且使用该信息去改变或重构现有系统，以改善其整体质量。",
+  "options": {
+   "A": "设计重构",
+   "B": "双向工程",
+   "C": "正向工程",
+   "D": "再工程"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在数据库系统中，一般将事务的执行状态分为五种。若“事务的最后一条语句自动执行后”，事务处于(40)状态。",
+  "options": {
+   "A": "活动",
+   "B": "部分提交",
+   "C": "提交",
+   "D": "失败"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "某证券公司股票交易系统采用分布式数据库，这样本地客户的交易业务能够在本地正常进行，而不需要依赖于其他场地数据库，这属于分布式数据库的(41)特点。",
+  "options": {
+   "A": "共享性",
+   "B": "分布性",
+   "C": "可用性",
+   "D": "自治性"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在数据库系统中，视图实际上是一个(42)。",
+  "options": {
+   "A": "真实存在的表，并保存了待查询的数据",
+   "B": "真实存在的表，只有部分数据来源于基本表",
+   "C": "虚拟表，查询时只能从1个基本表中导出的表",
+   "D": "虚拟表，查询时可以从1个或多个基本表或视图中导出的表"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "给定关系模式 R(U,F)，其中:属性集U={4,B,C,D,E,G，函数依赖集F={A→BC,C→D,A→D,E→G}。关系R中(43)，函数依赖集F 中(44)。",
+  "options": {
+   "A": "有1个候选码 A",
+   "B": "有1个候选码 AE",
+   "C": "有2个候选码 AC和 AE",
+   "D": "有2个候选码 CE 和 AE"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "给定关系模式 R(U,F)，其中:属性集U={4,B,C,D,E,G，函数依赖集F={A→BC,C→D,A→D,E→G}。关系R中(43)，函数依赖集F 中(44)。",
+  "options": {
+   "A": "存在传递依赖，但不存在几余函数依赖",
+   "B": "既不存在传递依赖，也不存在几余函数依赖",
+   "C": "存在传递依赖，并且存在几余函数依赖A-D",
+   "D": "不存在传递依赖，但存在几余函数依赖A-D"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "分布式数据库系统中的两阶段提交协议(TwoPhase Commit Protocol，2PC 协议)包含协调者和参与者，通常有如下操作指令。满足 2PC的正常序列是(45)。\n\r\n①协调者向参与者发 prepare 消息\n②)参与者向协调者发回 ready 消息\n③参与者向协调者发回 abort 消息\n④协调者向参与者发 commit 消息\n⑤协调者向参与者发 rollback 消息",
+  "options": {
+   "A": "①②④",
+   "B": "①②⑤",
+   "C": "②③④",
+   "D": "②③⑤"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在支持多线程的操作系统中，假设进程 P1创建了线程 T1 和 T2，进程 P2 创建了线程T3 和 T4，那么以下说法错误的是(46)。",
+  "options": {
+   "A": "线程 T1和 T2 可以共享 P1的数据段",
+   "B": "线程 T3 和 T4 可以共享 P2 的数据段",
+   "C": "线程 T1和 T2 可以共享 P1 中任何一个线程打开的文件",
+   "D": "线程 T3 可以共享线程 T4 的栈指针"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "嵌入式系统初始化过程通常包括三个环节:片级初始化、板级初始化和系统初始化。以下关于系统级初始化主要任务的描述，准确的是(47)",
+  "options": {
+   "A": "完成嵌入式微处理器的初始化",
+   "B": "以软件初始化为主，主要进行操作系统的初始化",
+   "C": "完成嵌入式微处理器以外的其他硬件设备的初始化",
+   "D": "设置嵌入式微处理器的核心寄存器和控制寄存器工作状态"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "某文件系统采用索引节点管理，其磁盘索引块和磁盘数据块大小均为 4KB 字节，且每个文件索引节点有8个地址项 iaddr[0]~iaddr[7]，每个地址项大小为4字节，其中 iaddr[0]~iaddr[4]采用直接地址索引，iaddr[5]和 iaddr[6]采用一级间接地址索引，iaddr[7]采用二级间接地址索引。若用户要访问文件 flex 中逻辑块号为5和 2056的信息，则系统应分别采用(48)物理块。",
+  "options": {
+   "A": "直接地址访问和直接地址访问",
+   "B": "直接地址访问和一级间接地址访问",
+   "C": "一级间接地址访问和一级间接地址访问",
+   "D": "一级间接地址访问和二级间接地址访问"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "进程 P1、P2、P3、P4、P5 和 P6 的前趋图如下所示:",
+  "options": {
+   "A": "V(S1)和P(S2)P(S3)",
+   "B": "P(S1)和V(S2)V(S3)",
+   "C": "V(S1)和V(S2)V(S3）",
+   "D": "P(S1)和P(S2)P(S3)"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "进程 P1、P2、P3、P4、P5 和 P6 的前趋图如下所示:",
+  "options": {
+   "A": "V(S4)V(S5)和P(S3)",
+   "B": "P(S4)和V(S4)V(S5)",
+   "C": "P(S4)P(S5)和V(S3)",
+   "D": "V(S4)和V(S5)P(S5)"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "进程 P1、P2、P3、P4、P5 和 P6 的前趋图如下所示:",
+  "options": {
+   "A": "P(S5)和P(S7)",
+   "B": "P(S6)和P(S7)",
+   "C": "V(S6)和V(S7)",
+   "D": "P(S6)和V(S7)"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "以下关于数学建模的叙述中，不正确的是(52)。",
+  "options": {
+   "A": "数学建模用数学的语言量化现实世界的现象并分析其行为",
+   "B": "数学建模用数学来探索和发展我们对现实世界问题的理解",
+   "C": "数学建模往往是对实际问题迭代求解的过程",
+   "D": "人们常把示例问题用作所有数学建模的模板"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "某项目包括8个作业A~H，每天需要间接费用5万元，完成各作业所需的时间与直接费用、赶进度时每天需要增加的费用以及作业之间的衔接关系见下表。根据这些数据，以最低成本完成该项目需要(53)天。",
+  "options": {
+   "A": "13",
+   "B": "14",
+   "C": "15",
+   "D": "16"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "以下关于线性规划模型的叙述中，不正确的是(54)。",
+  "options": {
+   "A": "决策目标是使若干决策变量的线性函数达到极值",
+   "B": "一组决策变量的线性等式或不等式构成约束条件",
+   "C": "单纯形法是求解线性规划问题的一种方法",
+   "D": "线性规划模型是运输问题的一类特殊情形"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "某企业招聘英语翻译2人，日语、德语、俄语翻译各1人。经过统一测试的十分制评分,有5名应聘者 A、B、C、D、E 通过初选进入候选定岗。已知这5人的得分如下表。\n\r\n\r\n根据此表，可以获得这5人最大总分为(55)的最优录用定岗方案(每人一岗)。",
+  "options": {
+   "A": "34",
+   "B": "35",
+   "C": "37",
+   "D": "38"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "某项目要求在指定日期从结点A沿多条线路运输到结点F,其运输路线图(包括 A~F6个结点以及9段线路)如下所示。每段线路都标注了两个数字:前一个数字是该段线路上单位运输量所需的费用(单位:万元/万吨)，后一个数字是每天允许通过该段线路的最大运输量(万吨)。如果对该图采用最小费用最大流算法，那么该项目可以用最低的总费用，在指定日期分多条路线运输总计(56)万吨的货物。",
+  "options": {
+   "A": "11",
+   "B": "12",
+   "C": "13",
+   "D": "14"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "某工厂分配四个工人甲、乙、丙、丁同时去操作四台机床 A、B、C、D，每人分配其中的一台。已知每个工人操作每台机床每小时的效益值如下表所示，则总效益最高的最优分配方案共有(57)个。",
+  "options": {
+   "A": "1",
+   "B": "2",
+   "C": "3",
+   "D": "4"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "某班级某次考试由于教师出题太难导致大多数人的卷面百分制成绩不及格(低于60分)，成绩较高的与较低的学生都很少。为了控制及格率，教师根据卷面成绩x做了函数变换y-f(x)，得到最终的百分制成绩y，使及格率大为提高。比较公平合理的函数变换为(58)。",
+  "options": {
+   "A": "y=X+20",
+   "B": "y=1.2x",
+   "C": "y10√x",
+   "D": "yx/100"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "系统可靠性是系统在规定时间内及规定的环境条件下，完成规定功能的能力。系统可靠性包含四个子特征，其中(59)是指系统避免因错误的发生而导致失效的能力;(60)是指系统依附于与可靠性相关的标准、约定或规定的能力",
+  "options": {
+   "A": "成熟性",
+   "B": "容错性",
+   "C": "易恢复性",
+   "D": "可靠性的依从性"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "系统可靠性是系统在规定时间内及规定的环境条件下，完成规定功能的能力。系统可靠性包含四个子特征，其中(59)是指系统避免因错误的发生而导致失效的能力;(60)是指系统依附于与可靠性相关的标准、约定或规定的能力。",
+  "options": {
+   "A": "成熟性",
+   "B": "容错性",
+   "C": "易恢复性",
+   "D": "可靠性的依从性"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "组相联映射是常见的 Cache 映射方法。如果容量为 64 块的 Cache 采用组相联方式映射，每块大小为 128 个字，每 4块为一组，即 Cache 分为(61)组。若主存容量为 4096 页，且以字编址。根据主存与 Cache 块的容量需一致，即每个内存页的大小是(62)个字，主存地址需要(63)位，主存组号需(64)位。",
+  "options": {
+   "A": "8",
+   "B": "16",
+   "C": "32",
+   "D": "4"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "组相联映射是常见的 Cache 映射方法。如果容量为 64 块的 Cache 采用组相联方式映射，每块大小为 128 个字，每 4块为一组，即 Cache 分为(61)组。若主存容量为 4096 页，且以字编址。根据主存与 Cache 块的容量需一致，即每个内存页的大小是(62)个字，主存地址需要(63)位，主存组号需(64)位。",
+  "options": {
+   "A": "128",
+   "B": "64",
+   "C": "4096",
+   "D": "1024"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "组相联映射是常见的 Cache 映射方法。如果容量为 64 块的 Cache 采用组相联方式映射，每块大小为 128 个字，每 4块为一组，即 Cache 分为(61)组。若主存容量为 4096 页，且以字编址。根据主存与 Cache 块的容量需一致，即每个内存页的大小是(62)个字，主存地址需要(63)位，主存组号需(64)位。",
+  "options": {
+   "A": "256",
+   "B": "19",
+   "C": "128",
+   "D": "8"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "组相联映射是常见的 Cache 映射方法。如果容量为 64 块的 Cache 采用组相联方式映射，每块大小为 128 个字，每 4块为一组，即 Cache 分为(61)组。若主存容量为 4096 页，且以字编址。根据主存与 Cache 块的容量需一致，即每个内存页的大小是(62)个字，主存地址需要(63)位，主存组号需(64)位。",
+  "options": {
+   "A": "8",
+   "B": "16",
+   "C": "19",
+   "D": "4"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "通常使用(65)为IP 数据报文进行加密。",
+  "options": {
+   "A": "IPSec",
+   "B": "PP2P",
+   "C": "HUNNPS",
+   "D": "TLS"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "数据包通过防火墙时，不能依据(66)进行过滤。",
+  "options": {
+   "A": "源和目的 卫 地址",
+   "B": "源和目的端口",
+   "C": "IP 协议号",
+   "D": "负载内容"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "以下关于 AES 加密算法的描述中，错误的是(67)。",
+  "options": {
+   "A": "AES 的分组长度可以是 256 比特",
+   "B": "AES 的密钥长度可以是 128 比特",
+   "C": "AES 所用S盒的输入为8比特",
+   "D": "AES 是一种确定性的加密算法"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "在对服务器的日志进行分析时，发现某一时间段，网络中有大量包含“USER”“PASS”负载的数据，该异常行为最可能是(68)。",
+  "options": {
+   "A": "ICMP 泛洪攻击",
+   "B": "端口扫描",
+   "C": "弱口令扫描",
+   "D": "TCP 泛洪攻击"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "某主机无法上网，查看“本地连接”属性中的数据发送情况，发现只有发送没有接收，造成该主机网络故障的原因最有可能是(69)。",
+  "options": {
+   "A": "IP地址配置错误",
+   "B": "网络协议配置错误",
+   "C": "网络没有物理连接",
+   "D": "DNS 配置不正确"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "某公司的员工区域使用的IP 地址段是 172.16.133.128/23,该地址段中最多能够容纳的主机数量是(70)台。",
+  "options": {
+   "A": "254",
+   "B": "510",
+   "C": "1022",
+   "D": "2046"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "The objective of the systems analysis phase is to understand the proposed project, ensure thatit will support business requirements, and build a solid foundation for system development. Thesystems analysis phase includes four main activities. (71) involves fact-finding to describe thecurrent system and identification of the requirements for the new system, such as outputs,inputs,processes, performance, and security. (72) refer to the logical rules that are applied to transform the datainto meaningful information.(73) continues the modeling process by leaming how to represent graphicallysystem data and processes using traditional structured analysis techniques._(74)_combines data and theprocesses that act on the data into objects. These objects represent actual people, things,transactions, andevents that affect the system. In (75) , we will consider various development options and prepare for thetransition to the systems design phase of the SDLC.",
+  "options": {
+   "A": "System logical modeling",
+   "B": "Use case modeling",
+   "C": "Requirement modeling",
+   "D": "Application modeling"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "The objective of the systems analysis phase is to understand the proposed project, ensure thatit will support business requirements, and build a solid foundation for system development. Thesystems analysis phase includes four main activities. (71) involves fact-finding to describe thecurrent system and identification of the requirements for the new system, such as outputs,inputs,processes, performance, and security. (72) refer to the logical rules that are applied to transform the datainto meaningful information.(73) continues the modeling process by leaming how to represent graphicallysystem data and processes using traditional structured analysis techniques._(74)_combines data and theprocesses that act on the data into objects. These objects represent actual people, things,transactions, andevents that affect the system. In (75) , we will consider various development options and prepare for thetransition to the systems design phase of the SDLC.",
+  "options": {
+   "A": "Outputs",
+   "B": "Inputs",
+   "C": "Processes",
+   "D": "Models"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "The objective of the systems analysis phase is to understand the proposed project, ensure thatit will support business requirements, and build a solid foundation for system development. Thesystems analysis phase includes four main activities. (71) involves fact-finding to describe thecurrent system and identification of the requirements for the new system, such as outputs,inputs,processes, performance, and security. (72) refer to the logical rules that are applied to transform the datainto meaningful information.(73) continues the modeling process by leaming how to represent graphicallysystem data and processes using traditional structured analysis techniques._(74)_combines data and theprocesses that act on the data into objects. These objects represent actual people, things,transactions, andevents that affect the system. In (75) , we will consider various development options and prepare for thetransition to the systems design phase of the SDLC.",
+  "options": {
+   "A": "Business modeling",
+   "B": "Database modeling",
+   "C": "Structure modeling",
+   "D": "Data and process modeling"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "The objective of the systems analysis phase is to understand the proposed project, ensure thatit will support business requirements, and build a solid foundation for system development. Thesystems analysis phase includes four main activities. (71) involves fact-finding to describe thecurrent system and identification of the requirements for the new system, such as outputs,inputs,processes, performance, and security. (72) refer to the logical rules that are applied to transform the datainto meaningful information.(73) continues the modeling process by leaming how to represent graphicallysystem data and processes using traditional structured analysis techniques._(74)_combines data and theprocesses that act on the data into objects. These objects represent actual people, things,transactions, andevents that affect the system. In (75) , we will consider various development options and prepare for thetransition to the systems design phase of the SDLC.",
+  "options": {
+   "A": "Object modeling",
+   "B": "Domain analysis",
+   "C": "Component modeling",
+   "D": "Behavior modeling"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2021,
+  "half": "上半年",
+  "paper": "2021年 上半年 综合知识",
+  "type": "single",
+  "content": "The objective of the systems analysis phase is to understand the proposed project, ensure thatit will support business requirements, and build a solid foundation for system development. Thesystems analysis phase includes four main activities. (71) involves fact-finding to describe thecurrent system and identification of the requirements for the new system, such as outputs,inputs,processes, performance, and security. (72) refer to the logical rules that are applied to transform the datainto meaningful information.(73) continues the modeling process by leaming how to represent graphicallysystem data and processes using traditional structured analysis techniques._(74)_combines data and theprocesses that act on the data into objects. These objects represent actual people, things,transactions, andevents that affect the system. In (75) , we will consider various development options and prepare for thetransition to the systems design phase of the SDLC.",
+  "options": {
+   "A": "feasibility analysis",
+   "B": "development strategies",
+   "C": "architecture design",
+   "D": "technique outline"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "系统结构化分析模型包括数据模型、功能模型和行为模型，这些模型的核心是( )\n。",
+  "options": {
+   "A": "实体联系图",
+   "B": "状态转换图",
+   "C": "数据字典",
+   "D": "流程图"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "数据流图是系统分析的重要工具，数据流图中包含的元素有( )\n。",
+  "options": {
+   "A": "外部实体、加工、数据流、数据存储",
+   "B": "参与者、用例、加工、数据流",
+   "C": "实体、关系、基数、属性",
+   "D": "模块、活动、数据流、控制流"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\nUML 2.0所包含的图中，( )\n将进程或者其他结构展示为计算内部一步步的控制流和数据流；( )\n描述模型本身分解而成的组织单元以及它们之间的依赖关系；( )\n描述运行时的处理节点以及在其内部生存的构件的配置。",
+  "options": {
+   "A": "用例图",
+   "B": "通信图",
+   "C": "状态图",
+   "D": "活动图"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\nUML 2.0所包含的图中，( )\n将进程或者其他结构展示为计算内部一步步的控制流和数据流；( )\n描述模型本身分解而成的组织单元以及它们之间的依赖关系；( )\n描述运行时的处理节点以及在其内部生存的构件的配置。",
+  "options": {
+   "A": "类图",
+   "B": "包图",
+   "C": "对象图",
+   "D": "构件图"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\nUML 2.0所包含的图中，( )\n将进程或者其他结构展示为计算内部一步步的控制流和数据流；( )\n描述模型本身分解而成的组织单元以及它们之间的依赖关系；( )\n描述运行时的处理节点以及在其内部生存的构件的配置。",
+  "options": {
+   "A": "组合结构图",
+   "B": "制品图",
+   "C": "部署图",
+   "D": "交互图"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "以下关于防火墙技术的描述中，正确的是( )\n。",
+  "options": {
+   "A": "防火墙不能支持网络地址转换",
+   "B": "防火墙通常部署在企业内部网和Internet之间",
+   "C": "防火墙可以查、杀各种病毒",
+   "D": "防火墙可以过滤垃圾邮件"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "SHA-256是( )\n算法。",
+  "options": {
+   "A": "加密",
+   "B": "数字签名",
+   "C": "认证",
+   "D": "报文摘要"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "某电了商务网站为实现用户安全访问，应使用的协议是( )\n。",
+  "options": {
+   "A": "HTTP",
+   "B": "WAP",
+   "C": "HTTPS",
+   "D": "IMAP"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "根据国际标准ITUT X.509规定，数字证书的一般格式中会包含认证机构的签名，该数据域的作用是( )\n。",
+  "options": {
+   "A": "用于标识颁发证书的权威机构CA",
+   "B": "用于指示建立和签署证书的CA的X.509名字",
+   "C": "用于防止证书伪造",
+   "D": "用于传递CA的公钥"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "李某是某软件公司的软件设计师，其作为主要人员完成某软件项目开发后，按公司规定进行归档。以下有关该软件的著作权的叙述中，正确的是( )\n。",
+  "options": {
+   "A": "该软件著作权应由公司享有",
+   "B": "该软件著作权应由公司和李某共同享有",
+   "C": "该软件著作权应由李某享有",
+   "D": "除署名权以外的著作权其他权利由李某享有"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "我国由国家版权局主管全国软件著作权登记管理工作，指定( )\n为软件著作权登记机构。",
+  "options": {
+   "A": "著作权登记中心",
+   "B": "国家知识产权局",
+   "C": "中国版权保护中心",
+   "D": "国家专利局"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "在软件使用许可中，按照被许可使用权排他性强弱的不同，可分为独占使用许可、( )\n。",
+  "options": {
+   "A": "排他使用许可和多用户许可",
+   "B": "排他使用许可和普通使用许可",
+   "C": "专有许可和普通使用许可",
+   "D": "专有许可和多用户许可"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "以下关于软件著作权产生时间的叙述中，正确的是( )\n。",
+  "options": {
+   "A": "自软件首次公开发表时",
+   "B": "自开发者有开发意图时",
+   "C": "自软件开发完成之日时",
+   "D": "自软件著作权登记时"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "RISC-V是基于精简指令集计算原理建立的开放指令集架构，以下关于RISC-V的说法中，不正确的是( )\n。",
+  "options": {
+   "A": "RISC-V架构不仅短小精悍，而且其不同的部分还能以模块化的方式组织在一起，从而试图通过一套统一的架构满足各种不同的应用场景",
+   "B": "RISC-V基础指令集中只有40多条指令，加上其他模块化扩展指令总共也就几十条指令",
+   "C": "RISC-V1SA可以免费使用，允许任何人设计、制造和销售RISC-V芯片和软件",
+   "D": "RISC-V也是X86架构的一种，它和ARM架构之间存在很大区别"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "IEEE-1394总线采用菊花链的拓扑结构时，可最多支持63个节点。当1394总线支持1023条桥接总线时，最多可以采用菊花链的拓扑结构互连( )\n个节点。",
+  "options": {
+   "A": "1023",
+   "B": "1086",
+   "C": "64449",
+   "D": "645535"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "在计算机体系结构设计时，通常在CPU和内存之间设置小容量的Cache机制，以提高CPU数据输入输出速率。通常当Cache已存满数据后，新数据必须替换(淘汰)Cadie中的 某些旧数据。常用的数据替换算法包括( )\n。",
+  "options": {
+   "A": "随机算法、先进先出(FIFO)和近期最少使用(LRU)",
+   "B": "随机算法、先进后出(FILO)和近期最少使用(LRU)",
+   "C": "轮询调度(RRS)、先进先出(FIFO)和近期最少使用(LRU)",
+   "D": "先进先出(FIFO)、近期最少使用(LRU)和最近最常使用(MRU)"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n在信息安全领域，基本的安全性原则包括保密性(Confidentiality)、完整性(Integrity) 和可用性(Availability)。保密性指保护信息在使用、传输和存储时( )\n。信息加密是保证系统保密性的常用手段。使用哈希校验是保证数据完整性的常用方法。可用性指保证合法用户对资源的正常访问，不会被不正当地拒绝。( )\n就是破坏系统的可用性。",
+  "options": {
+   "A": "不被泄露给已注册的用户",
+   "B": "不被泄露给未授权的用户",
+   "C": "不被泄露给未注册的用户",
+   "D": "不被泄露给已授权的用户"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n在信息安全领域，基本的安全性原则包括保密性(Confidentiality)、完整性(Integrity) 和可用性(Availability)。保密性指保护信息在使用、传输和存储时( )\n。信息加密是保证系统保密性的常用手段。使用哈希校验是保证数据完整性的常用方法。可用性指保证合法用户对资源的正常访问，不会被不正当地拒绝。( )\n就是破坏系统的可用性。",
+  "options": {
+   "A": "XSS跨站脚本攻击",
+   "B": "DoS拒绝服务攻击",
+   "C": "CSRF跨站请求伪造攻击",
+   "D": "缓冲区溢出攻击"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n( )\n是一套为企业运营提供辅助决策和日常管理信息的大规模集成化软件，同时也是辅助企业管理向零缺陷趋近的一整套现代化管理思想和办公手段。它将供应商和企业内部的采购、( )\n、销售以及客户紧密联系起来，可对( )\n上的所有环节进行有效管理， 实现对企业的动态控制和资源的集成和优化，提升基础管理水平，追求资源的合理高效利用。",
+  "options": {
+   "A": "供应链管理系统",
+   "B": "财务管理系统",
+   "C": "信息资源规划系统",
+   "D": "企业资源规划系统"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n( )\n是一套为企业运营提供辅助决策和日常管理信息的大规模集成化软件，同时也是辅助企业管理向零缺陷趋近的一整套现代化管理思想和办公手段。它将供应商和企业内部的采购、( )\n、销售以及客户紧密联系起来，可对( )\n上的所有环节进行有效管理， 实现对企业的动态控制和资源的集成和优化，提升基础管理水平，追求资源的合理高效利用。",
+  "options": {
+   "A": "人力",
+   "B": "生产",
+   "C": "培训",
+   "D": "交付"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\n( )\n是一套为企业运营提供辅助决策和日常管理信息的大规模集成化软件，同时也是辅助企业管理向零缺陷趋近的一整套现代化管理思想和办公手段。它将供应商和企业内部的采购、( )\n、销售以及客户紧密联系起来，可对( )\n上的所有环节进行有效管理， 实现对企业的动态控制和资源的集成和优化，提升基础管理水平，追求资源的合理高效利用。",
+  "options": {
+   "A": "供应链",
+   "B": "资金链",
+   "C": "信息流",
+   "D": "业务流"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n客户关系管理系统的核心是客户( )\n管理，其目的是与客户建立长期和有效的业务关系，最大限度地增加利润。( )\n和客户服务是CRM的支柱性功能，是客户与企业产生联系的主要方面。",
+  "options": {
+   "A": "信息",
+   "B": "价值",
+   "C": "需求",
+   "D": "变更"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n客户关系管理系统的核心是客户( )\n管理，其目的是与客户建立长期和有效的业务关系，最大限度地增加利润。( )\n和客户服务是CRM的支柱性功能，是客户与企业产生联系的主要方面。",
+  "options": {
+   "A": "客户关怀",
+   "B": "客户开拓",
+   "C": "市场营销",
+   "D": "市场调研"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n商业智能(BI)主要关注如何从业务数据中提取有用的信息，然后根据这些信息采取相应的行动，其核心是构建( )\n 。BI系统的处理流程主要包括4个阶段，其中( )\n阶段主要包括数据的抽取(extraction)、转换(transformation)和加载(load)三个步骤(即ETL过程)；( )\n阶段不仅需要进行数据汇总/聚集，同时还提供切片、切块、下钻、上卷和旋转等海最数据分析功能。",
+  "options": {
+   "A": "ER模型",
+   "B": "消息中心",
+   "C": "数据仓库",
+   "D": "业务模型"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n商业智能(BI)主要关注如何从业务数据中提取有用的信息，然后根据这些信息采取相应的行动，其核心是构建( )\n 。BI系统的处理流程主要包括4个阶段，其中( )\n阶段主要包括数据的抽取(extraction)、转换(transformation)和加载(load)三个步骤(即ETL过程)；( )\n阶段不仅需要进行数据汇总/聚集，同时还提供切片、切块、下钻、上卷和旋转等海最数据分析功能。",
+  "options": {
+   "A": "数据预处理",
+   "B": "数据预加载",
+   "C": "数据前处理",
+   "D": "数据后处理"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\n商业智能(BI)主要关注如何从业务数据中提取有用的信息，然后根据这些信息采取相应的行动，其核心是构建( )\n 。BI系统的处理流程主要包括4个阶段，其中( )\n阶段主要包括数据的抽取(extraction)、转换(transformation)和加载(load)三个步骤(即ETL过程)；( )\n阶段不仅需要进行数据汇总/聚集，同时还提供切片、切块、下钻、上卷和旋转等海最数据分析功能。",
+  "options": {
+   "A": "业务流程分析",
+   "B": "OLTP",
+   "C": "OLAP",
+   "D": "数据清流"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n工作流管理系统(Workflow Management System, WflVIS)通过( )\n创建工作流并管理其执行。它运行在一个或多个工作流引擎上，这些引擎解释对过程的定义与参与者的相互作用，并根据需要调用其他IT工具或应用。WfMS的基本功能体现在对工作流进行建模、上作流执行和( )\n 。WfMS最基本的组成部分是工作流参考模型(Workflow Reference Model, WRM),其包含6个基本模块，分别是工作流执行服务、工作流引擎、( )\n、 客户端应用、调用应用和管理监控工具。",
+  "options": {
+   "A": "软件定义",
+   "B": "需求定义",
+   "C": "标准定义",
+   "D": "实现定义"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n工作流管理系统(Workflow Management System, WflVIS)通过( )\n创建工作流并管理其执行。它运行在一个或多个工作流引擎上，这些引擎解释对过程的定义与参与者的相互作用，并根据需要调用其他IT工具或应用。WfMS的基本功能体现在对工作流进行建模、上作流执行和( )\n 。WfMS最基本的组成部分是工作流参考模型(Workflow Reference Model, WRM),其包含6个基本模块，分别是工作流执行服务、工作流引擎、( )\n、 客户端应用、调用应用和管理监控工具。",
+  "options": {
+   "A": "业务过程的实现",
+   "B": "业务过程的设计和实现",
+   "C": "业务过程的管理和分析",
+   "D": "业务过程的监控"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\n工作流管理系统(Workflow Management System, WflVIS)通过( )\n创建工作流并管理其执行。它运行在一个或多个工作流引擎上，这些引擎解释对过程的定义与参与者的相互作用，并根据需要调用其他IT工具或应用。WfMS的基本功能体现在对工作流进行建模、上作流执行和( )\n 。WfMS最基本的组成部分是工作流参考模型(Workflow Reference Model, WRM),其包含6个基本模块，分别是工作流执行服务、工作流引擎、( )\n、 客户端应用、调用应用和管理监控工具。",
+  "options": {
+   "A": "流程定义工具",
+   "B": "流程服务引擎",
+   "C": "标准引擎",
+   "D": "流程设计工具"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n企业应用集成(Enterprise Application Integration，EAI)技术可以消除( )\n。当前，从最普遍的意义上来说，EAI可以包括表示集成、数据集成、控制集成和业务流程集成等多个层次和方面。其中，( )\n把用户界面作为公共的集成点，把原有零散的系统界面集中在一个新的界面中。",
+  "options": {
+   "A": "业务流程编排错误",
+   "B": "安全隐患",
+   "C": "信息孤岛",
+   "D": "网络故障"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n企业应用集成(Enterprise Application Integration，EAI)技术可以消除( )\n。当前，从最普遍的意义上来说，EAI可以包括表示集成、数据集成、控制集成和业务流程集成等多个层次和方面。其中，( )\n把用户界面作为公共的集成点，把原有零散的系统界面集中在一个新的界面中。",
+  "options": {
+   "A": "表示集成",
+   "B": "数据集成",
+   "C": "控制集成",
+   "D": "业务流程集成"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n结构化设计(Structured Design，SD)是一种面向数据流的系统设计方法，它以( )\n 等文档为基础，是一个( )\n、逐步求精和模块化的过程。SD方法的基本思想是将软件设计成由相对独立有单一功能的模块，其中( )\n阶段的主要任务是确定软件系统的结构， 对软件系统进行校块划分，确定每个模块的功能、接口和模块之间的调用关系。",
+  "options": {
+   "A": "数据流图和数据字典",
+   "B": "业务流程说明书",
+   "C": "需求说明书",
+   "D": "数据说明书"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n结构化设计(Structured Design，SD)是一种面向数据流的系统设计方法，它以( )\n 等文档为基础，是一个( )\n、逐步求精和模块化的过程。SD方法的基本思想是将软件设计成由相对独立有单一功能的模块，其中( )\n阶段的主要任务是确定软件系统的结构， 对软件系统进行校块划分，确定每个模块的功能、接口和模块之间的调用关系。",
+  "options": {
+   "A": "自底向上",
+   "B": "自顶向下",
+   "C": "原型化",
+   "D": "层次化"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\n结构化设计(Structured Design，SD)是一种面向数据流的系统设计方法，它以( )\n 等文档为基础，是一个( )\n、逐步求精和模块化的过程。SD方法的基本思想是将软件设计成由相对独立有单一功能的模块，其中( )\n阶段的主要任务是确定软件系统的结构， 对软件系统进行校块划分，确定每个模块的功能、接口和模块之间的调用关系。",
+  "options": {
+   "A": "模块设计",
+   "B": "详细设计",
+   "C": "概要设计",
+   "D": "架构设计"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "在信息系统开发方法中，( )\n是一种根据用户初步需求，利用系统开发工具，快速地建立一个系统模型展示给用户，在此基础上与用户交流，最终实现用户需求的系统快速开发方法。",
+  "options": {
+   "A": "结构化方法",
+   "B": "需求模型法",
+   "C": "面向对象法",
+   "D": "原型法"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n企业战略与信息化战略集成的主要方法有业务与IT整合和( )\n，其中，( )\n适用于现有信息系统和IT基础架构不一致、不兼容和缺乏统一的整体管理的企业。",
+  "options": {
+   "A": "企业IT架构",
+   "B": "BITA",
+   "C": "信息架构",
+   "D": "业务信息整合"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n企业战略与信息化战略集成的主要方法有业务与IT整合和( )\n，其中，( )\n适用于现有信息系统和IT基础架构不一致、不兼容和缺乏统一的整体管理的企业。",
+  "options": {
+   "A": "信息架构",
+   "B": "企业IT架构",
+   "C": "业务与IT整合",
+   "D": "结构化方法"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n在软件逆向工程的相关概念中，( )\n是指在同一抽象级别上转换系统描述形式。( )\n是指在逆向工程所获得信息的基础上，修改或重构已有的系统，产生系统的一个新版本。",
+  "options": {
+   "A": "设计恢复",
+   "B": "正向工程",
+   "C": "设计重构",
+   "D": "重构"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n在软件逆向工程的相关概念中，( )\n是指在同一抽象级别上转换系统描述形式。( )\n是指在逆向工程所获得信息的基础上，修改或重构已有的系统，产生系统的一个新版本。",
+  "options": {
+   "A": "设计重构",
+   "B": "双向工程",
+   "C": "再工程",
+   "D": "重构"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "在数据库系统中，数据的并发控制是指在多用户共享的系统中，协调并发事务的执行， 保证数据库的( )\n不受破坏，避免用户得到不正确的数据。",
+  "options": {
+   "A": "安全性",
+   "B": "可靠性",
+   "C": "兼容性",
+   "D": "完整性"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "若事务T1对数据D1已加排它锁，事务T2对数据D2已加共享锁，那么( )\n。",
+  "options": {
+   "A": "事务T1对数据D2加共享锁成功，加排它锁失败；事务T2对数据D1加共享锁成功、加排它锁失败",
+   "B": "事务T1对数据D2加排它锁和共享锁都失败：事务T2对数据D1加共享锁成功、加排它锁失败",
+   "C": "事务T1对数据D2加共享锁失败，加排它锁成功；事务T2对数据D1加共享锁成功、加排它锁失败",
+   "D": "事务T1对数据D2加共享锁成功，加排它锁失败；事务T2对数据D1加共享锁和排它锁都失败"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "将Teachers表的查询权限授予用户U1和U2,并允许该用户将此权限授予其他用户。实现此功能的SQL语句如下( )\n。",
+  "options": {
+   "A": "GRANT SELECT ON TABLE Teachers TO U1，U2 WITH PUBLIC",
+   "B": "GRANT SELECT TO TABLE Teachers ON Ul, U2 WITH PUBLIC",
+   "C": "GRANT SELECT ON TAE5LE Teachers TO Ul, U2 WITH GRANT OPTION;",
+   "D": "GRANT SELECT TO TABLE Teachers ON Ul, U2 WITH GRANT OPTION;"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "数据的物理独立性和逻辑独立性分别是通过修改( )\n来完成的。",
+  "options": {
+   "A": "外模式与内模式之间的映像、模式与内模式之间的映像",
+   "B": "外模式与内模式之间的映像、外模式与模式之间的映像",
+   "C": "外模式与模式之间的映像、模式与内模式之间的映像",
+   "D": "模式与内模式之间的映像、外模式与模式之间的映像"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n在进程资源有向图中，圆圈表示进程，方框表示资源，方框内的小圆数表示资源数。当有向边(或称请求边)由进程指向资源时，表示申请一个资源；当有向边(或称分配边)由资源指向进程时，表示获得一个资源。假设系统中存三个进程P1、P2和P3,两种资源R1、 R2,且R1的资源数等于3, R2的资源数等于3。如果进程资源图如图(a)和图b)所示， 那么图(a)中( )\n:图(b)中( )\n。",
+  "options": {
+   "A": "P1、P2、P3都是阻塞节点，该图不可以化简，是死锁的",
+   "B": "P1、P2、P3都是非阻塞节点，该图可以化简，是非死锁的",
+   "C": "Pl、P2是非阻塞节点，P3是阻塞节点，该图不可以化简，是死锁的",
+   "D": "P3是非阻塞节点，P1、P3是阻塞节点，该图可以化简，是非死锁的"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n在进程资源有向图中，圆圈表示进程，方框表示资源，方框内的小圆数表示资源数。当有向边(或称请求边)由进程指向资源时，表示申请一个资源；当有向边(或称分配边)由资源指向进程时，表示获得一个资源。假设系统中存三个进程P1、P2和P3,两种资源R1、 R2,且R1的资源数等于3, R2的资源数等于3。如果进程资源图如图(a)和图b)所示， 那么图(a)中( )\n:图(b)中( )\n。",
+  "options": {
+   "A": "P1、P2、P3都是非阻塞节点，该图可以化简，是非死锁的",
+   "B": "P1、P2、P3都是阻塞节点，该图不可以化简，是死锁的",
+   "C": "P3是非阻塞节点，P1、P2是阻塞节点，该图可以化简，是非死锁的",
+   "D": "Pl、P2是非阻塞节点，P3是阻塞节点，该图不可以化简，是死锁的"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "某文件管理系统在磁盘上建立了位示图(bitmap)，记录磁盘的使用情况。若计算机系统的字长为32位(注：每位可以表示一个物理块“使用”还是“未用”的情况)，若磁盘的容量为400GB，物理块的大小为4MB，那么位示图的大小需要( )\n个字。",
+  "options": {
+   "A": "256",
+   "B": "1024",
+   "C": "3200",
+   "D": "4098"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n进程P1、P2、P3、P4和P5的前趋图如下所示：\n 若用pv操作控制这5个进程的同步与互斥的程序如下，那么程序中的空①和空②处应分別为( )\n；空③和空④处应分别为( )\n；空⑤和空⑥处应分别为( )\n。",
+  "options": {
+   "A": "V(S1)和P(S2)",
+   "B": "P(S1)和V(S2)",
+   "C": "V(S1)和V(S2)",
+   "D": "V(S2)和P(S1)"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n进程P1、P2、P3、P4和P5的前趋图如下所示：\n 若用pv操作控制这5个进程的同步与互斥的程序如下，那么程序中的空①和空②处应分別为( )\n；空③和空④处应分别为( )\n；空⑤和空⑥处应分别为( )\n。",
+  "options": {
+   "A": "V(S4)和V(S5)P(S3)",
+   "B": "P(S3)和V(S5)V(S6)",
+   "C": "V(S3)和V(S4)V(S5)",
+   "D": "P(S4)和V(S4)P(S3)"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\n进程P1、P2、P3、P4和P5的前趋图如下所示：\n 若用pv操作控制这5个进程的同步与互斥的程序如下，那么程序中的空①和空②处应分別为( )\n；空③和空④处应分别为( )\n；空⑤和空⑥处应分别为( )\n。",
+  "options": {
+   "A": "P(S5)和P(S7)",
+   "B": "P(S6)和P(S7)",
+   "C": "V(S5)和V(S6)",
+   "D": "V(S6)和P(S7)"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "线性规划问题由线性的目标函数和线性的约束条件(包括变量非负条件)组成。束条件的所有解的集合称为可行解区。既满足约束条件，又使目标函数达到极值的解称为最优解。以下关于可行解区和最优解的叙述中，正确的是 ( )\n。",
+  "options": {
+   "A": "可行解区一定是封闭的多边形或多面体",
+   "B": "若增加一个线性约束条件，则可行解区可能会扩大",
+   "C": "若存在两个最优解，则它们的所有线性组合都是最优解",
+   "D": "若最优解存在且唯一，则可以从可行解区顶点处比较目标函数值来求解"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n某项目有8个作业A?H，每个作业的紧前作业、所需天数和所需人数见下表。由于整个项目团队总共只有9人，各个作业都必须连续进行，中途不能停止，因此需要适当安排施工方案，使该项目能尽快在( )\n内完工。在该方案中,作业A应安排在( )\n内进行。",
+  "options": {
+   "A": "10天",
+   "B": "11天",
+   "C": "12天",
+   "D": "13天"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n某项目有8个作业A?H，每个作业的紧前作业、所需天数和所需人数见下表。由于整个项目团队总共只有9人，各个作业都必须连续进行，中途不能停止，因此需要适当安排施工方案，使该项目能尽快在( )\n内完工。在该方案中,作业A应安排在( )\n内进行。",
+  "options": {
+   "A": "第3~5天",
+   "B": "第4~6天",
+   "C": "第5~7天",
+   "D": "第6~8天"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "某乡8个小村(编号为1?8)之间的距离如下表(单位：km)。1号村离水库最近，为5km,从水库开始铺设水管将各村连接起来，最少需要铺设( )\n长的水管(为便于管理和维修，水管分叉必须设在各村处)。",
+  "options": {
+   "A": "6.3km",
+   "B": "11.3km",
+   "C": "11.8km",
+   "D": "16.8km"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "某运输网络图(见下图)有A?E五个结点，结点之间标有运输方向箭线，每条箭线旁标有两个数字，前一个是单位流量的运输费用，后一个是该箭线所允许的单位时间内的流量上限。从结点A到E可以有多种分配运输量的方案。如果每次都选择最小费用的路径来分配最大流量，则可以用最小总费用获得最大总流量的最优运输方案。该最优运输方案中，所需总费用和达到的总流量分别为( )\n。",
+  "options": {
+   "A": "4，5",
+   "B": "12，16",
+   "C": "60，11",
+   "D": "71，11"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "甲、乙、丙、丁四个任务分配在A、B、C、D四台机器上执行，每台机器执行一个任务，所需的成本(单位：百元)如下表所示。适当分配使总成本最低的最优方案中，任务乙应由机器( )\n执行。",
+  "options": {
+   "A": "A",
+   "B": "B",
+   "C": "C",
+   "D": "D"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "根据历史数据和理论推导可知，某随机变量x的分布密度函数为f(x)=2x，(0( )\n来模拟该随机变量，其中，r1和r2为计算机产生的、均匀分布在(0，1)区间的两个伪随机数，且互相独立。",
+  "options": {
+   "A": "max(r1,r2)",
+   "B": "min(r1，r2)",
+   "C": "r1*r2",
+   "D": "(r1+r2)/2"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n系统评价是对系统运行一段时间后的技术性能和经济效益等方面的评价，是对信息系统审计工作的延伸。系统评价包含多个方面的内容，其中系统( )\n评价是系统评价的主要内容，评价指标一般包括可靠性、系统效率、可维护性等；系统( )\n评价分配在信息系统生命周期的各个阶段的阶段评审之中，在系统规划阶段，主要关注如何识别满足业务目标的信息系统。",
+  "options": {
+   "A": "性能",
+   "B": "建设",
+   "C": "效益",
+   "D": "安全"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n系统评价是对系统运行一段时间后的技术性能和经济效益等方面的评价，是对信息系统审计工作的延伸。系统评价包含多个方面的内容，其中系统( )\n评价是系统评价的主要内容，评价指标一般包括可靠性、系统效率、可维护性等；系统( )\n评价分配在信息系统生命周期的各个阶段的阶段评审之中，在系统规划阶段，主要关注如何识别满足业务目标的信息系统。",
+  "options": {
+   "A": "性能",
+   "B": "建设",
+   "C": "效益",
+   "D": "安全"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\n磁盘冗余阵列(Redundant Array of Inexpensive Disks，RAID)机制中共分( )\n级别，RAID应用的主要技术有分块技术、交叉技术和重聚技术。其中，( )\n是无冗余和无校验的数据分块：( )\n由磁盘对组成，每一个工作盘都有其对应的镜像盘，上面保存着与工作盘完全相同的数据拷贝，具有最高的安全性，但磁盘空间利用率只有50%；( )\n是具有独立的数据硬盘与两个独立的分布式校验方案。",
+  "options": {
+   "A": "7个",
+   "B": "8个",
+   "C": "6个",
+   "D": "9个"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\n磁盘冗余阵列(Redundant Array of Inexpensive Disks，RAID)机制中共分( )\n级别，RAID应用的主要技术有分块技术、交叉技术和重聚技术。其中，( )\n是无冗余和无校验的数据分块：( )\n由磁盘对组成，每一个工作盘都有其对应的镜像盘，上面保存着与工作盘完全相同的数据拷贝，具有最高的安全性，但磁盘空间利用率只有50%；( )\n是具有独立的数据硬盘与两个独立的分布式校验方案。",
+  "options": {
+   "A": "RAID 0级",
+   "B": "RAID 1级",
+   "C": "RAID 2级",
+   "D": "RAID 3级"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\n磁盘冗余阵列(Redundant Array of Inexpensive Disks，RAID)机制中共分( )\n级别，RAID应用的主要技术有分块技术、交叉技术和重聚技术。其中，( )\n是无冗余和无校验的数据分块：( )\n由磁盘对组成，每一个工作盘都有其对应的镜像盘，上面保存着与工作盘完全相同的数据拷贝，具有最高的安全性，但磁盘空间利用率只有50%；( )\n是具有独立的数据硬盘与两个独立的分布式校验方案。",
+  "options": {
+   "A": "RAID 4级",
+   "B": "RAID 1级",
+   "C": "RAID 3级",
+   "D": "RAID 2级"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第4空)\n磁盘冗余阵列(Redundant Array of Inexpensive Disks，RAID)机制中共分( )\n级别，RAID应用的主要技术有分块技术、交叉技术和重聚技术。其中，( )\n是无冗余和无校验的数据分块：( )\n由磁盘对组成，每一个工作盘都有其对应的镜像盘，上面保存着与工作盘完全相同的数据拷贝，具有最高的安全性，但磁盘空间利用率只有50%；( )\n是具有独立的数据硬盘与两个独立的分布式校验方案。",
+  "options": {
+   "A": "RAID 6级",
+   "B": "RAID 5级",
+   "C": "RAID 4级",
+   "D": "RAID 3级"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "Telnet是用于远程访问服务器的常用协议。下列关于Telnet的描述中，不正确的是( )\n。",
+  "options": {
+   "A": "可传输数据和口令",
+   "B": "默认端口号是23",
+   "C": "一种安全的通信协议",
+   "D": "用TCP作为传输层协议"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "Cookie为客户端持久保持数据提供了方便，但也存在一定的弊端,，下列选项中，不属于Cookie弊端的是( )\n。",
+  "options": {
+   "A": "增加流量消耗",
+   "B": "明文传输，存在安全性隐患",
+   "C": "存在敏感信息泄漏风险",
+   "D": "保存访问站点的缓存数据"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "使用电子邮件客户端从服务器下载邮件，能实现邮件的移动、删除等操作在客户端和邮箱更新同步，所使用的电子邮件接收协议是( )\n。",
+  "options": {
+   "A": "SMTP",
+   "B": "POP3",
+   "C": "IMAP4",
+   "D": "MIME"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "用户在登泶FTP服务器的过程中，建立TCP连接时使用的默认端口号是( )\n。",
+  "options": {
+   "A": "20",
+   "B": "21",
+   "C": "22",
+   "D": "23"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "作Linux系统中，DNS配置文件的( )\n参数，用于确定DNS服务器地址。",
+  "options": {
+   "A": "nameserver",
+   "B": "domain",
+   "C": "search",
+   "D": "sortlist"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "为了控制IP报文在网络中无限转发，在IPv4数据报首部中设置了( )\n字段。",
+  "options": {
+   "A": "标识符",
+   "B": "首部长度",
+   "C": "生存期",
+   "D": "总长度"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第1空)\nUnified Modeling Language (UML) is a widely used method of visualizing and documenting an information system. The UML can be used to develop ( )\n ,in which an object represents a\n person, place, event, or transaction that is significant to the information system. Systems analysts define an object’s attributes during the ( )\n.An object also has ( )\n，which are tasks or functions that the object performs when it receives a message, or command, to do so. A(n) ( )\n is a group of similar objects. If objects are similar to nouns, attributes are similar to adjectives that describe the characteristics of an object. Objects can have a specific attribute called a(n) ( )\n, which of an object is an adjective that describes the object's current status. All objects within a class share common attributes and methods, so a class is like a blueprint, or template for all the objects within the class.",
+  "options": {
+   "A": "database models",
+   "B": "object models",
+   "C": "event models",
+   "D": "static system models"
+  },
+  "answer": "B",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第2空)\nUnified Modeling Language (UML) is a widely used method of visualizing and documenting an information system. The UML can be used to develop ( )\n ,in which an object represents a\n person, place, event, or transaction that is significant to the information system. Systems analysts define an object’s attributes during the ( )\n.An object also has ( )\n，which are tasks or functions that the object performs when it receives a message, or command, to do so. A(n) ( )\n is a group of similar objects. If objects are similar to nouns, attributes are similar to adjectives that describe the characteristics of an object. Objects can have a specific attribute called a(n) ( )\n, which of an object is an adjective that describes the object's current status. All objects within a class share common attributes and methods, so a class is like a blueprint, or template for all the objects within the class.",
+  "options": {
+   "A": "systems maintenance process",
+   "B": "systems implementation process",
+   "C": "systems design process",
+   "D": "systems testing process"
+  },
+  "answer": "C",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第3空)\nUnified Modeling Language (UML) is a widely used method of visualizing and documenting an information system. The UML can be used to develop ( )\n ,in which an object represents a\n person, place, event, or transaction that is significant to the information system. Systems analysts define an object’s attributes during the ( )\n.An object also has ( )\n，which are tasks or functions that the object performs when it receives a message, or command, to do so. A(n) ( )\n is a group of similar objects. If objects are similar to nouns, attributes are similar to adjectives that describe the characteristics of an object. Objects can have a specific attribute called a(n) ( )\n, which of an object is an adjective that describes the object's current status. All objects within a class share common attributes and methods, so a class is like a blueprint, or template for all the objects within the class.",
+  "options": {
+   "A": "methods",
+   "B": "interactions",
+   "C": "interfaces",
+   "D": "behaviors"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第4空)\nUnified Modeling Language (UML) is a widely used method of visualizing and documenting an information system. The UML can be used to develop ( )\n ,in which an object represents a\n person, place, event, or transaction that is significant to the information system. Systems analysts define an object’s attributes during the ( )\n.An object also has ( )\n，which are tasks or functions that the object performs when it receives a message, or command, to do so. A(n) ( )\n is a group of similar objects. If objects are similar to nouns, attributes are similar to adjectives that describe the characteristics of an object. Objects can have a specific attribute called a(n) ( )\n, which of an object is an adjective that describes the object's current status. All objects within a class share common attributes and methods, so a class is like a blueprint, or template for all the objects within the class.",
+  "options": {
+   "A": "actor",
+   "B": "instance",
+   "C": "component",
+   "D": "class"
+  },
+  "answer": "D",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ },
+ {
+  "subject": "系统分析师",
+  "year": 2020,
+  "half": "下半年",
+  "paper": "2020年 下半年 综合知识",
+  "type": "single",
+  "content": "(第5空)\nUnified Modeling Language (UML) is a widely used method of visualizing and documenting an information system. The UML can be used to develop ( )\n ,in which an object represents a\n person, place, event, or transaction that is significant to the information system. Systems analysts define an object’s attributes during the ( )\n.An object also has ( )\n，which are tasks or functions that the object performs when it receives a message, or command, to do so. A(n) ( )\n is a group of similar objects. If objects are similar to nouns, attributes are similar to adjectives that describe the characteristics of an object. Objects can have a specific attribute called a(n) ( )\n, which of an object is an adjective that describes the object's current status. All objects within a class share common attributes and methods, so a class is like a blueprint, or template for all the objects within the class.",
+  "options": {
+   "A": "state",
+   "B": "constant",
+   "C": "instance",
+   "D": "member"
+  },
+  "answer": "A",
+  "analysis": "",
+  "source": "lightsoft.tech"
+ }
+]

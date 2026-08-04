@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { listExamRecords } from '@/api/exam'
-import { formatDuration, timeAgo } from '@/utils/format'
+import { formatDuration, formatPercent, timeAgo } from '@/utils/format'
+import LineChart from '@/components/charts/LineChart.vue'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
 import BaseLoading from '@/components/common/BaseLoading.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
@@ -25,9 +26,27 @@ onMounted(async () => {
   }
 })
 
+const finishedRecords = computed(() => records.value.filter(r => r.status === 'finished'))
+
+const trendData = computed(() =>
+  finishedRecords.value
+    .map(r => ({
+      label: (r.started_at || '').slice(5),
+      value: percent(r.score, r.total_score),
+      hint: `正确率 ${formatPercent(r.accuracy)}`,
+    }))
+    .reverse(),
+)
+
 function percent(score: number, total: number) {
   if (!total) return 0
   return Math.round((score / total) * 100)
+}
+
+function accuracyClass(r: ExamRecordResp) {
+  if (r.accuracy >= 80) return 'text-emerald-600'
+  if (r.accuracy >= 60) return 'text-indigo-600'
+  return 'text-red-500'
 }
 
 function statusBadge(r: ExamRecordResp) {
@@ -70,6 +89,14 @@ function goDetail(r: ExamRecordResp) {
     </div>
 
     <div v-else class="space-y-3">
+      <div v-if="finishedRecords.length" class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 class="text-base font-semibold text-gray-900">成绩趋势</h2>
+          <p class="text-xs text-gray-400">最近 {{ finishedRecords.length }} 次已完成考试 · 得分率</p>
+        </div>
+        <LineChart :data="trendData" :height="200" />
+      </div>
+
       <div
         v-for="r in records"
         :key="r.id"
@@ -99,7 +126,10 @@ function goDetail(r: ExamRecordResp) {
                 />
               </div>
             </div>
-            <span class="text-sm font-bold text-gray-900">{{ r.score }}<span class="text-xs font-normal text-gray-400"> / {{ r.total_score }}</span></span>
+            <div class="text-center">
+              <p class="text-sm font-bold text-gray-900">{{ r.score }}<span class="text-xs font-normal text-gray-400"> / {{ r.total_score }}</span></p>
+              <p class="mt-0.5 text-xs" :class="accuracyClass(r)">{{ formatPercent(r.accuracy) }}</p>
+            </div>
             <BaseButton size="sm" type="secondary">查看详情</BaseButton>
           </div>
         </template>

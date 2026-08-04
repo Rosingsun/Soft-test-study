@@ -298,7 +298,7 @@ INSERT INTO `questions` (`subject_id`, `sub_subject_id`, `type`, `difficulty`, `
  '快速排序在平均情况下的时间复杂度为 O(n log n)。（  ）',
  NULL,
  '正确',
- '快速排序平均时间复杂度为 O(n log n)，最坏情况为 O(n²)。',dwqdqwd
+ '快速排序平均时间复杂度为 O(n log n)，最坏情况为 O(n²)。',
  2024, 1, NOW()),
 
 (4, 1, 'judge', 'medium',

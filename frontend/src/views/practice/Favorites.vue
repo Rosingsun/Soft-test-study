@@ -110,10 +110,10 @@ onMounted(async () => {
     <div class="mb-6 flex flex-wrap items-center gap-2">
       <button
         type="button"
-        class="cursor-pointer rounded-lg border px-3 py-1.5 text-sm transition-colors"
+        class="cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200"
         :class="!currentFolderId
-          ? 'border-indigo-600 bg-indigo-600 text-white'
-          : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'"
+          ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm'
+          : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:text-indigo-600'"
         @click="currentFolderId = null; loadFavorites()"
       >
         全部
@@ -122,10 +122,10 @@ onMounted(async () => {
         v-for="folder in folders"
         :key="folder.id"
         type="button"
-        class="cursor-pointer rounded-lg border px-3 py-1.5 text-sm transition-colors"
+        class="cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200"
         :class="currentFolderId === folder.id
-          ? 'border-indigo-600 bg-indigo-600 text-white'
-          : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'"
+          ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm'
+          : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:text-indigo-600'"
         @click="currentFolderId = folder.id; loadFavorites()"
       >
         {{ folder.name }}
@@ -136,7 +136,7 @@ onMounted(async () => {
       <BaseLoading />
     </div>
 
-    <div v-else-if="error" class="rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div v-else-if="error" class="rounded-xl border border-gray-100 bg-white shadow-sm">
       <BaseEmpty title="加载失败" :description="error">
         <template #action>
           <BaseButton type="secondary" size="sm" class="mt-4" @click="loadFavorites">
@@ -146,7 +146,7 @@ onMounted(async () => {
       </BaseEmpty>
     </div>
 
-    <div v-else-if="favorites.length === 0" class="rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div v-else-if="favorites.length === 0" class="rounded-xl border border-gray-100 bg-white shadow-sm">
       <BaseEmpty title="暂无收藏题目" description="去题库中收藏值得反复练习的题目吧">
         <template #action>
           <BaseButton type="secondary" size="sm" class="mt-4" @click="router.push('/practice/random')">

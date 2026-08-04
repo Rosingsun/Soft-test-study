@@ -5,6 +5,7 @@ export interface ExamTemplateResp {
   duration: number
   total_score: number
   year: number
+  question_type: string
   question_count: number
 }
 
@@ -37,6 +38,7 @@ export interface SubmitAnswerReq {
 
 export interface AnswerDetailResp {
   question_id: number
+  exam_answer_id: number
   type: string
   content: string
   options: string
@@ -60,9 +62,10 @@ export interface ExamResultResp {
   subject_id: number
   score: number
   total_score: number
-  duration: number
+  duration: number      // 秒
   correct_count: number
   total_count: number
+  accuracy: number      // 本次考试整体正确率 %
   status: string
   started_at: string
   finished_at: string
@@ -78,6 +81,8 @@ export interface ExamRecordResp {
   score: number
   total_score: number
   duration: number
+  correct_count: number
+  accuracy: number
   status: string
   started_at: string
   finished_at: string

@@ -28,7 +28,9 @@ func (r *StatsRepo) Overview(userID uint) (*StatsOverview, error) {
 		SELECT
 			COUNT(*) AS total_practiced,
 			COALESCE(SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END), 0) AS total_correct
-		FROM practice_records WHERE user_id = ?
+		FROM practice_records pr
+		JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
+		WHERE pr.user_id = ?
 	`, userID).Scan(&ov).Error; err != nil {
 		return nil, err
 	}
@@ -36,8 +38,10 @@ func (r *StatsRepo) Overview(userID uint) (*StatsOverview, error) {
 	if err := r.db.Raw(`
 		SELECT
 			COUNT(*) AS total_exams,
-			COALESCE(AVG(score), 0) AS avg_exam_score
-		FROM exam_records WHERE user_id = ? AND status = 'finished'
+			COALESCE(AVG(er.score), 0) AS avg_exam_score
+		FROM exam_records er
+		JOIN exam_templates t ON t.id = er.template_id AND (t.question_type IS NULL OR t.question_type = '')
+		WHERE er.user_id = ? AND er.status = 'finished'
 	`, userID).Scan(&ov).Error; err != nil {
 		return nil, err
 	}
@@ -50,8 +54,10 @@ func (r *StatsRepo) Overview(userID uint) (*StatsOverview, error) {
 	}
 
 	if err := r.db.Raw(`
-		SELECT COUNT(DISTINCT DATE(created_at)) AS study_days
-		FROM practice_records WHERE user_id = ?
+		SELECT COUNT(DISTINCT DATE(pr.created_at)) AS study_days
+		FROM practice_records pr
+		JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
+		WHERE pr.user_id = ?
 	`, userID).Scan(&ov).Error; err != nil {
 		return nil, err
 	}
@@ -68,12 +74,13 @@ type DailyStat struct {
 func (r *StatsRepo) Daily(userID uint, startDate string) ([]DailyStat, error) {
 	var list []DailyStat
 	err := r.db.Raw(`
-		SELECT DATE(created_at) AS date,
+		SELECT DATE(pr.created_at) AS date,
 		       COUNT(*) AS total_count,
-		       COALESCE(SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_count
-		FROM practice_records
-		WHERE user_id = ? AND created_at >= ?
-		GROUP BY DATE(created_at)
+		       COALESCE(SUM(CASE WHEN pr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_count
+		FROM practice_records pr
+		JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
+		WHERE pr.user_id = ? AND pr.created_at >= ?
+		GROUP BY DATE(pr.created_at)
 		ORDER BY date ASC
 	`, userID, startDate).Scan(&list).Error
 	return list, err
@@ -93,7 +100,7 @@ func (r *StatsRepo) SubjectProgress(userID uint) ([]SubjectProgressStat, error) 
 		       COALESCE(SUM(CASE WHEN pr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_count
 		FROM practice_records pr
 		JOIN questions q ON q.id = pr.question_id
-		WHERE pr.user_id = ?
+		WHERE pr.user_id = ? AND q.type <> 'essay'
 		GROUP BY q.subject_id
 		ORDER BY total_count DESC
 	`, userID).Scan(&list).Error
@@ -110,13 +117,14 @@ type CalendarStat struct {
 func (r *StatsRepo) Calendar(userID uint, startDate, endDate string) ([]CalendarStat, error) {
 	var list []CalendarStat
 	err := r.db.Raw(`
-		SELECT DATE(created_at) AS date,
+		SELECT DATE(pr.created_at) AS date,
 		       COUNT(*) AS total_count,
-		       COALESCE(SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_count,
-		       COALESCE(SUM(duration), 0) AS duration
-		FROM practice_records
-		WHERE user_id = ? AND created_at >= ? AND created_at < ?
-		GROUP BY DATE(created_at)
+		       COALESCE(SUM(CASE WHEN pr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_count,
+		       COALESCE(SUM(pr.duration), 0) AS duration
+		FROM practice_records pr
+		JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
+		WHERE pr.user_id = ? AND pr.created_at >= ? AND pr.created_at < ?
+		GROUP BY DATE(pr.created_at)
 		ORDER BY date ASC
 	`, userID, startDate, endDate).Scan(&list).Error
 	return list, err
@@ -139,7 +147,7 @@ func (r *StatsRepo) ChapterProgress(userID uint) ([]ChapterProgressStat, error) 
 		       COUNT(*) AS total_count,
 		       COALESCE(SUM(CASE WHEN pr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_count
 		FROM practice_records pr
-		JOIN questions q ON q.id = pr.question_id
+		JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
 		JOIN chapters c ON c.id = q.chapter_id
 		WHERE pr.user_id = ? AND q.chapter_id > 0
 		GROUP BY c.id, c.name, c.sub_subject_id

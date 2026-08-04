@@ -1,4 +1,4 @@
-export type QuestionType = 'single' | 'multi' | 'judge' | 'fill' | 'short' | 'comprehensive'
+export type QuestionType = 'single' | 'multi' | 'judge' | 'fill' | 'short' | 'comprehensive' | 'essay'
 export type Difficulty = 'easy' | 'medium' | 'hard'
 
 export interface Question {

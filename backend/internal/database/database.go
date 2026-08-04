@@ -34,6 +34,8 @@ func Init(cfg *config.Config) (*gorm.DB, error) {
 		&model.ExamTemplateQuestion{},
 		&model.ExamRecord{},
 		&model.ExamRecordAnswer{},
+		&model.AiGeneratedQuestion{},
+		&model.EssayScore{},
 	); err != nil {
 		return nil, err
 	}
