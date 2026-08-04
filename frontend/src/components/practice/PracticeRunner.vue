@@ -32,6 +32,7 @@ const marked = ref<Record<number, boolean>>({})
 const favorited = ref<Record<number, boolean>>({})
 const showCard = ref(false)
 const loadingFavorites = ref(true)
+const caseExpanded = ref(true)
 
 const current = computed(() => props.questions[currentIndex.value])
 const total = computed(() => props.questions.length)
@@ -248,8 +249,12 @@ function optionBadgeClass(q: Question, optValue: string, state: string) {
   return 'border-gray-300 text-gray-500'
 }
 
-const difficultyMap: Record<string, { label: string; cls: string }> = {
-  easy: { label: '简单', cls: 'bg-emerald-50 text-emerald-600 ring-emerald-600/20' },
+// 主观题（论文 / 案例分析）：不自动判分，仅展示参考答案
+function isSubjective(q: Question): boolean {
+  return q.type === 'essay' || q.type === 'case_study'
+}
+
+const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: { label: '简单', cls: 'bg-emerald-50 text-emerald-600 ring-emerald-600/20' },
   medium: { label: '中等', cls: 'bg-amber-50 text-amber-600 ring-amber-600/20' },
   hard: { label: '困难', cls: 'bg-red-50 text-red-600 ring-red-600/20' },
 }
@@ -337,6 +342,30 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {
         </span>
       </div>
 
+      <!-- 案例材料（案例分析题）：可折叠引用块 -->
+      <div v-if="current.case_material" class="mb-5 rounded-xl border-l-4 border-violet-400 bg-violet-50/50 p-4">
+        <button
+          type="button"
+          class="flex w-full cursor-pointer items-center justify-between text-left"
+          @click="caseExpanded = !caseExpanded"
+        >
+          <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-violet-700">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+            案例材料
+          </span>
+          <svg
+            class="h-4 w-4 text-violet-500 transition-transform duration-200"
+            :class="caseExpanded ? 'rotate-180' : ''"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+        <div v-show="caseExpanded" class="mt-3 max-h-80 overflow-y-auto text-sm leading-7 text-gray-700" v-html="sanitizeHtml(current.case_material)" />
+      </div>
+
       <!-- 题干 -->
       <div class="mb-6 text-[15px] leading-7 text-gray-800" v-html="sanitizeHtml(current.content)" />
 
@@ -377,36 +406,38 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {
         </button>
       </div>
 
-      <!-- 填空 / 简答 / 综合 / 论文 -->
+      <!-- 填空 / 简答 / 综合 / 论文 / 案例分析 -->
       <div v-else>
         <textarea
           v-model="answers[current.id]"
           :disabled="!!submitted[current.id]"
-          :rows="current.type === 'essay' ? 12 : 4"
+          :rows="current.type === 'essay' || current.type === 'case_study' ? 8 : 4"
           class="w-full rounded-xl border border-gray-300 bg-gray-50/50 px-4 py-3 text-sm leading-6 transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:bg-gray-100"
           :class="{
-            'border-emerald-500 bg-emerald-50/50': submitted[current.id] && current.type !== 'essay' && isCorrect(current),
-            'border-red-400 bg-red-50/50': submitted[current.id] && current.type !== 'essay' && answers[current.id] && !isCorrect(current),
+            'border-emerald-500 bg-emerald-50/50': submitted[current.id] && current.type !== 'essay' && current.type !== 'case_study' && isCorrect(current),
+            'border-red-400 bg-red-50/50': submitted[current.id] && current.type !== 'essay' && current.type !== 'case_study' && answers[current.id] && !isCorrect(current),
           }"
-          :placeholder="current.type === 'essay' ? '请在此撰写论文正文…' : '请输入答案'"
+          :placeholder="current.type === 'essay' ? '请在此撰写论文正文…' : current.type === 'case_study' ? '请结合上方案例材料作答…' : '请输入答案'"
         />
-        <p v-if="current.type === 'essay'" class="mt-2 text-xs text-gray-400">论文题无标准答案，作答后仅记录提交内容，不自动判分。</p>
+        <p v-if="current.type === 'essay' || current.type === 'case_study'" class="mt-2 text-xs text-gray-400">
+          {{ current.type === 'essay' ? '论文题无标准答案，作答后仅记录提交内容，不自动判分。' : '案例分析题为主观题，作答后仅展示参考答案与解析，不自动判分。' }}
+        </p>
       </div>
 
       <!-- 解析（提交后显示） -->
       <div
         v-if="submitted[current.id]"
         class="mt-6 rounded-xl border-l-4 p-5"
-        :class="current.type === 'essay'
+        :class="isSubjective(current)
           ? 'border-indigo-400 bg-indigo-50/50'
           : isCorrect(current) ? 'border-emerald-400 bg-emerald-50/50' : 'border-red-400 bg-red-50/50'"
       >
         <div class="mb-3 flex items-center gap-2">
           <span
             class="flex h-6 w-6 items-center justify-center rounded-full text-white"
-            :class="current.type === 'essay' ? 'bg-indigo-500' : isCorrect(current) ? 'bg-emerald-500' : 'bg-red-500'"
+            :class="isSubjective(current) ? 'bg-indigo-500' : isCorrect(current) ? 'bg-emerald-500' : 'bg-red-500'"
           >
-            <svg v-if="current.type === 'essay' || isCorrect(current)" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+            <svg v-if="isSubjective(current) || isCorrect(current)" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
             <svg v-else class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
@@ -415,9 +446,9 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {
           </span>
           <span
             class="text-sm font-semibold"
-            :class="current.type === 'essay' ? 'text-indigo-700' : isCorrect(current) ? 'text-emerald-700' : 'text-red-700'"
+            :class="isSubjective(current) ? 'text-indigo-700' : isCorrect(current) ? 'text-emerald-700' : 'text-red-700'"
           >
-            {{ current.type === 'essay' ? '已提交，不判分' : isCorrect(current) ? '回答正确' : '回答错误' }}
+            {{ isSubjective(current) ? '已提交，不判分' : isCorrect(current) ? '回答正确' : '回答错误' }}
           </span>
         </div>
 

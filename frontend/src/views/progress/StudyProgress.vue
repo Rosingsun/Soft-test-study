@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getStatsOverview, getDailyStats, getSubjectProgress, getCalendarStats, getChapterProgress } from '@/api/stats'
 import CalendarHeatmap from '@/components/charts/CalendarHeatmap.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
 import type { StatsOverviewResp, DailyStatsResp, SubjectProgressResp, CalendarStatsResp, ChapterProgressResp } from '@/types/stats'
 
@@ -101,9 +101,7 @@ onMounted(async () => {
   <div>
     <BasePageHeader title="学习进度" subtitle="掌握你的学习节奏与知识掌握情况" />
 
-    <div v-if="loading">
-      <BaseLoading />
-    </div>
+    <BaseSkeleton v-if="loading" variant="detail" />
 
     <div v-else-if="error" class="rounded-lg bg-white p-6 shadow-sm">
       <p class="text-red-500">{{ error }}</p>

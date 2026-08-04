@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { changePassword } from '@/api/auth'
 import { getStatsOverview, getDailyStats } from '@/api/stats'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
@@ -102,9 +102,7 @@ onMounted(async () => {
   <div class="mx-auto max-w-4xl">
     <BasePageHeader title="个人中心" subtitle="管理个人信息与账号安全" />
 
-    <div v-if="loading">
-      <BaseLoading />
-    </div>
+    <BaseSkeleton v-if="loading" variant="detail" />
 
     <div v-else-if="error" class="rounded-lg bg-white p-6 shadow-sm">
       <p class="text-red-500">{{ error }}</p>

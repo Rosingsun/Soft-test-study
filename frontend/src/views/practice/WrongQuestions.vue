@@ -10,7 +10,7 @@ import BasePageHeader from '@/components/common/BasePageHeader.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import BaseBadge from '@/components/common/BaseBadge.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
 
 const auth = useAuthStore()
@@ -68,9 +68,7 @@ const typeBadges: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'de
       </template>
     </BasePageHeader>
 
-    <div v-if="loading">
-      <BaseLoading />
-    </div>
+    <BaseSkeleton v-if="loading" variant="list" :count="4" />
 
     <div v-else-if="error" class="rounded-xl border border-gray-100 bg-white shadow-sm">
       <BaseEmpty title="加载失败" :description="error">

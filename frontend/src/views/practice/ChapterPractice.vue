@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useSubjectStore } from '@/stores/subject'
 import { getQuestionsByChapter } from '@/api/question'
 import PracticeRunner from '@/components/practice/PracticeRunner.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
@@ -42,9 +42,7 @@ function goBack() {
   <div>
     <BasePageHeader title="章节练习" :subtitle="chapterName || `章节 #${chapterId}`" />
 
-    <div v-if="loading">
-      <BaseLoading />
-    </div>
+    <BaseSkeleton v-if="loading" variant="question" />
 
     <div v-else-if="error" class="rounded-xl border border-red-100 bg-red-50 p-6">
       <p class="text-sm text-red-600">{{ error }}</p>

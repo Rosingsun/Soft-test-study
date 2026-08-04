@@ -5,7 +5,7 @@ import type { Subject } from '@/types/subject'
 import { useSubjectStore } from '@/stores/subject'
 import { useAuthStore } from '@/stores/auth'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import BaseBadge from '@/components/common/BaseBadge.vue'
@@ -101,7 +101,7 @@ watch(() => route.query.level_id, (id) => {
       </button>
     </div>
 
-    <BaseLoading v-if="loading" />
+    <BaseSkeleton v-if="loading" variant="grid" :count="6" />
 
     <BaseEmpty
       v-else-if="error"

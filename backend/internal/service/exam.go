@@ -156,13 +156,14 @@ func (s *ExamService) loadExam(recordID, userID uint, template *model.ExamTempla
 			continue
 		}
 		questionList = append(questionList, dto.ExamQuesResp{
-			ID:         q.ID,
-			Type:       q.Type,
-			Content:    q.Content,
-			Options:    q.Options,
-			Difficulty: q.Difficulty,
-			Score:      1,
-			SortOrder:  i + 1,
+			ID:          q.ID,
+			Type:        q.Type,
+			Content:     q.Content,
+			CaseMaterial: q.CaseMaterial,
+			Options:     q.Options,
+			Difficulty:  q.Difficulty,
+			Score:       1,
+			SortOrder:   i + 1,
 		})
 	}
 

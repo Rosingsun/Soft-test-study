@@ -99,6 +99,7 @@ CREATE TABLE `questions` (
   `type`           VARCHAR(20)     NOT NULL COMMENT '题型: single/multi/judge/fill',
   `difficulty`     VARCHAR(20)     NOT NULL COMMENT '难度: easy/medium/hard',
   `content`        TEXT            NOT NULL COMMENT '题目内容(支持Markdown)',
+  `case_material`  TEXT            DEFAULT NULL COMMENT '案例材料(案例分析题专用)',
   `options`        JSON            DEFAULT NULL COMMENT '选项(JSON数组)',
   `answer`         TEXT            NOT NULL COMMENT '正确答案',
   `analysis`       TEXT            DEFAULT NULL COMMENT '解析',
@@ -300,3 +301,30 @@ SELECT s.`id`, '基础知识', 1 FROM `subjects` s WHERE s.`name` IN ('软件设
 
 INSERT INTO `sub_subjects` (`subject_id`, `name`, `sort_order`)
 SELECT s.`id`, '应用技术', 2 FROM `subjects` s WHERE s.`name` IN ('软件设计师', '网络工程师', '程序员');
+
+-- 4.2 系统分析师-案例分析 示例真题（1 个案例 + 3 个小题，case_material 共享）
+SET @sa_case_ss = (SELECT id FROM `sub_subjects` WHERE `name` = '案例分析' AND `subject_id` = (SELECT id FROM `subjects` WHERE `name` = '系统分析师') LIMIT 1);
+SET @sa_id = (SELECT id FROM `subjects` WHERE `name` = '系统分析师' LIMIT 1);
+
+INSERT INTO `questions` (`subject_id`, `sub_subject_id`, `chapter_id`, `type`, `difficulty`, `content`, `case_material`, `options`, `answer`, `analysis`, `year`, `status`)
+VALUES
+(@sa_id, @sa_case_ss, 0, 'case_study', 'medium',
+ '【问题 1】结合上述说明，请用 200 字以内简要说明该系统采用分层架构的优点。',
+ '某大型企业拟构建一套跨部门协同办公系统，要求支持高并发访问、便于后期功能扩展，并能够与既有的 ERP、CRM 系统对接。架构师在方案评审时提出采用经典的分层架构风格，将系统划分为表示层、业务逻辑层和数据访问层，各层之间通过明确定义的接口进行通信。',
+ '{}', '',
+ '分层架构将关注点分离，表示层负责交互、业务逻辑层封装核心规则、数据访问层屏蔽存储细节；层间通过接口解耦，便于独立开发与测试，也更有利于功能扩展与既有系统对接。',
+ 2023, 1),
+
+(@sa_id, @sa_case_ss, 0, 'case_study', 'medium',
+ '【问题 2】请指出该分层架构在性能与扩展性方面可能存在的两个不足，并给出改进建议。',
+ '某大型企业拟构建一套跨部门协同办公系统，要求支持高并发访问、便于后期功能扩展，并能够与既有的 ERP、CRM 系统对接。架构师在方案评审时提出采用经典的分层架构风格，将系统划分为表示层、业务逻辑层和数据访问层，各层之间通过明确定义的接口进行通信。',
+ '{}', '',
+ '不足：①层间调用链长，跨层请求需逐层转发，高并发下存在性能损耗；②严格分层可能形成数据访问瓶颈。改进：引入缓存层（如 Redis）减少数据库访问；对热点服务采用异步消息解耦；必要时以微服务拆分高内聚模块。',
+ 2023, 1),
+
+(@sa_id, @sa_case_ss, 0, 'case_study', 'hard',
+ '【问题 3】若需与既有 ERP、CRM 系统对接，请说明应采用的集成方式及需要注意的数据一致性问题。',
+ '某大型企业拟构建一套跨部门协同办公系统，要求支持高并发访问、便于后期功能扩展，并能够与既有的 ERP、CRM 系统对接。架构师在方案评审时提出采用经典的分层架构风格，将系统划分为表示层、业务逻辑层和数据访问层，各层之间通过明确定义的接口进行通信。',
+ '{}', '',
+ '集成方式：优先采用基于 API 的集成（REST/消息中间件），通过企业服务总线或 API 网关统一编排；数据一致性：跨系统写操作采用最终一致性，通过事务补偿、幂等设计与消息确认机制保证；需统一主数据口径并做对账。',
+ 2023, 1);

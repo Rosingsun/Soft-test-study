@@ -256,13 +256,14 @@ func (s *AiService) StartAiExam(userID uint, req dto.StartAiExamReq) (*dto.Start
 			QuestionID: q.ID,
 		}
 		examQuestions[i] = dto.ExamQuesResp{
-			ID:         q.ID,
-			Type:       q.Type,
-			Content:    q.Content,
-			Options:    q.Options,
-			Difficulty: q.Difficulty,
-			Score:      1,
-			SortOrder:  i + 1,
+			ID:          q.ID,
+			Type:        q.Type,
+			Content:     q.Content,
+			CaseMaterial: q.CaseMaterial,
+			Options:     q.Options,
+			Difficulty:  q.Difficulty,
+			Score:       1,
+			SortOrder:   i + 1,
 		}
 	}
 

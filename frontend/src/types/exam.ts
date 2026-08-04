@@ -13,6 +13,7 @@ export interface ExamQuesResp {
   id: number
   type: string
   content: string
+  case_material?: string
   options: string
   difficulty: string
   score: number

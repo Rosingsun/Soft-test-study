@@ -8,6 +8,7 @@ export const TYPE_LABELS: Record<string, string> = {
   short: '简答题',
   comprehensive: '综合题',
   essay: '论文题',
+  case_study: '案例分析',
 }
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {

@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getStatsOverview, getDailyStats, getSubjectProgress } from '@/api/stats'
 import BarChart from '@/components/charts/BarChart.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import type { StatsOverviewResp, DailyStatsResp, SubjectProgressResp } from '@/types/stats'
 
 const router = useRouter()
@@ -111,9 +111,7 @@ function accuracyBarClass(a: number) {
       </div>
     </div>
 
-    <div v-if="loading">
-      <BaseLoading />
-    </div>
+    <BaseSkeleton v-if="loading" variant="detail" />
 
     <div v-else-if="error" class="rounded-xl border border-red-100 bg-red-50 p-6">
       <p class="text-sm text-red-600">{{ error }}</p>

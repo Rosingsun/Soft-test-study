@@ -8,6 +8,7 @@ type QuestionResp struct {
 	Type         string `json:"type"`
 	Difficulty   string `json:"difficulty"`
 	Content      string `json:"content"`
+	CaseMaterial string `json:"case_material"`
 	Options      string `json:"options"`
 	Answer       string `json:"answer"`
 	Analysis     string `json:"analysis"`

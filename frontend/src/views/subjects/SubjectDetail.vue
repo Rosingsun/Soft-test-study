@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSubjectStore } from '@/stores/subject'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
@@ -55,7 +55,7 @@ onMounted(load)
       </template>
     </BasePageHeader>
 
-    <BaseLoading v-if="loading" />
+    <BaseSkeleton v-if="loading" variant="detail" />
 
     <BaseEmpty
       v-else-if="error"

@@ -67,6 +67,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	api.GET("/subjects/:id/sub-subjects", subSubjectH.ListBySubject)
 	api.GET("/sub-subjects/:id/chapters", chapterH.ListBySubSubject)
 	api.GET("/questions", questionH.ListByChapter)
+	api.GET("/questions/case-studies", questionH.CaseStudies)
 	api.GET("/questions/:id", questionH.GetByID)
 	api.GET("/exam-templates", examH.ListTemplates)
 	api.GET("/ai/providers", aiH.GetProviders)

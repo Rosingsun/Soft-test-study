@@ -7,7 +7,7 @@ import { getSpecialQuestions } from '@/api/practice'
 import PracticeRunner from '@/components/practice/PracticeRunner.vue'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import { typeLabel } from '@/utils/question'
 import type { Question } from '@/types/question'
 
@@ -24,7 +24,7 @@ const started = ref(false)
 const loading = ref(false)
 const error = ref('')
 
-const typeOptions = ['single', 'multi', 'judge', 'fill', 'short', 'comprehensive', 'essay']
+const typeOptions = ['single', 'multi', 'judge', 'fill', 'short', 'comprehensive', 'case_study', 'essay']
 const difficultyOptions = [
   { value: '', label: '全部难度' },
   { value: 'easy', label: '简单' },
@@ -158,9 +158,7 @@ function reset() {
     </div>
 
     <div v-else>
-      <div v-if="loading">
-        <BaseLoading />
-      </div>
+      <BaseSkeleton v-if="loading" variant="question" />
       <PracticeRunner
         v-else
         :questions="questions"

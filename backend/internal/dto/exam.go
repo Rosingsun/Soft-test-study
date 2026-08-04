@@ -24,13 +24,14 @@ type StartExamResp struct {
 }
 
 type ExamQuesResp struct {
-	ID         uint   `json:"id"`
-	Type       string `json:"type"`
-	Content    string `json:"content"`
-	Options    string `json:"options"`
-	Difficulty string `json:"difficulty"`
-	Score      int    `json:"score"`
-	SortOrder  int    `json:"sort_order"`
+	ID          uint   `json:"id"`
+	Type        string `json:"type"`
+	Content     string `json:"content"`
+	CaseMaterial string `json:"case_material"`
+	Options     string `json:"options"`
+	Difficulty  string `json:"difficulty"`
+	Score       int    `json:"score"`
+	SortOrder   int    `json:"sort_order"`
 }
 
 type SubmitAnswerReq struct {

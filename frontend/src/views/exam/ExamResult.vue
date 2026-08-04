@@ -7,7 +7,7 @@ import { useAiStore } from '@/stores/ai'
 import { formatDuration, formatPercent } from '@/utils/format'
 import { typeLabel } from '@/utils/question'
 import DonutChart from '@/components/charts/DonutChart.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import type { ExamResultResp, SectionAccuracyResp } from '@/types/exam'
 import type { EssayScoreResp } from '@/types/ai'
@@ -115,9 +115,7 @@ async function handleExamAiScore(detail: { question_id: number; exam_answer_id: 
 
 <template>
   <div class="mx-auto max-w-4xl">
-    <div v-if="loading">
-      <BaseLoading />
-    </div>
+    <BaseSkeleton v-if="loading" variant="detail" />
 
     <div v-else-if="error" class="rounded-xl border border-red-100 bg-red-50 p-6">
       <p class="text-sm text-red-600">{{ error }}</p>

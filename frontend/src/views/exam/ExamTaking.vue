@@ -7,7 +7,7 @@ import { sanitizeHtml } from '@/utils/sanitize'
 import { parseOptions, typeLabel } from '@/utils/question'
 import { showToast } from '@/utils/toast'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import type { StartExamResp, ExamQuesResp } from '@/types/exam'
 
 const route = useRoute()
@@ -21,6 +21,7 @@ const error = ref('')
 const showCard = ref(false)
 const submitting = ref(false)
 const submitted = ref(false)
+const caseExpanded = ref(true)
 const confirmDialog = ref<InstanceType<typeof ConfirmDialog> | null>(null)
 const remainingSeconds = ref(0)
 let timer: number | null = null
@@ -178,9 +179,7 @@ async function handleSubmit() {
 
 <template>
   <div class="mx-auto max-w-6xl">
-    <div v-if="loading">
-      <BaseLoading />
-    </div>
+    <BaseSkeleton v-if="loading" variant="question" />
 
     <div v-else-if="error" class="rounded-xl border border-red-100 bg-red-50 p-6">
       <p class="text-sm text-red-600">{{ error }}</p>
@@ -284,6 +283,30 @@ async function handleSubmit() {
               </span>
             </div>
 
+            <!-- 案例材料（案例分析题）：可折叠引用块 -->
+            <div v-if="current.case_material" class="mb-5 rounded-xl border-l-4 border-violet-400 bg-violet-50/50 p-4">
+              <button
+                type="button"
+                class="flex w-full cursor-pointer items-center justify-between text-left"
+                @click="caseExpanded = !caseExpanded"
+              >
+                <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-violet-700">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                  </svg>
+                  案例材料
+                </span>
+                <svg
+                  class="h-4 w-4 text-violet-500 transition-transform duration-200"
+                  :class="caseExpanded ? 'rotate-180' : ''"
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              <div v-show="caseExpanded" class="mt-3 max-h-80 overflow-y-auto text-sm leading-7 text-gray-700" v-html="sanitizeHtml(current.case_material)" />
+            </div>
+
             <div class="mb-6 text-[15px] leading-7 text-gray-800" v-html="sanitizeHtml(current.content)" />
 
             <div v-if="current.type === 'single' || current.type === 'multi'" class="space-y-2.5">
@@ -328,12 +351,14 @@ async function handleSubmit() {
             <div v-else>
               <textarea
                 :value="answers[current.id] || ''"
-                :rows="current.type === 'essay' ? 14 : 4"
+                :rows="current.type === 'essay' || current.type === 'case_study' ? 10 : 4"
                 class="w-full rounded-xl border border-gray-300 bg-gray-50/50 px-4 py-3 text-sm leading-6 transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                :placeholder="current.type === 'essay' ? '请在此撰写论文正文…' : '请输入答案'"
+                :placeholder="current.type === 'essay' ? '请在此撰写论文正文…' : current.type === 'case_study' ? '请结合上方案例材料作答…' : '请输入答案'"
                 @input="selectAnswer(current.id, ($event.target as HTMLTextAreaElement).value)"
               />
-              <p v-if="current.type === 'essay'" class="mt-2 text-xs text-gray-400">论文题无标准答案，作答后仅记录提交内容，不自动判分。</p>
+              <p v-if="current.type === 'essay' || current.type === 'case_study'" class="mt-2 text-xs text-gray-400">
+                {{ current.type === 'essay' ? '论文题无标准答案，作答后仅记录提交内容，不自动判分。' : '案例分析题为主观题，作答后仅记录提交内容，不自动判分。' }}
+              </p>
             </div>
           </div>
         </div>

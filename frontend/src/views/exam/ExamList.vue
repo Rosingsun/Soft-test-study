@@ -7,7 +7,7 @@ import { useExamStore } from '@/stores/exam'
 import { listExamTemplates } from '@/api/exam'
 import { startAiExam } from '@/api/ai'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
 import BaseBadge from '@/components/common/BaseBadge.vue'
 import type { ExamTemplateResp } from '@/types/exam'
@@ -125,9 +125,7 @@ async function startAiExamHandler() {
       </button>
     </div>
 
-    <div v-if="loading">
-      <BaseLoading />
-    </div>
+    <BaseSkeleton v-if="loading" variant="grid" :count="6" />
 
     <div v-else-if="error" class="rounded-xl border border-red-100 bg-red-50 p-6">
       <p class="text-sm text-red-600">{{ error }}</p>

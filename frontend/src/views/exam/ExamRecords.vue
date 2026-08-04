@@ -5,7 +5,7 @@ import { listExamRecords } from '@/api/exam'
 import { formatDuration, formatPercent, timeAgo } from '@/utils/format'
 import LineChart from '@/components/charts/LineChart.vue'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
 import BaseBadge from '@/components/common/BaseBadge.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
@@ -72,9 +72,7 @@ function goDetail(r: ExamRecordResp) {
       </template>
     </BasePageHeader>
 
-    <div v-if="loading">
-      <BaseLoading />
-    </div>
+    <BaseSkeleton v-if="loading" variant="list" :count="4" />
 
     <div v-else-if="error" class="rounded-lg bg-white p-6 shadow-sm">
       <p class="text-red-500">{{ error }}</p>

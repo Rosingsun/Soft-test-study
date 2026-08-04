@@ -7,7 +7,7 @@ import { getRandomQuestions } from '@/api/practice'
 import PracticeRunner from '@/components/practice/PracticeRunner.vue'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import type { Question } from '@/types/question'
 
 const router = useRouter()
@@ -139,9 +139,7 @@ function reset() {
     </div>
 
     <div v-else>
-      <div v-if="loading">
-        <BaseLoading />
-      </div>
+      <BaseSkeleton v-if="loading" variant="question" />
       <PracticeRunner
         v-else
         :questions="questions"

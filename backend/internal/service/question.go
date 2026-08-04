@@ -61,6 +61,15 @@ func (s *QuestionService) GetSpecialQuestions(subjectID uint, qtype, difficulty 
 	return toQuestionRespList(questions), nil
 }
 
+// GetCaseStudies 按子科目查询案例分析题
+func (s *QuestionService) GetCaseStudies(subSubjectID uint, year int) ([]dto.QuestionResp, error) {
+	questions, err := s.repo.FindCaseStudies(subSubjectID, year)
+	if err != nil {
+		return nil, err
+	}
+	return toQuestionRespList(questions), nil
+}
+
 func toQuestionRespList(questions []model.Question) []dto.QuestionResp {
 	resp := make([]dto.QuestionResp, len(questions))
 	for i, q := range questions {
@@ -78,6 +87,7 @@ func toQuestionResp(q model.Question) dto.QuestionResp {
 		Type:         q.Type,
 		Difficulty:   q.Difficulty,
 		Content:      q.Content,
+		CaseMaterial: q.CaseMaterial,
 		Options:      q.Options,
 		Answer:       q.Answer,
 		Analysis:     q.Analysis,

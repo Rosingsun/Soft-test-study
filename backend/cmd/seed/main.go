@@ -293,7 +293,7 @@ func questionScore(qtype string) int {
 	switch qtype {
 	case "multi":
 		return 2
-	case "short", "comprehensive":
+	case "short", "comprehensive", "case_study":
 		return 5
 	case "single", "judge", "fill":
 		return 1

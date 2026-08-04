@@ -37,6 +37,26 @@ func (h *QuestionHandler) ListByChapter(c *gin.Context) {
 	response.Success(c, list)
 }
 
+func (h *QuestionHandler) CaseStudies(c *gin.Context) {
+	subSubjectID, ok := parseUintQuery(c, "sub_subject_id")
+	if !ok {
+		response.Error(c, config.CodeParamError, "缺少或错误的 sub_subject_id 参数")
+		return
+	}
+	year := 0
+	if v := c.Query("year"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			year = n
+		}
+	}
+	list, err := h.svc.GetCaseStudies(subSubjectID, year)
+	if err != nil {
+		response.Error(c, config.CodeBadRequest, "获取案例分析题失败")
+		return
+	}
+	response.Success(c, list)
+}
+
 func (h *QuestionHandler) GetByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)

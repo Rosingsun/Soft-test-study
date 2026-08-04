@@ -37,6 +37,17 @@ func (r *QuestionRepo) FindBySubSubjectID(subSubjectID uint) ([]model.Question, 
 	return list, err
 }
 
+// FindCaseStudies 按子科目查询案例分析题，支持按年份筛选
+func (r *QuestionRepo) FindCaseStudies(subSubjectID uint, year int) ([]model.Question, error) {
+	var list []model.Question
+	query := r.db.Where("sub_subject_id = ? AND type = ? AND status = 1", subSubjectID, model.TypeCaseStudy)
+	if year > 0 {
+		query = query.Where("year = ?", year)
+	}
+	err := query.Order("year desc, id asc").Find(&list).Error
+	return list, err
+}
+
 func (r *QuestionRepo) FindByID(id uint) (*model.Question, error) {
 	var q model.Question
 	err := r.db.Where("id = ? AND status = 1", id).First(&q).Error

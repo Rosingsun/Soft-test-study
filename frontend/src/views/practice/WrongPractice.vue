@@ -6,7 +6,7 @@ import { wrongPracticeSubmit, removeWrongQuestion } from '@/api/wrong_question'
 import { getQuestion } from '@/api/question'
 import PracticeRunner from '@/components/practice/PracticeRunner.vue'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
-import BaseLoading from '@/components/common/BaseLoading.vue'
+import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import type { Question } from '@/types/question'
@@ -65,9 +65,7 @@ function goBack() {
       subtitle="连续答对会自动移出错题本"
     />
 
-    <div v-if="loading">
-      <BaseLoading />
-    </div>
+    <BaseSkeleton v-if="loading" variant="question" />
 
     <div v-else-if="error" class="rounded-lg bg-white p-6 shadow-sm">
       <p class="text-red-500">{{ error }}</p>
