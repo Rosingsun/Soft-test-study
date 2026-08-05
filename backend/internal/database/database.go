@@ -29,6 +29,7 @@ func Init(cfg *config.Config) (*gorm.DB, error) {
 		&model.QuestionKnowledge{},
 		&model.FavoriteFolder{},
 		&model.QuestionFavorite{},
+		&model.QuestionMark{},
 		&model.WrongQuestion{},
 		&model.ExamTemplate{},
 		&model.ExamTemplateQuestion{},

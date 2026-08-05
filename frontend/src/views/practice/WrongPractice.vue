@@ -15,6 +15,7 @@ const route = useRoute()
 const router = useRouter()
 const singleQid = Number(route.query.qid) || 0
 const questions = ref<Question[]>([])
+const startIndex = ref(0)
 const loading = ref(true)
 const error = ref('')
 
@@ -23,15 +24,21 @@ onMounted(async () => {
     const data = await listWrongQuestions()
     const target = singleQid ? data.filter(q => q.question_id === singleQid) : data
     const loaded: Question[] = []
+    const wanted: number[] = []
     for (const w of target) {
       try {
         const q = await getQuestion(w.question_id)
         loaded.push(q)
+        wanted.push(q.id)
       } catch {
         // 题目可能已被删除，跳过
       }
     }
     questions.value = loaded
+    if (singleQid) {
+      const idx = wanted.indexOf(singleQid)
+      startIndex.value = idx >= 0 ? idx : 0
+    }
   } catch (e) {
     error.value = (e as Error).message
   } finally {
@@ -62,7 +69,7 @@ function goBack() {
   <div>
     <BasePageHeader
       :title="singleQid ? '错题重做' : '错题练习'"
-      subtitle="连续答对会自动移出错题本"
+      subtitle="连续答对会自动移出错题本，作答后可直接继续下一题"
     />
 
     <BaseSkeleton v-if="loading" variant="question" />
@@ -80,6 +87,13 @@ function goBack() {
       </BaseEmpty>
     </div>
 
-    <PracticeRunner v-else :questions="questions" mode="wrong" :submit-handler="submitHandler" @back="goBack" />
+    <PracticeRunner
+      v-else
+      :questions="questions"
+      :start-index="startIndex"
+      mode="wrong"
+      :submit-handler="submitHandler"
+      @back="goBack"
+    />
   </div>
 </template>

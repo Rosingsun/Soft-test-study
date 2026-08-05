@@ -174,7 +174,22 @@ CREATE TABLE `question_favorites` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='题目收藏表';
 
 -- =============================================================
--- 11. 错题表
+-- 11. 题目标记表（标记疑问）
+-- =============================================================
+CREATE TABLE `question_marks` (
+  `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`     BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+  `question_id` BIGINT UNSIGNED NOT NULL COMMENT '题目ID',
+  `created_at`  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_question` (`user_id`, `question_id`),
+  KEY `idx_question_id` (`question_id`),
+  CONSTRAINT `fk_qm_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_qm_question` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='题目标记表';
+
+-- =============================================================
+-- 12. 错题表
 -- =============================================================
 CREATE TABLE `wrong_questions` (
   `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -192,7 +207,7 @@ CREATE TABLE `wrong_questions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='错题表';
 
 -- =============================================================
--- 12. 考试模板表
+-- 13. 考试模板表
 -- =============================================================
 CREATE TABLE `exam_templates` (
   `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -211,7 +226,7 @@ CREATE TABLE `exam_templates` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='考试模板表';
 
 -- =============================================================
--- 13. 考试模板题目关联表
+-- 14. 考试模板题目关联表
 -- =============================================================
 CREATE TABLE `exam_template_questions` (
   `template_id` BIGINT UNSIGNED NOT NULL COMMENT '模板ID',
@@ -225,7 +240,7 @@ CREATE TABLE `exam_template_questions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='考试模板题目关联表';
 
 -- =============================================================
--- 14. 考试记录表
+-- 15. 考试记录表
 -- =============================================================
 CREATE TABLE `exam_records` (
   `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -246,7 +261,7 @@ CREATE TABLE `exam_records` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='考试记录表';
 
 -- =============================================================
--- 15. 考试答题记录表
+-- 16. 考试答题记录表
 -- =============================================================
 CREATE TABLE `exam_record_answers` (
   `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

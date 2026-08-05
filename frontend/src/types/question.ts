@@ -48,6 +48,12 @@ export interface QuestionFavoriteResp {
   created_at: string
 }
 
+export interface QuestionMarkResp {
+  id: number
+  question_id: number
+  created_at: string
+}
+
 export interface WrongQuestionResp {
   id: number
   question_id: number

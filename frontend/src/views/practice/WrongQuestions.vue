@@ -90,25 +90,23 @@ const typeBadges: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'de
       </BaseEmpty>
     </div>
 
-    <div v-else class="space-y-3">
+    <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <BaseCard
         v-for="w in list"
         :key="w.id"
-        class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+        class="flex flex-col gap-3"
       >
-        <div class="flex min-w-0 flex-1 flex-col gap-1.5">
-          <div class="flex flex-wrap items-center gap-2">
-            <BaseBadge :type="typeBadges[w.type]">
-              {{ typeLabel(w.type) }}
-            </BaseBadge>
-            <span class="text-xs text-gray-400">
-              错误 {{ w.wrong_count }} 次 · 正确 {{ w.correct_count }} 次
-            </span>
-            <span class="text-xs text-gray-400">最近错误：{{ timeAgo(w.last_wrong_at) }}</span>
-          </div>
-          <p class="text-sm text-gray-700 line-clamp-2">{{ stripHtml(w.content) }}</p>
+        <div class="flex flex-wrap items-center gap-2">
+          <BaseBadge :type="typeBadges[w.type]">
+            {{ typeLabel(w.type) }}
+          </BaseBadge>
+          <span class="text-xs text-gray-400">
+            错 {{ w.wrong_count }} · 对 {{ w.correct_count }}
+          </span>
         </div>
-        <div class="flex shrink-0 items-center gap-2">
+        <p class="line-clamp-3 min-h-0 flex-1 text-sm leading-6 text-gray-700">{{ stripHtml(w.content) }}</p>
+        <div class="flex items-center gap-2 border-t border-gray-50 pt-3">
+          <span class="min-w-0 flex-1 truncate text-xs text-gray-400">{{ timeAgo(w.last_wrong_at) }}</span>
           <BaseButton type="secondary" size="sm" @click="router.push(`/practice/wrong?qid=${w.question_id}`)">
             重做
           </BaseButton>

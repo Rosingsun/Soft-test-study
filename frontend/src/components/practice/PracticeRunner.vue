@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { submitPractice } from '@/api/practice'
 import { addFavorite, removeFavorite, checkFavorited } from '@/api/bookmark'
+import { addMark, removeMark, checkMarked } from '@/api/mark'
 import { essayScore, checkEssayScore } from '@/api/ai'
 import { useAiStore } from '@/stores/ai'
 import { sanitizeHtml } from '@/utils/sanitize'
@@ -17,15 +18,17 @@ const props = withDefaults(defineProps<{
   questions: Question[]
   mode?: string
   title?: string
+  startIndex?: number
   submitHandler?: (questionId: number, answer: string) => Promise<PracticeRecordResp>
 }>(), {
   mode: 'chapter',
   title: '',
+  startIndex: 0,
 })
 
 const emit = defineEmits<{ (e: 'back'): void }>()
 
-const currentIndex = ref(0)
+const currentIndex = ref(props.startIndex ?? 0)
 const answers = ref<Record<number, string>>({})
 const submitted = ref<Record<number, boolean>>({})
 const marked = ref<Record<number, boolean>>({})
@@ -55,12 +58,26 @@ async function loadFavoriteState() {
     } catch {
       favorited.value[q.id] = false
     }
+    try {
+      const res = await checkMarked(q.id)
+      marked.value[q.id] = res.marked
+    } catch {
+      marked.value[q.id] = false
+    }
   }
   loadingFavorites.value = false
 }
 
 function goTo(index: number) {
   if (index >= 0 && index < total.value) currentIndex.value = index
+}
+
+function handleNext() {
+  if (currentIndex.value === total.value - 1) {
+    emit('back')
+    return
+  }
+  goTo(currentIndex.value + 1)
 }
 
 function selectAnswer(questionId: number, value: string) {
@@ -82,8 +99,20 @@ function selectAnswer(questionId: number, value: string) {
   }
 }
 
-function toggleMark() {
-  if (current.value) marked.value[current.value.id] = !marked.value[current.value.id]
+async function toggleMark() {
+  const q = current.value
+  if (!q) return
+  try {
+    if (marked.value[q.id]) {
+      await removeMark(q.id)
+      marked.value[q.id] = false
+    } else {
+      await addMark(q.id)
+      marked.value[q.id] = true
+    }
+  } catch {
+    // toast 由 request 层提示
+  }
 }
 
 async function toggleFavorite() {
@@ -348,11 +377,11 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
         </button>
         <button
           class="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-white"
-          :disabled="currentIndex === total - 1"
-          @click="goTo(currentIndex + 1)"
+          :disabled="currentIndex === total - 1 && !(current && submitted[current.id])"
+          @click="handleNext"
         >
-          下一题
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          {{ currentIndex === total - 1 ? '完成' : '下一题' }}
+          <svg v-if="currentIndex < total - 1" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>

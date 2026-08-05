@@ -1,5 +1,6 @@
 import { get, post } from './request'
 import type { PracticeSubmitReq, PracticeRecordResp, Question } from '@/types/question'
+import type { GenerateQuestionsResp } from '@/types/ai'
 
 export function submitPractice(data: PracticeSubmitReq) {
   return post<PracticeRecordResp>('/practice/submit', data)
@@ -33,8 +34,8 @@ export function getQuestionById(id: number) {
   return get<Question>(`/questions/${id}`)
 }
 
-export function generateQuestions(data: any) {
-  return post('/ai/generate', data).catch((err) => {
+export function generateQuestions(data: any): Promise<GenerateQuestionsResp> {
+  return post<GenerateQuestionsResp>('/ai/generate', data).catch((err) => {
     // 开发环境下后端可能未启动，返回 mock 数据以便前端调试
     // 仅在 Vite 开发模式下启用
     // 注意：生产环境不会触发此分支
