@@ -19,11 +19,6 @@ const error = ref('')
 const now = new Date()
 const currentMonth = ref(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)
 
-const monthTotal = computed(() => calendarData.value.reduce((sum, d) => sum + d.total_count, 0))
-const monthCorrect = computed(() => calendarData.value.reduce((sum, d) => sum + d.correct_count, 0))
-const monthAccuracy = computed(() => monthTotal.value ? (monthCorrect.value / monthTotal.value * 100) : 0)
-const monthDuration = computed(() => calendarData.value.reduce((sum, d) => sum + d.duration, 0))
-
 const maxDailyCount = computed(() => {
   if (!dailyStats.value.length) return 1
   return Math.max(...dailyStats.value.map(d => d.total_count), 1)
@@ -131,34 +126,18 @@ onMounted(async () => {
       <!-- 学习日历热力图 -->
       <div class="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 class="text-base font-semibold text-gray-900">学习日历</h2>
+          <div>
+            <h2 class="text-base font-semibold text-gray-900">学习日历</h2>
+            <p class="mt-0.5 text-xs text-gray-400">点击日期可查看当天学习详情</p>
+          </div>
           <div class="flex items-center gap-2">
-            <button class="cursor-pointer rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50" @click="shiftMonth(-1)">
+            <button class="cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 transition-colors hover:border-indigo-300 hover:text-indigo-600" @click="shiftMonth(-1)">
               ← 上月
             </button>
-            <span class="min-w-24 text-center text-sm font-medium text-gray-700">{{ currentMonth }}</span>
-            <button class="cursor-pointer rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-sm text-gray-600 hover:bg-gray-50" @click="shiftMonth(1)">
+            <span class="min-w-24 text-center text-sm font-semibold text-gray-700">{{ currentMonth }}</span>
+            <button class="cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 transition-colors hover:border-indigo-300 hover:text-indigo-600" @click="shiftMonth(1)">
               下月 →
             </button>
-          </div>
-        </div>
-
-        <div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div class="rounded-lg bg-gray-50 p-3 text-center">
-            <p class="text-lg font-bold text-indigo-600">{{ monthTotal }}</p>
-            <p class="text-xs text-gray-400">本月答题</p>
-          </div>
-          <div class="rounded-lg bg-gray-50 p-3 text-center">
-            <p class="text-lg font-bold" :class="accuracyClass(monthAccuracy)">{{ monthAccuracy.toFixed(1) }}%</p>
-            <p class="text-xs text-gray-400">本月正确率</p>
-          </div>
-          <div class="rounded-lg bg-gray-50 p-3 text-center">
-            <p class="text-lg font-bold text-emerald-600">{{ monthCorrect }}</p>
-            <p class="text-xs text-gray-400">本月答对</p>
-          </div>
-          <div class="rounded-lg bg-gray-50 p-3 text-center">
-            <p class="text-lg font-bold text-gray-700">{{ Math.round(monthDuration / 60) }} 分</p>
-            <p class="text-xs text-gray-400">本月学习时长</p>
           </div>
         </div>
 
