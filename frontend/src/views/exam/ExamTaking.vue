@@ -24,6 +24,8 @@ const submitted = ref(false)
 const caseExpanded = ref(true)
 const confirmDialog = ref<InstanceType<typeof ConfirmDialog> | null>(null)
 const remainingSeconds = ref(0)
+// 已确认完成的题目（单选/判断选中即完成；多选/主观题手动完成）
+const completed = ref<Record<number, boolean>>({})
 let timer: number | null = null
 let deadline = 0
 let lastSaveErrorAt = 0
@@ -136,6 +138,32 @@ function selectAnswer(questionId: number, value: string) {
     answers.value[questionId] = value
   }
   saveAnswer(questionId, answers.value[questionId])
+  // 单选 / 判断题：选中后自动标记完成并跳到下一题
+  if ((q.type === 'single' || q.type === 'judge') && !completed.value[questionId]) {
+    completed.value[questionId] = true
+    goToNextUnanswered()
+  }
+}
+
+// 标记当前题完成（多选 / 主观题手动触发）
+function completeQuestion() {
+  if (!current.value) return
+  completed.value[current.value.id] = true
+  if (answers.value[current.value.id]) saveAnswer(current.value.id, answers.value[current.value.id])
+  goToNextUnanswered()
+}
+
+// 跳转到下一个未答或未完成的题目
+function goToNextUnanswered() {
+  const questions = examData.value?.questions || []
+  for (let i = currentIndex.value + 1; i < questions.length; i++) {
+    const q = questions[i]
+    if (!answers.value[q.id]) {
+      currentIndex.value = i
+      return
+    }
+  }
+  showToast('已是最后一题，可点击交卷', 'info')
 }
 
 function saveAnswer(questionId: number, answer: string) {
@@ -154,6 +182,7 @@ function isSelected(questionId: number, value: string) {
 }
 
 function statusClass(questionId: number) {
+  if (completed.value[questionId]) return 'bg-emerald-500 text-white'
   if (answers.value[questionId]) return 'bg-indigo-600 text-white'
   return 'bg-gray-200 text-gray-600'
 }
@@ -241,38 +270,57 @@ async function handleSubmit() {
           </div>
         </div>
 
-        <!-- 顶部导航：上一题 / 下一题 / 已答 -->
-        <div class="flex items-center justify-between rounded-xl border border-gray-100 bg-white/95 px-3 py-2 shadow-sm backdrop-blur">
-          <button
-            class="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-3.5 py-1.5 text-sm font-medium text-gray-600 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-30"
-            :disabled="currentIndex === 0"
-            @click="goTo(currentIndex - 1)"
-          >
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            上一题
-          </button>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-400">已答 <span class="font-bold text-indigo-600">{{ answeredCount }}</span> / {{ total }}</span>
-            <span class="hidden text-xs text-gray-400 sm:inline">· 答案已自动保存</span>
-          </div>
-          <button
-            class="bg-brand-gradient flex cursor-pointer items-center gap-1 rounded-lg px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:brightness-110 disabled:opacity-30 disabled:shadow-none"
-            :disabled="currentIndex === total - 1"
-            @click="goTo(currentIndex + 1)"
-          >
-            下一题
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
+        <!-- 上一题/下一题已上移到题目卡片上方 -->
       </div>
 
       <div class="flex flex-col gap-4 lg:flex-row">
         <!-- 题目区 -->
         <div class="min-w-0 flex-1">
+          <!-- 题目操作栏：上一题/下一题/标记/收藏/完成本题/提交答案（题目卡片外正上方） -->
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-100 bg-white/95 p-3 shadow-sm backdrop-blur">
+            <div class="flex gap-2">
+              <button
+                class="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-30"
+                :disabled="currentIndex === 0"
+                @click="goTo(currentIndex - 1)"
+              >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                上一题
+              </button>
+              <button
+                class="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-30"
+                :disabled="currentIndex === total - 1"
+                @click="goTo(currentIndex + 1)"
+              >
+                下一题
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span
+                v-if="completed[current.id]"
+                class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600 ring-1 ring-inset ring-emerald-600/20"
+              >
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                本题已完成
+              </span>
+              <button
+                v-if="!completed[current.id] && current.type !== 'single' && current.type !== 'judge'"
+                class="bg-brand-gradient cursor-pointer rounded-lg px-5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition-all duration-200 hover:shadow-lg hover:brightness-110 active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
+                :disabled="!answers[current.id]"
+                @click="completeQuestion"
+              >
+                完成本题
+              </button>
+            </div>
+          </div>
+
           <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
             <div class="mb-5 flex flex-wrap items-center gap-2">
               <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-600 ring-1 ring-inset ring-indigo-600/20">
@@ -373,6 +421,7 @@ async function handleSubmit() {
             <button class="cursor-pointer text-xs text-gray-400 hover:text-gray-600 lg:hidden" @click="showCard = false">收起</button>
           </div>
           <div class="mb-3 flex flex-wrap gap-2 text-[10px] text-gray-400">
+            <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />已完成</span>
             <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-full bg-indigo-500" />已答</span>
             <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-full bg-gray-200" />未答</span>
           </div>

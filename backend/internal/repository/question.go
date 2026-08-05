@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/soft-test-study/backend/internal/model"
 	"gorm.io/gorm"
 )
@@ -98,6 +100,17 @@ func (r *QuestionRepo) FindSpecial(subjectID uint, qtype, difficulty string, lim
 		query = query.Where("difficulty = ?", difficulty)
 	}
 	err := query.Order("RAND()").Limit(limit).Find(&list).Error
+	return list, err
+}
+
+func (r *QuestionRepo) FindEssayQuestions(subjectID uint, years int) ([]model.Question, error) {
+	var list []model.Question
+	if years <= 0 {
+		years = 5
+	}
+	thresholdYear := time.Now().Year() - years + 1
+	err := r.db.Where("subject_id = ? AND type = ? AND status = 1 AND year >= ?", subjectID, model.TypeEssay, thresholdYear).
+		Order("year desc, id asc").Find(&list).Error
 	return list, err
 }
 

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -36,6 +37,10 @@ type ChatResponse struct {
 	Choices []ChatChoice `json:"choices"`
 }
 
+type AnthropicResponse struct {
+	Completion string `json:"completion"`
+}
+
 type ErrorResponse struct {
 	Error struct {
 		Message string `json:"message"`
@@ -44,19 +49,41 @@ type ErrorResponse struct {
 	} `json:"error"`
 }
 
-func Chat(ctx context.Context, baseURL, apiKey string, req ChatRequest) (*ChatResponse, error) {
+func Chat(ctx context.Context, provider, baseURL, apiKey string, req ChatRequest) (*ChatResponse, error) {
+	if provider == "anthropic" {
+		return chatAnthropic(ctx, baseURL, apiKey, req)
+	}
+
+	return chatOpenAI(ctx, provider, baseURL, apiKey, req)
+}
+
+func chatOpenAI(ctx context.Context, provider, baseURL, apiKey string, req ChatRequest) (*ChatResponse, error) {
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, fmt.Errorf("序列化请求失败: %w", err)
 	}
 
-	url := trimSuffix(baseURL, "/") + "/v1/chat/completions"
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	url := trimSuffix(baseURL, "/")
+	httpReqURL := url
+	if provider == "azure" {
+		if req.Model == "" {
+			return nil, fmt.Errorf("Azure 模型/部署名称不能为空")
+		}
+		httpReqURL = fmt.Sprintf("%s/openai/deployments/%s/chat/completions?api-version=2023-10-01-preview", url, req.Model)
+	} else {
+		httpReqURL = fmt.Sprintf("%s/v1/chat/completions", url)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, httpReqURL, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("创建请求失败: %w", err)
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", "Bearer "+apiKey)
+	if provider == "azure" {
+		httpReq.Header.Set("api-key", apiKey)
+	} else {
+		httpReq.Header.Set("Authorization", "Bearer "+apiKey)
+	}
 
 	client := &http.Client{Timeout: 60 * time.Second}
 	resp, err := client.Do(httpReq)
@@ -88,6 +115,68 @@ func Chat(ctx context.Context, baseURL, apiKey string, req ChatRequest) (*ChatRe
 	}
 
 	return &chatResp, nil
+}
+
+func chatAnthropic(ctx context.Context, baseURL, apiKey string, req ChatRequest) (*ChatResponse, error) {
+	prompt := buildAnthropicPrompt(req.Messages)
+	anthropicReq := map[string]any{
+		"model":                req.Model,
+		"prompt":               prompt,
+		"max_tokens_to_sample": req.MaxTokens,
+		"temperature":          req.Temperature,
+	}
+	body, err := json.Marshal(anthropicReq)
+	if err != nil {
+		return nil, fmt.Errorf("序列化请求失败: %w", err)
+	}
+
+	url := trimSuffix(baseURL, "/") + "/v1/complete"
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("创建请求失败: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", apiKey)
+
+	client := &http.Client{Timeout: 60 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("请求 AI 接口失败: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("读取响应失败: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		var errResp ErrorResponse
+		if json.Unmarshal(respBody, &errResp) == nil && errResp.Error.Message != "" {
+			return nil, fmt.Errorf("AI 接口返回错误 (status=%d): %s", resp.StatusCode, errResp.Error.Message)
+		}
+		return nil, fmt.Errorf("AI 接口返回错误 (status=%d): %s", resp.StatusCode, string(respBody))
+	}
+
+	var anthropicResp AnthropicResponse
+	if err := json.Unmarshal(respBody, &anthropicResp); err != nil {
+		return nil, fmt.Errorf("解析 Anthropic 响应失败: %w", err)
+	}
+
+	return &ChatResponse{Choices: []ChatChoice{{Message: ChatMessage{Role: "assistant", Content: anthropicResp.Completion}}}}, nil
+}
+
+func buildAnthropicPrompt(messages []ChatMessage) string {
+	var prompt strings.Builder
+	for _, msg := range messages {
+		if msg.Role == "system" {
+			prompt.WriteString("" + msg.Content + "\n\n")
+		} else if msg.Role == "user" {
+			prompt.WriteString("Human: " + msg.Content + "\n\n")
+		}
+	}
+	prompt.WriteString("Assistant:")
+	return prompt.String()
 }
 
 func trimSuffix(s, suffix string) string {

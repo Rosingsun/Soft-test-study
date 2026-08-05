@@ -115,6 +115,26 @@ func (h *QuestionHandler) Special(c *gin.Context) {
 	response.Success(c, list)
 }
 
+func (h *QuestionHandler) EssayList(c *gin.Context) {
+	subjectID, ok := parseUintQuery(c, "subject_id")
+	if !ok {
+		response.Error(c, config.CodeParamError, "缺少或错误的 subject_id 参数")
+		return
+	}
+	years := 5
+	if v := c.Query("years"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			years = n
+		}
+	}
+	list, err := h.svc.GetEssayQuestions(subjectID, years)
+	if err != nil {
+		response.Error(c, config.CodeBadRequest, "获取论文题目失败")
+		return
+	}
+	response.Success(c, list)
+}
+
 func parseUintQuery(c *gin.Context, key string) (uint, bool) {
 	val := c.Query(key)
 	if val == "" {

@@ -61,6 +61,14 @@ func (s *QuestionService) GetSpecialQuestions(subjectID uint, qtype, difficulty 
 	return toQuestionRespList(questions), nil
 }
 
+func (s *QuestionService) GetEssayQuestions(subjectID uint, years int) ([]dto.QuestionResp, error) {
+	questions, err := s.repo.FindEssayQuestions(subjectID, years)
+	if err != nil {
+		return nil, err
+	}
+	return toQuestionRespList(questions), nil
+}
+
 // GetCaseStudies 按子科目查询案例分析题
 func (s *QuestionService) GetCaseStudies(subSubjectID uint, year int) ([]dto.QuestionResp, error) {
 	questions, err := s.repo.FindCaseStudies(subSubjectID, year)

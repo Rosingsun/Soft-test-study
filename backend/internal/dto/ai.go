@@ -60,7 +60,7 @@ type StartAiExamReq struct {
 	Duration  int    `json:"duration"`
 }
 
-// EssayScoreReq 论文 AI 评分请求
+// EssayScoreReq AI 评分请求（论文/案例分析）
 type EssayScoreReq struct {
 	ApiConfig  AiApiConfig `json:"api_config" binding:"required"`
 	QuestionID uint        `json:"question_id" binding:"required"`
@@ -71,10 +71,11 @@ type EssayScoreReq struct {
 	ExamAnswerID uint   `json:"exam_answer_id"`                   // 考试答题详情ID（仅考试模式）
 }
 
-// EssayScoreResp 论文 AI 评分响应
+// EssayScoreResp AI 评分响应（论文/案例分析）
 type EssayScoreResp struct {
 	ID             uint   `json:"id"`
 	QuestionID     uint   `json:"question_id"`
+	QuestionType   string `json:"question_type"`
 	TotalScore     int    `json:"total_score"`
 	ArgumentScore  int    `json:"argument_score"`
 	StructureScore int    `json:"structure_score"`

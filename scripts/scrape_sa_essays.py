@@ -18,6 +18,7 @@
     }
 """
 
+import datetime
 import html
 import json
 import os
@@ -47,7 +48,8 @@ HEADERS = {
     "Referer": SUBJECT_URL,
 }
 
-YEAR_MIN, YEAR_MAX = 2009, 2026
+CURRENT_YEAR = datetime.datetime.now().year
+YEAR_MIN, YEAR_MAX = CURRENT_YEAR - 4, CURRENT_YEAR
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 
 

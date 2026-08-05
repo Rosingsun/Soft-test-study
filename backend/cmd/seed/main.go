@@ -105,7 +105,11 @@ var chapterNamesBySubject = map[string][]string{
 	"网络管理员": {"网络基础", "网络设备与配置", "网络安全与管理"},
 	"信息处理技术员": {"信息处理基础", "办公软件应用", "信息安全与法规"},
 	"信息系统管理工程师": {"信息系统基础", "系统运维管理", "IT服务管理"},
-	"系统分析师": {"系统分析基础", "需求工程", "系统设计", "软件工程", "项目管理"},
+	// 系统分析师综合知识按《系统分析师教程（第2版）》第一篇「基础知识」9章分类
+	"系统分析师": {
+		"绪论", "数学与工程基础", "计算机系统", "计算机网络与分布式系统",
+		"数据库系统", "企业信息化", "软件工程", "项目管理", "信息安全",
+	},
 	"系统架构设计师": {"架构设计基础", "软件架构风格", "系统质量与性能", "云与大数据架构"},
 	"网络规划设计师": {"网络规划基础", "网络拓扑设计", "网络性能与安全"},
 }
@@ -118,6 +122,14 @@ func seedChapters(db *gorm.DB) {
 		var subject model.Subject
 		if err := db.First(&subject, ss.SubjectID).Error; err != nil {
 			continue
+		}
+
+		// 系统分析师-综合知识按第二版教材9章重建：先强制删除该子科目下旧题目与旧章节，避免残留旧分类
+		if subject.Name == "系统分析师" && ss.Name == "综合知识" {
+			db.Unscoped().Where("subject_id = ? AND sub_subject_id = ?", subject.ID, ss.ID).
+				Delete(&model.Question{})
+			db.Unscoped().Where("subject_id = ? AND sub_subject_id = ?", subject.ID, ss.ID).
+				Delete(&model.Chapter{})
 		}
 
 		names := chapterNames(subject.Name, ss.Name)
@@ -153,6 +165,9 @@ func assignQuestionsToChapters(db *gorm.DB) {
 	var questions []model.Question
 	db.Where("chapter_id = 0 AND status = 1").Order("subject_id asc, sub_subject_id asc, id asc").Find(&questions)
 
+	// 系统分析师「综合知识」由 import_real 按第二版教材9章精确归类，seed 不随机分配
+	skipSubject, skipSub := resolveSAZongheIDs(db)
+
 	// 按 (subject_id, sub_subject_id) 缓存的章节列表
 	chapterPool := map[string][]model.Chapter{}
 	poolIndex := map[string]int{}
@@ -161,6 +176,10 @@ func assignQuestionsToChapters(db *gorm.DB) {
 	updated := 0
 	for i := range questions {
 		q := &questions[i]
+		// 跳过由 import_real 专属处理的系统分析师综合知识题目
+		if skipSubject != 0 && q.SubjectID == skipSubject && q.SubSubjectID == skipSub {
+			continue
+		}
 		key := fmt.Sprintf("%d:%d", q.SubjectID, q.SubSubjectID)
 
 		chapters, ok := chapterPool[key]
@@ -190,6 +209,20 @@ func assignQuestionsToChapters(db *gorm.DB) {
 	if updated > 0 {
 		fmt.Printf("已为 %d 道题目分配章节\n", updated)
 	}
+}
+
+// resolveSAZongheIDs 返回系统分析师「综合知识」的 subject_id / sub_subject_id，
+// 用于让 seed 跳过该子科目，避免随机分配章节覆盖 import_real 的精确归类
+func resolveSAZongheIDs(db *gorm.DB) (uint, uint) {
+	var subject model.Subject
+	if err := db.Where("name = ?", "系统分析师").First(&subject).Error; err != nil {
+		return 0, 0
+	}
+	var ss model.SubSubject
+	if err := db.Where("subject_id = ? AND name = ?", subject.ID, "综合知识").First(&ss).Error; err != nil {
+		return 0, 0
+	}
+	return subject.ID, ss.ID
 }
 
 func seedExamTemplates(db *gorm.DB) {

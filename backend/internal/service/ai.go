@@ -15,13 +15,13 @@ import (
 )
 
 type AiService struct {
-	aiRepo          *repository.AiRepo
-	questionRepo    *repository.QuestionRepo
-	subjectRepo     *repository.SubjectRepo
-	chapterRepo     *repository.ChapterRepo
-	examRepo        *repository.ExamRecordRepo
-	essayScoreRepo  *repository.EssayScoreRepo
-	practiceRepo    *repository.PracticeRecordRepo
+	aiRepo         *repository.AiRepo
+	questionRepo   *repository.QuestionRepo
+	subjectRepo    *repository.SubjectRepo
+	chapterRepo    *repository.ChapterRepo
+	examRepo       *repository.ExamRecordRepo
+	essayScoreRepo *repository.EssayScoreRepo
+	practiceRepo   *repository.PracticeRecordRepo
 }
 
 func NewAiService(
@@ -49,6 +49,8 @@ func (s *AiService) GetProviders() dto.AiProvidersResp {
 		Providers: []dto.AiProvider{
 			{Provider: "deepseek", Name: "DeepSeek", BaseURL: "https://api.deepseek.com", Models: []string{"deepseek-chat", "deepseek-reasoner"}},
 			{Provider: "openai", Name: "OpenAI", BaseURL: "https://api.openai.com", Models: []string{"gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"}},
+			{Provider: "azure", Name: "Azure OpenAI", BaseURL: "https://<your-resource-name>.openai.azure.com", Models: []string{"gpt-35-turbo", "gpt-4o-mini", "gpt-4o"}},
+			{Provider: "anthropic", Name: "Anthropic", BaseURL: "https://api.anthropic.com", Models: []string{"claude-3.5-mini", "claude-3.5", "claude-4o"}},
 			{Provider: "custom", Name: "自定义", BaseURL: "", Models: []string{}},
 		},
 	}
@@ -88,7 +90,7 @@ func (s *AiService) callAIAndParse(config dto.AiApiConfig, subjectID, chapterID 
 
 	prompt := buildGeneratePrompt(subjectName, chapterName, strings.Join(typeNames, "、"), difficultyName, count)
 
-	resp, err := llm.Chat(context.Background(), config.BaseURL, config.ApiKey, llm.ChatRequest{
+	resp, err := llm.Chat(context.Background(), config.Provider, config.BaseURL, config.ApiKey, llm.ChatRequest{
 		Model:       config.Model,
 		Messages:    []llm.ChatMessage{{Role: "user", Content: prompt}},
 		Temperature: 0.7,
@@ -256,14 +258,14 @@ func (s *AiService) StartAiExam(userID uint, req dto.StartAiExamReq) (*dto.Start
 			QuestionID: q.ID,
 		}
 		examQuestions[i] = dto.ExamQuesResp{
-			ID:          q.ID,
-			Type:        q.Type,
-			Content:     q.Content,
+			ID:           q.ID,
+			Type:         q.Type,
+			Content:      q.Content,
 			CaseMaterial: q.CaseMaterial,
-			Options:     q.Options,
-			Difficulty:  q.Difficulty,
-			Score:       1,
-			SortOrder:   i + 1,
+			Options:      q.Options,
+			Difficulty:   q.Difficulty,
+			Score:        1,
+			SortOrder:    i + 1,
 		}
 	}
 
@@ -309,7 +311,7 @@ func (s *AiService) Analyze(req dto.AnalyzeReq) (*dto.AnalyzeResp, error) {
 		typeName, req.QuestionContent, req.QuestionAnswer, req.UserAnswer,
 	)
 
-	resp, err := llm.Chat(context.Background(), req.ApiConfig.BaseURL, req.ApiConfig.ApiKey, llm.ChatRequest{
+	resp, err := llm.Chat(context.Background(), req.ApiConfig.Provider, req.ApiConfig.BaseURL, req.ApiConfig.ApiKey, llm.ChatRequest{
 		Model:       req.ApiConfig.Model,
 		Messages:    []llm.ChatMessage{{Role: "user", Content: prompt}},
 		Temperature: 0.5,
@@ -333,6 +335,40 @@ type aiGeneratedItem struct {
 }
 
 func buildGeneratePrompt(subject, chapter, types, difficulty string, count int) string {
+	if types == "essay" {
+		return fmt.Sprintf(
+			`你是一位软考（计算机技术与软件专业技术资格水平考试）出题专家。请根据以下要求生成论文题目：
+
+- 考试科目：%s
+- 题目类型：论文题
+- 难度：%s
+- 数量：%d 道
+
+要求：
+1. 题目内容需符合系统分析师考试论文题风格
+2. 题目内容务必简洁清晰，可直接作为写作命题
+3. 输出内容仅为题目描述，不需要给出答案或解析
+4. type 字段固定为 essay
+5. options 字段应该是一个空数组 []
+6. answer 字段留空字符串
+7. analysis 字段留空字符串
+
+请严格按照以下 JSON 格式输出，不要输出 markdown 代码块标记，也不要输出额外注释：
+[
+  {
+    "type": "essay",
+    "difficulty": "medium",
+    "content": "论文题目内容",
+    "options": [],
+    "answer": "",
+    "analysis": "",
+    "knowledge_point": "知识点名称"
+  }
+]`,
+			subject, difficulty, count,
+		)
+	}
+
 	return fmt.Sprintf(
 		`你是一位软考（计算机技术与软件专业技术资格水平考试）出题专家。请根据以下要求生成题目：
 
@@ -349,7 +385,7 @@ func buildGeneratePrompt(subject, chapter, types, difficulty string, count int) 
 4. type 字段可选值为 single 或 multi
 5. 多选题的 answer 格式为逗号分隔的字母，如 "A,C" 表示选 A 和 C
 
-请严格按照以下 JSON 格式输出，不要输出 markdown 代码块标记，只输出纯 JSON 数组：
+请严格按照以下 JSON 格式输出，不要输出 markdown 代码块标记，也不要输出额外注释：
 [
   {
     "type": "single",
@@ -390,6 +426,8 @@ func typeLabelCN(t string) string {
 		return "综合题"
 	case "essay":
 		return "论文题"
+	case "case_study":
+		return "案例分析"
 	default:
 		return t
 	}
@@ -408,7 +446,7 @@ func difficultyLabelCN(d string) string {
 	}
 }
 
-// EssayScore 对论文进行 AI 评分
+// EssayScore 对论文/案例分析进行 AI 评分
 func (s *AiService) EssayScore(userID uint, req dto.EssayScoreReq) (*dto.EssayScoreResp, error) {
 	// 获取题目内容
 	question, err := s.questionRepo.FindByID(req.QuestionID)
@@ -416,10 +454,17 @@ func (s *AiService) EssayScore(userID uint, req dto.EssayScoreReq) (*dto.EssaySc
 		return nil, fmt.Errorf("获取题目信息失败: %w", err)
 	}
 
-	// 构建评分 prompt
-	prompt := buildEssayScorePrompt(question.Content, req.UserAnswer)
+	// 根据题型选择评分维度与 prompt
+	scoreSpec := scoreSpecForType(question.Type)
+	var prompt string
+	if question.Type == "case_study" {
+		// 案例分析需要把案例材料一并作为上下文
+		prompt = buildCaseStudyScorePrompt(question.Content, question.CaseMaterial, req.UserAnswer)
+	} else {
+		prompt = buildEssayScorePrompt(question.Content, req.UserAnswer)
+	}
 
-	resp, err := llm.Chat(context.Background(), req.ApiConfig.BaseURL, req.ApiConfig.ApiKey, llm.ChatRequest{
+	resp, err := llm.Chat(context.Background(), req.ApiConfig.Provider, req.ApiConfig.BaseURL, req.ApiConfig.ApiKey, llm.ChatRequest{
 		Model:       req.ApiConfig.Model,
 		Messages:    []llm.ChatMessage{{Role: "user", Content: prompt}},
 		Temperature: 0.3,
@@ -437,7 +482,7 @@ func (s *AiService) EssayScore(userID uint, req dto.EssayScoreReq) (*dto.EssaySc
 		return nil, fmt.Errorf("AI 评分结果解析失败: %w", err)
 	}
 
-	// 校验分值范围
+	// 校验分值范围（按题型对应的各维度满分 clamp）
 	clamp := func(v, min, max int) int {
 		if v < min {
 			return min
@@ -447,17 +492,18 @@ func (s *AiService) EssayScore(userID uint, req dto.EssayScoreReq) (*dto.EssaySc
 		}
 		return v
 	}
-	result.ArgumentScore = clamp(result.ArgumentScore, 0, 20)
-	result.StructureScore = clamp(result.StructureScore, 0, 20)
-	result.LanguageScore = clamp(result.LanguageScore, 0, 20)
-	result.DepthScore = clamp(result.DepthScore, 0, 15)
-	result.TotalScore = clamp(result.TotalScore, 0, 75)
+	result.ArgumentScore = clamp(result.ArgumentScore, 0, scoreSpec.ArgumentMax)
+	result.StructureScore = clamp(result.StructureScore, 0, scoreSpec.StructureMax)
+	result.LanguageScore = clamp(result.LanguageScore, 0, scoreSpec.LanguageMax)
+	result.DepthScore = clamp(result.DepthScore, 0, scoreSpec.DepthMax)
+	result.TotalScore = clamp(result.TotalScore, 0, scoreSpec.TotalMax)
 
 	now := time.Now()
 
 	score := &model.EssayScore{
 		UserID:         userID,
 		QuestionID:     req.QuestionID,
+		QuestionType:   question.Type,
 		RecordType:     req.RecordType,
 		RecordID:       req.RecordID,
 		ExamAnswerID:   req.ExamAnswerID,
@@ -495,6 +541,7 @@ func (s *AiService) EssayScore(userID uint, req dto.EssayScoreReq) (*dto.EssaySc
 	return &dto.EssayScoreResp{
 		ID:             score.ID,
 		QuestionID:     score.QuestionID,
+		QuestionType:   score.QuestionType,
 		TotalScore:     score.TotalScore,
 		ArgumentScore:  score.ArgumentScore,
 		StructureScore: score.StructureScore,
@@ -505,7 +552,7 @@ func (s *AiService) EssayScore(userID uint, req dto.EssayScoreReq) (*dto.EssaySc
 	}, nil
 }
 
-// CheckEssayScore 检查论文是否已有评分
+// CheckEssayScore 检查是否已有评分
 func (s *AiService) CheckEssayScore(recordType string, recordID, examAnswerID uint) (*dto.EssayScoreCheckResp, error) {
 	var score *model.EssayScore
 	var err error
@@ -528,6 +575,7 @@ func (s *AiService) CheckEssayScore(recordType string, recordID, examAnswerID ui
 		Score: &dto.EssayScoreResp{
 			ID:             score.ID,
 			QuestionID:     score.QuestionID,
+			QuestionType:   score.QuestionType,
 			TotalScore:     score.TotalScore,
 			ArgumentScore:  score.ArgumentScore,
 			StructureScore: score.StructureScore,
@@ -575,5 +623,63 @@ func buildEssayScorePrompt(questionContent, userAnswer string) string {
   "comment": "评语内容，包含优缺点分析和改进建议，200字左右"
 }`,
 		questionContent, userAnswer,
+	)
+}
+
+// scoreSpec 定义各题型评分的维度满分
+type scoreSpec struct {
+	ArgumentMax  int // 第一维度满分
+	StructureMax int // 第二维度满分
+	LanguageMax  int // 第三维度满分
+	DepthMax     int // 第四维度满分
+	TotalMax     int // 总分满分
+}
+
+// scoreSpecForType 返回题型对应的评分维度满分范围
+func scoreSpecForType(questionType string) scoreSpec {
+	switch questionType {
+	case "case_study":
+		// 案例分析：要点完整性/分析逻辑/专业术语/方案可行性，各20分
+		return scoreSpec{ArgumentMax: 20, StructureMax: 20, LanguageMax: 20, DepthMax: 20, TotalMax: 80}
+	default:
+		// 论文：论点/结构/语言/深度，20/20/20/15
+		return scoreSpec{ArgumentMax: 20, StructureMax: 20, LanguageMax: 20, DepthMax: 15, TotalMax: 75}
+	}
+}
+
+func buildCaseStudyScorePrompt(questionContent, caseMaterial, userAnswer string) string {
+	caseCtx := caseMaterial
+	if strings.TrimSpace(caseCtx) == "" {
+		caseCtx = "（无案例材料）"
+	}
+	return fmt.Sprintf(
+		`你是一位软考案例分析阅卷专家。请结合所给案例材料，对以下案例分析题的作答进行分维度评分。
+
+案例材料：
+%s
+
+案例问题：
+%s
+
+考生作答：
+%s
+
+评分要求：
+1. 要点完整性（满分20分）：评估是否覆盖题目要求的关键要点，结论是否全面
+2. 分析逻辑（满分20分）：评估分析推理是否严谨、步骤是否清晰、是否紧扣案例材料
+3. 专业术语（满分20分）：评估术语使用是否准确规范、表述是否专业
+4. 方案可行性（满分20分）：评估给出的方案/结论是否合理、可落地、具有实践价值
+5. 总分（满分80分）：为以上4项得分之和
+
+请严格按照以下 JSON 格式输出，不要输出 markdown 代码块标记，只输出纯 JSON：
+{
+  "total_score": 64,
+  "argument_score": 16,
+  "structure_score": 17,
+  "language_score": 15,
+  "depth_score": 16,
+  "comment": "评语内容，包含优缺点分析和改进建议，200字左右"
+}`,
+		caseCtx, questionContent, userAnswer,
 	)
 }

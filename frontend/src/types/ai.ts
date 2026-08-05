@@ -67,6 +67,7 @@ export interface EssayScoreReq {
 export interface EssayScoreResp {
   id: number
   question_id: number
+  question_type?: string
   total_score: number
   argument_score: number
   structure_score: number

@@ -2,16 +2,17 @@ package model
 
 import "time"
 
-// EssayScore 论文 AI 评分记录
+// EssayScore AI 评分记录（论文/案例分析）
 type EssayScore struct {
 	ID               uint      `gorm:"primarykey"`
 	UserID           uint      `gorm:"column:user_id;not null;index:idx_user_record"`
 	QuestionID       uint      `gorm:"column:question_id;not null"`
+	QuestionType     string    `gorm:"column:question_type;type:varchar(20);comment:essay/case_study"`
 	RecordType       string    `gorm:"column:record_type;type:varchar(20);not null;comment:practice/exam"`
 	RecordID         uint      `gorm:"column:record_id;not null;index:idx_user_record;comment:练习记录ID或考试记录ID"`
 	ExamAnswerID     uint      `gorm:"column:exam_answer_id;comment:考试答题详情ID(仅考试模式)"`
 	UserAnswer       string    `gorm:"column:user_answer;type:text"`
-	TotalScore       int       `gorm:"column:total_score;comment:AI 总分(满分75)"`
+	TotalScore       int       `gorm:"column:total_score;comment:AI 总分(论文满分75,案例分析满分80)"`
 	ArgumentScore    int       `gorm:"column:argument_score;comment:论点与立意得分"`
 	StructureScore   int       `gorm:"column:structure_score;comment:结构与逻辑得分"`
 	LanguageScore    int       `gorm:"column:language_score;comment:语言表达得分"`

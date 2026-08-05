@@ -30,7 +30,6 @@ const navGroups = computed(() => {
       title: '练习',
       items: [
         { label: 'AI 学习', icon: 'ai', to: '/ai/practice' },
-        { label: '随机练习', icon: 'random', to: '/practice/random' },
         { label: '专项练习', icon: 'target', to: '/practice/special' },
         { label: '错题本', icon: 'wrong', to: '/wrong-questions' },
         { label: '我的收藏', icon: 'star', to: '/favorites' },

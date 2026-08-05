@@ -43,8 +43,8 @@ func (h *AiHandler) GenerateQuestions(c *gin.Context) {
 	}
 
 	for _, t := range req.Types {
-		if t != "single" && t != "multi" {
-			response.Error(c, config.CodeParamError, "AI 出题仅支持 single 和 multi 类型")
+		if t != "single" && t != "multi" && t != "essay" {
+			response.Error(c, config.CodeParamError, "AI 出题仅支持 single、multi 和 essay 类型")
 			return
 		}
 	}

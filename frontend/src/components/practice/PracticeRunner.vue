@@ -6,7 +6,7 @@ import { addFavorite, removeFavorite, checkFavorited } from '@/api/bookmark'
 import { essayScore, checkEssayScore } from '@/api/ai'
 import { useAiStore } from '@/stores/ai'
 import { sanitizeHtml } from '@/utils/sanitize'
-import { typeLabel, parseOptions, isCorrectAnswer } from '@/utils/question'
+import { typeLabel, parseOptions, isCorrectAnswer, aiScoreSpec, aiDimensionScore } from '@/utils/question'
 import type { Question, PracticeRecordResp } from '@/types/question'
 import type { EssayScoreResp } from '@/types/ai'
 
@@ -40,6 +40,8 @@ const progressText = computed(() => `第 ${currentIndex.value + 1} 题 / 共 ${t
 const progressPct = computed(() => total.value ? ((currentIndex.value + 1) / total.value) * 100 : 0)
 const answeredCount = computed(() => Object.keys(answers.value).length)
 const markedCount = computed(() => Object.values(marked.value).filter(Boolean).length)
+// 当前主观题（论文/案例分析）的 AI 评分展示规格
+const currentAiSpec = computed(() => current.value ? aiScoreSpec(current.value.type) : aiScoreSpec('essay'))
 
 onMounted(loadFavoriteState)
 watch(() => props.questions, loadFavoriteState)
@@ -74,6 +76,10 @@ function selectAnswer(questionId: number, value: string) {
   } else {
     answers.value[questionId] = value
   }
+  // 单选 / 判断题：选中后自动提交（立即判分并显示解析）
+  if (q.type === 'single' || q.type === 'judge') {
+    handleSubmit()
+  }
 }
 
 function toggleMark() {
@@ -102,8 +108,8 @@ const aiScoreResults = ref<Record<number, EssayScoreResp>>({})
 const aiScoreError = ref<Record<number, string>>({})
 const practiceRecordIds = ref<Record<number, number>>({})
 
-// 检查论文是否已有评分
-async function checkExistingScore(questionId: number, recordId: number) {
+// 检查是否已有评分
+async function checkExistingScore(_questionId: number, recordId: number) {
   try {
     const res = await checkEssayScore({ record_type: 'practice', record_id: recordId })
     return res.has_score ? res.score : null
@@ -112,10 +118,10 @@ async function checkExistingScore(questionId: number, recordId: number) {
   }
 }
 
-// 论文 AI 评分
+// AI 评分（论文 / 案例分析）
 async function handleAiScore() {
   const q = current.value
-  if (!q || q.type !== 'essay' || !answers.value[q.id] || !submitted.value[q.id]) return
+  if (!q || !isSubjective(q) || !answers.value[q.id] || !submitted.value[q.id]) return
 
   // 检查是否已配置 AI
   if (!aiStore.hasConfig) {
@@ -131,7 +137,7 @@ async function handleAiScore() {
   // 检查是否已有评分
   const existing = await checkExistingScore(q.id, recordId)
   if (existing) {
-    if (!confirm('AI 已对此论文评过分，是否还需要再次测评？')) {
+    if (!confirm(`AI 已对此${typeLabel(q.type)}评过分，是否还需要再次测评？`)) {
       // 直接显示已有评分
       aiScoreResults.value[q.id] = existing
       return
@@ -160,6 +166,14 @@ async function handleAiScore() {
 async function handleSubmit() {
   const q = current.value
   if (!q || !answers.value[q.id] || submitted.value[q.id]) return
+  // 已存在练习记录，无需重复提交
+  if (practiceRecordIds.value[q.id]) {
+    submitted.value[q.id] = true
+    return
+  }
+  // 本地即时判分：题目查询已带回正确答案与解析，先同步置为已提交以立即渲染解析与对错，
+  // 再异步上报练习记录（统计/错题入库/AI 评分 record_id），不阻塞判分展示。
+  submitted.value[q.id] = true
   try {
     const submit = props.submitHandler
       ? props.submitHandler
@@ -170,12 +184,11 @@ async function handleSubmit() {
         duration: 0,
       })
     const res = await submit(q.id, answers.value[q.id])
-    submitted.value[q.id] = true
     if (res.answer) answers.value[q.id] = res.answer
     // 保存练习记录ID，供后续 AI 评分使用
     practiceRecordIds.value[q.id] = res.id
   } catch {
-    // toast 由 request 层提示
+    // 上报失败仅影响统计/错题入库，不打断已完成的本地判分展示
   }
 }
 
@@ -205,7 +218,7 @@ function isCorrect(q: Question): boolean {
 function statusClass(questionId: number) {
   if (submitted.value[questionId]) {
     const q = props.questions.find(x => x.id === questionId)
-    if (q && q.type === 'essay') return 'bg-indigo-100 text-indigo-700'
+    if (q && (q.type === 'essay' || q.type === 'case_study')) return 'bg-indigo-100 text-indigo-700'
     return q && isCorrect(q) ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
   }
   if (answers.value[questionId]) return 'bg-indigo-600 text-white'
@@ -320,6 +333,75 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
       </div>
     </div>
 
+    <!-- 题目卡片上方操作栏（题目卡片外正上方） -->
+    <div class="sticky top-2 z-10 mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-100 bg-white/95 p-3 shadow-sm backdrop-blur">
+      <div class="flex gap-2">
+        <button
+          class="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-white"
+          :disabled="currentIndex === 0"
+          @click="goTo(currentIndex - 1)"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          上一题
+        </button>
+        <button
+          class="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-white"
+          :disabled="currentIndex === total - 1"
+          @click="goTo(currentIndex + 1)"
+        >
+          下一题
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <span
+          v-if="current && submitted[current.id]"
+          class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600 ring-1 ring-inset ring-emerald-600/20"
+        >
+          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          已提交
+        </span>
+        <button
+          class="flex cursor-pointer items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-medium transition-all duration-200"
+          :class="current && marked[current.id]
+            ? 'border-amber-300 bg-amber-50 text-amber-700'
+            : 'border-gray-200 bg-white text-gray-600 shadow-sm hover:border-gray-300 hover:bg-gray-50'"
+          @click="toggleMark"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0l2.77-.693a9 9 0 016.208.682l.108.054a9 9 0 016.086.71l3.114-.732a48.524 48.524 0 01-.005-10.499l-3.11.732a9 9 0 01-6.085-.711l-.108-.054a9 9 0 00-6.208-.682L3 4.5M3 15V4.5" />
+          </svg>
+          {{ current && marked[current.id] ? '已标记' : '标记疑问' }}
+        </button>
+        <button
+          class="flex cursor-pointer items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-medium transition-all duration-200"
+          :class="current && favorited[current.id]
+            ? 'border-red-200 bg-red-50 text-red-600'
+            : 'border-gray-200 bg-white text-gray-600 shadow-sm hover:border-gray-300 hover:bg-gray-50'"
+          @click="toggleFavorite"
+        >
+          <svg class="h-4 w-4" :fill="current && favorited[current.id] ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+          </svg>
+          {{ current && favorited[current.id] ? '已收藏' : '收藏' }}
+        </button>
+        <button
+          v-if="current && !submitted[current.id] && current.type !== 'single' && current.type !== 'judge'"
+          class="bg-brand-gradient cursor-pointer rounded-lg px-5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition-all duration-200 hover:shadow-lg hover:brightness-110 active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
+          :disabled="!answers[current.id]"
+          @click="handleSubmit"
+        >
+          提交答案
+        </button>
+      </div>
+    </div>
+
     <!-- 题目卡片 -->
     <div v-if="current" class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
       <!-- 元信息 -->
@@ -336,7 +418,7 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
         <span v-if="current.year" class="text-xs text-gray-400">{{ current.year }} 年真题</span>
         <span v-if="marked[current.id]" class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-600 ring-1 ring-inset ring-amber-600/20">
           <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0l2.77-.693a9 9 0 016.208.682l.108.054a9 9 0 006.086.71l3.114-.732a48.524 48.524 0 01-.005-10.499l-3.11.732a9 9 0 01-6.085-.711l-.108-.054a9 9 0 00-6.208-.682L3 4.5M3 15V4.5" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0l2.77-.693a9 9 0 016.208.682l.108.054a9 9 0 016.086.71l3.114-.732a48.524 48.524 0 01-.005-10.499l-3.11.732a9 9 0 01-6.085-.711l-.108-.054a9 9 0 00-6.208-.682L3 4.5M3 15V4.5" />
           </svg>
           已标记
         </span>
@@ -466,14 +548,21 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
           </div>
         </div>
 
-        <!-- 论文 AI 评分按钮与结果 -->
-        <div v-if="current.type === 'essay'" class="mt-4 border-t border-indigo-100 pt-4">
+        <!-- AI 评分按钮与结果（论文 / 案例分析） -->
+        <div v-if="isSubjective(current)" class="mt-4 border-t border-indigo-100 pt-4">
           <button
-            v-if="!aiScoring[current.id] && !aiScoreResults[current.id]"
+            v-if="!aiScoring[current.id] && !aiScoreResults[current.id] && !practiceRecordIds[current.id]"
+            class="cursor-pointer rounded-lg px-4 py-2 text-sm font-medium text-gray-400 ring-1 ring-inset ring-gray-200"
+            disabled
+          >
+            记录提交中…
+          </button>
+          <button
+            v-else-if="!aiScoring[current.id] && !aiScoreResults[current.id]"
             class="bg-brand-gradient cursor-pointer rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:shadow-md hover:brightness-110"
             @click="handleAiScore"
           >
-            AI 评分
+            {{ currentAiSpec.title }}
           </button>
           <span v-if="aiScoring[current.id]" class="inline-flex items-center gap-2 text-sm text-indigo-600">
             <span class="h-4 w-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
@@ -496,50 +585,26 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
             <!-- 总分 -->
             <div class="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm">
               <span class="text-gradient text-3xl font-bold">{{ aiScoreResults[current.id].total_score }}</span>
-              <span class="text-xs text-gray-400">/ 75 分</span>
+              <span class="text-xs text-gray-400">/ {{ currentAiSpec.totalMax }} 分</span>
               <div class="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
                 <div
                   class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500"
-                  :style="{ width: (aiScoreResults[current.id].total_score / 75 * 100) + '%' }"
+                  :style="{ width: (aiScoreResults[current.id].total_score / currentAiSpec.totalMax * 100) + '%' }"
                 />
               </div>
             </div>
             <!-- 分维度评分 -->
             <div class="grid grid-cols-2 gap-2">
-              <div class="rounded-xl bg-white p-3 shadow-sm">
+              <div v-for="dim in currentAiSpec.dimensions" :key="dim.key" class="rounded-xl bg-white p-3 shadow-sm">
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-gray-500">论点与立意</span>
-                  <span class="font-semibold text-indigo-600">{{ aiScoreResults[current.id].argument_score }}/20</span>
+                  <span class="text-gray-500">{{ dim.label }}</span>
+                  <span class="font-semibold text-indigo-600">{{ aiDimensionScore(aiScoreResults[current.id], dim.key) }}/{{ dim.max }}</span>
                 </div>
                 <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-100">
-                  <div class="h-full rounded-full bg-gradient-to-r from-indigo-400 to-violet-400" :style="{ width: (aiScoreResults[current.id].argument_score / 20 * 100) + '%' }" />
-                </div>
-              </div>
-              <div class="rounded-xl bg-white p-3 shadow-sm">
-                <div class="flex items-center justify-between text-xs">
-                  <span class="text-gray-500">结构与逻辑</span>
-                  <span class="font-semibold text-indigo-600">{{ aiScoreResults[current.id].structure_score }}/20</span>
-                </div>
-                <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-100">
-                  <div class="h-full rounded-full bg-gradient-to-r from-indigo-400 to-violet-400" :style="{ width: (aiScoreResults[current.id].structure_score / 20 * 100) + '%' }" />
-                </div>
-              </div>
-              <div class="rounded-xl bg-white p-3 shadow-sm">
-                <div class="flex items-center justify-between text-xs">
-                  <span class="text-gray-500">语言表达</span>
-                  <span class="font-semibold text-indigo-600">{{ aiScoreResults[current.id].language_score }}/20</span>
-                </div>
-                <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-100">
-                  <div class="h-full rounded-full bg-gradient-to-r from-indigo-400 to-violet-400" :style="{ width: (aiScoreResults[current.id].language_score / 20 * 100) + '%' }" />
-                </div>
-              </div>
-              <div class="rounded-xl bg-white p-3 shadow-sm">
-                <div class="flex items-center justify-between text-xs">
-                  <span class="text-gray-500">深度与广度</span>
-                  <span class="font-semibold text-indigo-600">{{ aiScoreResults[current.id].depth_score }}/15</span>
-                </div>
-                <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-100">
-                  <div class="h-full rounded-full bg-gradient-to-r from-indigo-400 to-violet-400" :style="{ width: (aiScoreResults[current.id].depth_score / 15 * 100) + '%' }" />
+                  <div
+                    class="h-full rounded-full bg-gradient-to-r from-indigo-400 to-violet-400"
+                    :style="{ width: (aiDimensionScore(aiScoreResults[current.id], dim.key) / dim.max * 100) + '%' }"
+                  />
                 </div>
               </div>
             </div>
@@ -550,66 +615,6 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
             </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 底部操作栏 -->
-    <div class="sticky bottom-4 mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-100 bg-white/95 p-3 shadow-lg shadow-gray-900/5 backdrop-blur">
-      <div class="flex gap-2">
-        <button
-          class="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-white"
-          :disabled="currentIndex === 0"
-          @click="goTo(currentIndex - 1)"
-        >
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          上一题
-        </button>
-        <button
-          class="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-white"
-          :disabled="currentIndex === total - 1"
-          @click="goTo(currentIndex + 1)"
-        >
-          下一题
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <button
-          class="flex cursor-pointer items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-medium transition-all duration-200"
-          :class="current && marked[current.id]
-            ? 'border-amber-300 bg-amber-50 text-amber-700'
-            : 'border-gray-200 bg-white text-gray-600 shadow-sm hover:border-gray-300 hover:bg-gray-50'"
-          @click="toggleMark"
-        >
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0l2.77-.693a9 9 0 016.208.682l.108.054a9 9 0 006.086.71l3.114-.732a48.524 48.524 0 01-.005-10.499l-3.11.732a9 9 0 01-6.085-.711l-.108-.054a9 9 0 00-6.208-.682L3 4.5M3 15V4.5" />
-          </svg>
-          {{ current && marked[current.id] ? '已标记' : '标记疑问' }}
-        </button>
-        <button
-          class="flex cursor-pointer items-center gap-1.5 rounded-lg border px-3.5 py-2 text-sm font-medium transition-all duration-200"
-          :class="current && favorited[current.id]
-            ? 'border-red-200 bg-red-50 text-red-600'
-            : 'border-gray-200 bg-white text-gray-600 shadow-sm hover:border-gray-300 hover:bg-gray-50'"
-          @click="toggleFavorite"
-        >
-          <svg class="h-4 w-4" :fill="current && favorited[current.id] ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-          </svg>
-          {{ current && favorited[current.id] ? '已收藏' : '收藏' }}
-        </button>
-        <button
-          v-if="current && !submitted[current.id]"
-          class="bg-brand-gradient cursor-pointer rounded-lg px-5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition-all duration-200 hover:shadow-lg hover:brightness-110 active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
-          :disabled="!answers[current.id]"
-          @click="handleSubmit"
-        >
-          提交答案
-        </button>
       </div>
     </div>
   </div>

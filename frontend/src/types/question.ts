@@ -1,4 +1,4 @@
-export type QuestionType = 'single' | 'multi' | 'judge' | 'fill' | 'short' | 'comprehensive' | 'essay'
+export type QuestionType = 'single' | 'multi' | 'judge' | 'fill' | 'short' | 'comprehensive' | 'essay' | 'case_study'
 export type Difficulty = 'easy' | 'medium' | 'hard'
 
 export interface Question {
@@ -9,6 +9,7 @@ export interface Question {
   type: QuestionType
   difficulty: Difficulty
   content: string
+  case_material?: string
   options: string
   answer: string
   analysis: string
