@@ -2,23 +2,20 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useSubjectStore } from '@/stores/subject'
 import { getSpecialQuestions, getEssayQuestions, generateQuestions } from '@/api/practice'
 import { useAiStore } from '@/stores/ai'
 import PracticeRunner from '@/components/practice/PracticeRunner.vue'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
-import { typeLabel } from '@/utils/question'
 import type { Question } from '@/types/question'
 
 const router = useRouter()
 const auth = useAuthStore()
-const subjectStore = useSubjectStore()
 const aiStore = useAiStore()
 
-const subjectId = ref(0)
-const type = ref('single')
+const subjectId = computed(() => auth.selectedSubjectId)
+const type = ref('')
 const difficulty = ref('')
 const count = ref(10)
 const questions = ref<Question[]>([])
@@ -29,7 +26,17 @@ const essayTopics = ref<Question[]>([])
 const selectedEssayId = ref(0)
 const essayMode = ref<'fixed' | 'random' | 'ai'>('fixed')
 
-const typeOptions = ['single', 'multi', 'judge', 'fill', 'short', 'comprehensive', 'case_study', 'essay']
+const typeOptions = [
+  { value: '', label: '全部题型' },
+  { value: 'single', label: '单选题' },
+  { value: 'multi', label: '多选题' },
+  { value: 'judge', label: '判断题' },
+  { value: 'fill', label: '填空题' },
+  { value: 'short', label: '简答题' },
+  { value: 'comprehensive', label: '综合题' },
+  { value: 'case_study', label: '案例分析' },
+  { value: 'essay', label: '论文题' },
+]
 const difficultyOptions = [
   { value: '', label: '全部难度' },
   { value: 'easy', label: '简单' },
@@ -37,15 +44,11 @@ const difficultyOptions = [
   { value: 'hard', label: '困难' },
 ]
 
-const subjectsForLevel = computed(() => subjectStore.subjects.filter(s => s.level_id === auth.selectedLevelId))
 const isEssay = computed(() => type.value === 'essay')
 const showCount = computed(() => !isEssay.value)
 
 onMounted(async () => {
   if (!auth.initialized) await auth.checkAuth()
-  if (subjectStore.levels.length === 0) await subjectStore.fetchLevels()
-  if (auth.selectedLevelId) await subjectStore.ensureSubjects(auth.selectedLevelId)
-  subjectId.value = auth.selectedSubjectId || subjectsForLevel.value[0]?.id || 0
   if (isEssay.value && subjectId.value) {
     await loadEssayTopics()
   }
@@ -120,15 +123,18 @@ async function start() {
         count: 1,
       })
       // 后端返回 { questions: [...] }
+      // 用户在配置页已选择「论文」，这里强制 type 为 essay、options 为空数组，
+      // 保证 PracticeRunner 走论文回答模式（大文本框、不判分、AI 评分），
+      // 不受 AI 返回的 type 字段干扰。
       questions.value = (resp.questions || []).map((q: any) => ({
         id: q.id,
         subject_id: subjectId.value,
         sub_subject_id: 0,
         chapter_id: 0,
-        type: q.type,
-        difficulty: q.difficulty,
+        type: isEssay.value ? 'essay' : (q.type || 'essay'),
+        difficulty: q.difficulty || 'medium',
         content: q.content,
-        options: q.options || '[]',
+        options: '[]',
         answer: q.answer || '',
         analysis: q.analysis || '',
         year: q.year || 0,
@@ -170,7 +176,7 @@ function reset() {
           </div>
           <div>
             <h2 class="text-base font-semibold tracking-tight text-gray-900">题型专项训练</h2>
-            <p class="mt-0.5 text-sm text-gray-500">选择科目与题型，按需强化训练</p>
+            <p class="mt-0.5 text-sm text-gray-500">针对当前科目（{{ auth.user?.subject_name || '未选择科目' }}）的特定题型集中训练，逐个突破薄弱环节</p>
           </div>
         </div>
 
@@ -178,27 +184,18 @@ function reset() {
 
         <div class="space-y-5">
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-gray-700">选择科目</label>
-            <select
-              v-model="subjectId"
-              class="w-full cursor-pointer rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm shadow-sm transition-colors hover:border-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            >
-              <option v-for="s in subjectsForLevel" :key="s.id" :value="s.id">{{ s.name }}</option>
-            </select>
-          </div>
-          <div>
             <label class="mb-1.5 block text-sm font-medium text-gray-700">题型</label>
             <div class="flex flex-wrap gap-2">
               <button
                 v-for="t in typeOptions"
-                :key="t"
+                :key="t.value"
                 class="cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200"
-                :class="type === t
+                :class="type === t.value
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm'
                   : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:text-emerald-600'"
-                @click="type = t"
+                @click="type = t.value"
               >
-                {{ typeLabel(t) }}
+                {{ t.label }}
               </button>
             </div>
           </div>

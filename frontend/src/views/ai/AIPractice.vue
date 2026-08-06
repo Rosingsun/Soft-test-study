@@ -2,7 +2,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useSubjectStore } from '@/stores/subject'
 import { useAiStore } from '@/stores/ai'
 import { generateQuestions } from '@/api/ai'
 import { getChapters, getSubSubjects } from '@/api/subject'
@@ -12,14 +11,13 @@ import type { Question } from '@/types/question'
 
 const router = useRouter()
 const auth = useAuthStore()
-const subjectStore = useSubjectStore()
 const aiStore = useAiStore()
 
 const step = ref<'config' | 'generating' | 'practice' | 'result'>('config')
 const generating = ref(false)
 const error = ref('')
 
-const subjectId = ref(0)
+const subjectId = computed(() => auth.selectedSubjectId)
 const chapterId = ref(0)
 const types = ref<string[]>(['single', 'multi'])
 const difficulty = ref('medium')
@@ -40,8 +38,6 @@ const difficultyOptions = [
   { value: 'hard', label: '困难' },
 ]
 const countOptions = [3, 5, 10, 15, 20]
-
-const subjectsForLevel = computed(() => subjectStore.subjects.filter(s => s.level_id === auth.selectedLevelId))
 
 const practiceQuestions = computed<Question[]>(() => {
   return aiQuestions.value.map(q => ({
@@ -78,9 +74,6 @@ const typeLabel = (t: string) => t === 'single' ? '单选题' : '多选题'
 
 onMounted(async () => {
   if (!auth.initialized) await auth.checkAuth()
-  if (subjectStore.levels.length === 0) await subjectStore.fetchLevels()
-  if (auth.selectedLevelId) await subjectStore.ensureSubjects(auth.selectedLevelId)
-  subjectId.value = auth.selectedSubjectId || subjectsForLevel.value[0]?.id || 0
   if (subjectId.value) await loadChapters()
 })
 
@@ -96,11 +89,6 @@ async function loadChapters() {
   } catch {
     chapters.value = [{ id: 0, name: '不限定章节' }]
   }
-}
-
-async function onSubjectChange() {
-  chapterId.value = 0
-  await loadChapters()
 }
 
 function toggleType(type: string) {
@@ -206,17 +194,6 @@ function isCorrect(q: AiGeneratedQuestion): boolean {
         <div v-if="error" class="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{{ error }}</div>
 
         <div class="space-y-4">
-          <div>
-            <label class="mb-1.5 block text-sm font-medium text-gray-700">选择科目</label>
-            <select
-              v-model="subjectId"
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              @change="onSubjectChange"
-            >
-              <option v-for="s in subjectsForLevel" :key="s.id" :value="s.id">{{ s.name }}</option>
-            </select>
-          </div>
-
           <div>
             <label class="mb-1.5 block text-sm font-medium text-gray-700">知识点范围</label>
             <select

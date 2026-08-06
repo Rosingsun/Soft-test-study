@@ -55,7 +55,7 @@ async function init() {
       /* noop */
     }
   }
-  const levelId = Number(route.query.level_id)
+  const levelId = auth.selectedLevelId || Number(route.query.level_id)
   if (!levelId) {
     loading.value = false
     return
@@ -85,22 +85,6 @@ watch(() => route.query.level_id, (id) => {
       </template>
     </BasePageHeader>
 
-    <div v-if="store.levels.length > 0" class="mb-6 flex flex-wrap gap-2">
-      <button
-        v-for="level in store.levels"
-        :key="level.id"
-        :class="[
-          'cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition-all',
-          Number(route.query.level_id) === level.id
-            ? 'bg-indigo-600 text-white shadow-sm'
-            : 'border border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:text-indigo-600',
-        ]"
-        @click="router.push({ path: '/subjects', query: { level_id: level.id } })"
-      >
-        {{ level.name }}
-      </button>
-    </div>
-
     <BaseSkeleton v-if="loading" variant="grid" :count="6" />
 
     <BaseEmpty
@@ -109,16 +93,16 @@ watch(() => route.query.level_id, (id) => {
       :description="error"
     >
       <template #action>
-        <BaseButton @click="loadSubjects(Number(route.query.level_id))">
+        <BaseButton @click="loadSubjects(auth.selectedLevelId || Number(route.query.level_id))">
           重试
         </BaseButton>
       </template>
     </BaseEmpty>
 
     <BaseEmpty
-      v-else-if="!route.query.level_id"
+      v-else-if="!auth.selectedLevelId"
       :title="'请先选择考试等级'"
-      :description="'在上方选择你的考试等级，开始备考'"
+      :description="'请在右上角选择你的考试等级，开始备考'"
     />
 
     <BaseEmpty

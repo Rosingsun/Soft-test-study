@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<{
   mode?: string
   title?: string
   startIndex?: number
-  submitHandler?: (questionId: number, answer: string) => Promise<PracticeRecordResp>
+  submitHandler?: (questionId: number, answer: string, duration: number) => Promise<PracticeRecordResp>
 }>(), {
   mode: 'chapter',
   title: '',
@@ -31,18 +31,62 @@ const emit = defineEmits<{ (e: 'back'): void }>()
 const currentIndex = ref(props.startIndex ?? 0)
 const answers = ref<Record<number, string>>({})
 const submitted = ref<Record<number, boolean>>({})
+// 每道题首次进入的时间戳，用于统计本题作答耗时
+const questionStart = ref<Record<number, number>>({})
 const marked = ref<Record<number, boolean>>({})
 const favorited = ref<Record<number, boolean>>({})
 const showCard = ref(false)
 const loadingFavorites = ref(true)
 const caseExpanded = ref(true)
+// 案例分析题：把单题答案拆成若干个小节（“小的文章”）分别作答，提交时合并为一段
+const caseParts = ref<Record<number, string[]>>({})
+const CASE_PART_COUNT = 3
+
+function ensureCaseParts(q: Question): string[] {
+  if (q.type !== 'case_study') return []
+  let parts = caseParts.value[q.id] || []
+  const existing = answers.value[q.id] || ''
+  if (!parts.length) {
+    // 尝试从已存答案恢复（历史提交 / 重新进入）
+    if (existing) {
+      parts = existing.split(/\r?\n\s*\n/).filter(Boolean)
+    } else {
+      parts = Array.from({ length: CASE_PART_COUNT }, () => '')
+    }
+    caseParts.value[q.id] = parts
+  }
+  return parts
+}
+
+function updateCaseAnswers(questionId: number, parts: string[]) {
+  caseParts.value[questionId] = parts
+  const joined = parts.map(p => p.trim()).filter(Boolean)
+  answers.value[questionId] = joined.join('\n\n')
+}
+
+// 分段作答的某一小节变化
+function onCaseInput(q: Question, idx: number, val: string) {
+  const parts = ensureCaseParts(q)
+  parts[idx] = val
+  updateCaseAnswers(q.id, parts)
+}
 
 const current = computed(() => props.questions[currentIndex.value])
 const total = computed(() => props.questions.length)
+const pageTitle = computed(() => {
+  const map: Record<string, string> = {
+    special: '专项练习',
+    random: '随机练习',
+    chapter: '章节练习',
+    wrong: '错题练习',
+    ai: 'AI 练习',
+  }
+  return map[props.mode] || '练习'
+})
+
 const progressText = computed(() => `第 ${currentIndex.value + 1} 题 / 共 ${total.value} 题`)
 const progressPct = computed(() => total.value ? ((currentIndex.value + 1) / total.value) * 100 : 0)
 const answeredCount = computed(() => Object.keys(answers.value).length)
-const markedCount = computed(() => Object.values(marked.value).filter(Boolean).length)
 // 当前主观题（论文/案例分析）的 AI 评分展示规格
 const currentAiSpec = computed(() => current.value ? aiScoreSpec(current.value.type) : aiScoreSpec('essay'))
 
@@ -67,6 +111,15 @@ async function loadFavoriteState() {
   }
   loadingFavorites.value = false
 }
+
+function ensureTiming(qid: number) {
+  if (!questionStart.value[qid]) questionStart.value[qid] = Date.now()
+}
+
+watch(() => [currentIndex.value, props.questions], () => {
+  const q = props.questions[currentIndex.value]
+  if (q) ensureTiming(q.id)
+}, { immediate: true })
 
 function goTo(index: number) {
   if (index >= 0 && index < total.value) currentIndex.value = index
@@ -203,16 +256,17 @@ async function handleSubmit() {
   // 本地即时判分：题目查询已带回正确答案与解析，先同步置为已提交以立即渲染解析与对错，
   // 再异步上报练习记录（统计/错题入库/AI 评分 record_id），不阻塞判分展示。
   submitted.value[q.id] = true
+  const duration = Math.max(1, Math.round((Date.now() - (questionStart.value[q.id] || Date.now())) / 1000))
   try {
     const submit = props.submitHandler
       ? props.submitHandler
-      : (questionId: number, answer: string) => submitPractice({
+      : (questionId: number, answer: string, _duration: number) => submitPractice({
         question_id: questionId,
         mode: props.mode,
         answer,
-        duration: 0,
+        duration: _duration,
       })
-    const res = await submit(q.id, answers.value[q.id])
+    const res = await submit(q.id, answers.value[q.id], duration)
     if (res.answer) answers.value[q.id] = res.answer
     // 保存练习记录ID，供后续 AI 评分使用
     practiceRecordIds.value[q.id] = res.id
@@ -303,67 +357,52 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
 </script>
 
 <template>
-  <div class="mx-auto max-w-4xl">
-    <!-- 顶部工具栏 -->
-    <div class="mb-4 flex items-center justify-between gap-3">
-      <button
-        class="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-sm text-gray-500 transition-colors hover:bg-white hover:text-indigo-600"
-        @click="emit('back')"
-      >
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-        返回
-      </button>
-      <div class="flex items-center gap-3">
-        <div class="hidden items-center gap-2 sm:flex">
-          <div class="h-1.5 w-28 overflow-hidden rounded-full bg-gray-200">
-            <div
-              class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-300"
-              :style="{ width: progressPct + '%' }"
-            />
+  <div class="mx-auto max-w-6xl">
+    <!-- 顶部：状态栏（粘性） -->
+    <div class="sticky top-0 z-20 mb-4 space-y-2">
+      <div class="rounded-xl border border-gray-100 bg-white/95 p-3 shadow-sm backdrop-blur">
+        <div class="flex items-center justify-between">
+          <div class="flex min-w-0 items-center gap-3">
+            <button
+              class="cursor-pointer rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              title="返回"
+              @click="emit('back')"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <span class="truncate text-sm font-semibold text-gray-800">{{ title || pageTitle }}</span>
           </div>
-          <span class="text-xs text-gray-400">{{ progressText }}</span>
+          <div class="flex items-center gap-3">
+            <div class="hidden items-center gap-2 sm:flex">
+              <div class="h-1.5 w-24 overflow-hidden rounded-full bg-gray-100">
+                <div
+                  class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-300"
+                  :style="{ width: progressPct + '%' }"
+                />
+              </div>
+              <span class="text-xs text-gray-400">{{ answeredCount }}/{{ total }}</span>
+            </div>
+            <span class="text-xs text-gray-400 sm:hidden">{{ progressText }}</span>
+            <button
+              class="cursor-pointer rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors"
+              :class="showCard ? 'border-indigo-300 bg-indigo-50 text-indigo-600' : 'border-gray-200 bg-white text-gray-600'"
+              @click="showCard = !showCard"
+            >
+              答题卡
+            </button>
+          </div>
         </div>
-        <span class="text-xs text-gray-400 sm:hidden">{{ progressText }}</span>
-        <button
-          class="cursor-pointer rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors"
-          :class="showCard ? 'border-indigo-300 bg-indigo-50 text-indigo-600' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'"
-          @click="showCard = !showCard"
-        >
-          答题卡
-        </button>
       </div>
     </div>
 
-    <!-- 答题卡面板 -->
-    <div v-if="showCard" class="mb-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-      <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-500">
-        <span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />正确</span>
-        <span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 rounded-full bg-red-500" />错误</span>
-        <span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 rounded-full bg-indigo-500" />已答</span>
-        <span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 rounded-full bg-amber-400" />标记</span>
-        <span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 rounded-full bg-gray-200" />未答</span>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="(q, idx) in questions"
-          :key="q.id"
-          class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-xs font-medium transition-all duration-150 hover:scale-105"
-          :class="[statusClass(q.id), { 'ring-2 ring-indigo-400 ring-offset-1': idx === currentIndex }]"
-          @click="goTo(idx)"
-        >
-          {{ idx + 1 }}
-        </button>
-      </div>
-      <div class="mt-3 border-t border-gray-50 pt-2 text-xs text-gray-400">
-        已答 {{ answeredCount }} / {{ total }} 题
-        <span v-if="markedCount"> · 标记 {{ markedCount }} 题</span>
-      </div>
-    </div>
+    <div class="flex flex-col gap-4 lg:flex-row">
+      <!-- 题目区 -->
+      <div class="min-w-0 flex-1">
 
-    <!-- 题目卡片上方操作栏（题目卡片外正上方） -->
-    <div class="sticky top-2 z-10 mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-100 bg-white/95 p-3 shadow-sm backdrop-blur">
+    <!-- 题目操作栏（题目卡片外正上方） -->
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-100 bg-white/95 p-3 shadow-sm backdrop-blur">
       <div class="flex gap-2">
         <button
           class="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-white"
@@ -517,22 +556,61 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
         </button>
       </div>
 
-      <!-- 填空 / 简答 / 综合 / 论文 / 案例分析 -->
+      <!-- 论文：与模拟考试论文模块一致的作答区 -->
+      <div v-else-if="current.type === 'essay'">
+        <textarea
+          v-model="answers[current.id]"
+          :disabled="!!submitted[current.id]"
+          :rows="10"
+          class="w-full rounded-xl border border-gray-300 bg-gray-50/50 px-4 py-3 text-sm leading-6 transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:bg-gray-100"
+          placeholder="请在此撰写论文正文…"
+        />
+        <p class="mt-2 text-xs text-gray-400">论文题无标准答案，作答后仅记录提交内容，不自动判分。</p>
+      </div>
+
+      <!-- 案例分析：多个小的篇章分别作答 -->
+      <div v-else-if="current.type === 'case_study'">
+        <div class="space-y-4">
+          <div
+            v-for="(part, idx) in ensureCaseParts(current)"
+            :key="idx"
+            class="rounded-xl border border-gray-300 bg-white p-4 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-500/20"
+          >
+            <div class="mb-1.5 flex items-center justify-between">
+              <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-700">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                回答 {{ idx + 1 }}
+              </span>
+              <span class="text-xs text-gray-400">{{ part.length }} 字</span>
+            </div>
+            <textarea
+              :value="part"
+              :disabled="!!submitted[current.id]"
+              rows="4"
+              class="w-full resize-y bg-transparent px-1 py-1.5 text-sm leading-6 text-gray-800 outline-none placeholder:text-gray-400 disabled:bg-gray-50"
+              :placeholder="idx === 0 ? '请结合上方案例材料，分点作答…' : `继续作答第 ${idx + 1} 部分…`"
+              @input="onCaseInput(current, idx, ($event.target as HTMLTextAreaElement).value)"
+            />
+          </div>
+        </div>
+        <p class="mt-2 text-xs text-gray-400">案例分析题为主观题，可分段（如要点一、要点二…）作答，作答后仅展示参考答案与解析，不自动判分。</p>
+      </div>
+
+      <!-- 填空 / 简答 / 综合 -->
       <div v-else>
         <textarea
           v-model="answers[current.id]"
           :disabled="!!submitted[current.id]"
-          :rows="current.type === 'essay' || current.type === 'case_study' ? 8 : 4"
+          rows="4"
           class="w-full rounded-xl border border-gray-300 bg-gray-50/50 px-4 py-3 text-sm leading-6 transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:bg-gray-100"
           :class="{
-            'border-emerald-500 bg-emerald-50/50': submitted[current.id] && current.type !== 'essay' && current.type !== 'case_study' && isCorrect(current),
-            'border-red-400 bg-red-50/50': submitted[current.id] && current.type !== 'essay' && current.type !== 'case_study' && answers[current.id] && !isCorrect(current),
+            'border-emerald-500 bg-emerald-50/50': submitted[current.id] && isCorrect(current),
+            'border-red-400 bg-red-50/50': submitted[current.id] && answers[current.id] && !isCorrect(current),
           }"
-          :placeholder="current.type === 'essay' ? '请在此撰写论文正文…' : current.type === 'case_study' ? '请结合上方案例材料作答…' : '请输入答案'"
+          placeholder="请输入答案"
         />
-        <p v-if="current.type === 'essay' || current.type === 'case_study'" class="mt-2 text-xs text-gray-400">
-          {{ current.type === 'essay' ? '论文题无标准答案，作答后仅记录提交内容，不自动判分。' : '案例分析题为主观题，作答后仅展示参考答案与解析，不自动判分。' }}
-        </p>
       </div>
 
       <!-- 解析（提交后显示） -->
@@ -643,6 +721,44 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
               <p class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{{ aiScoreResults[current.id].comment }}</p>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+      </div>
+
+      <!-- 答题卡（桌面常驻 / 移动端抽屉） -->
+      <div
+        class="h-fit shrink-0 rounded-xl border border-gray-100 bg-white p-4 shadow-sm lg:sticky lg:top-24 lg:w-60"
+        :class="showCard ? 'block' : 'hidden lg:block'"
+      >
+        <div class="mb-3 flex items-center justify-between">
+          <h3 class="text-sm font-semibold text-gray-800">答题卡</h3>
+          <button class="cursor-pointer text-xs text-gray-400 hover:text-gray-600 lg:hidden" @click="showCard = false">收起</button>
+        </div>
+        <div class="mb-3 flex flex-wrap gap-2 text-[10px] text-gray-400">
+          <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />正确</span>
+          <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-full bg-red-500" />错误</span>
+          <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-full bg-indigo-500" />已答</span>
+          <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-full bg-amber-400" />标记</span>
+          <span class="flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-full bg-gray-200" />未答</span>
+        </div>
+        <div class="grid grid-cols-8 gap-1.5 lg:grid-cols-5">
+          <button
+            v-for="(q, idx) in questions"
+            :key="q.id"
+            class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-xs font-medium transition-all duration-150 hover:scale-105"
+            :class="[statusClass(q.id), { 'ring-2 ring-indigo-400 ring-offset-1': idx === currentIndex }]"
+            @click="goTo(idx)"
+          >
+            {{ idx + 1 }}
+          </button>
+        </div>
+        <div class="mt-3 rounded-xl bg-gray-50 p-3 text-center">
+          <p class="text-xs text-gray-500">已答 <span class="font-bold text-indigo-600">{{ answeredCount }}</span> / {{ total }}</p>
+          <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200">
+            <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-300" :style="{ width: progressPct + '%' }" />
+          </div>
+          <p class="mt-1.5 text-[10px] text-gray-400">{{ Math.round(progressPct) }}% 完成</p>
         </div>
       </div>
     </div>

@@ -74,7 +74,7 @@ type DailyStat struct {
 func (r *StatsRepo) Daily(userID uint, startDate string) ([]DailyStat, error) {
 	var list []DailyStat
 	err := r.db.Raw(`
-		SELECT DATE(pr.created_at) AS date,
+		SELECT DATE_FORMAT(pr.created_at, '%Y-%m-%d') AS date,
 		       COUNT(*) AS total_count,
 		       COALESCE(SUM(CASE WHEN pr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_count
 		FROM practice_records pr
@@ -117,7 +117,7 @@ type CalendarStat struct {
 func (r *StatsRepo) Calendar(userID uint, startDate, endDate string) ([]CalendarStat, error) {
 	var list []CalendarStat
 	err := r.db.Raw(`
-		SELECT DATE(pr.created_at) AS date,
+		SELECT DATE_FORMAT(pr.created_at, '%Y-%m-%d') AS date,
 		       COUNT(*) AS total_count,
 		       COALESCE(SUM(CASE WHEN pr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_count,
 		       COALESCE(SUM(pr.duration), 0) AS duration

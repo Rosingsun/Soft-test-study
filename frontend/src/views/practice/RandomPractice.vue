@@ -2,7 +2,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useSubjectStore } from '@/stores/subject'
 import { getRandomQuestions } from '@/api/practice'
 import PracticeRunner from '@/components/practice/PracticeRunner.vue'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
@@ -12,9 +11,8 @@ import type { Question } from '@/types/question'
 
 const router = useRouter()
 const auth = useAuthStore()
-const subjectStore = useSubjectStore()
 
-const subjectId = ref(0)
+const subjectId = computed(() => auth.selectedSubjectId)
 const difficulty = ref('')
 const count = ref(10)
 const questions = ref<Question[]>([])
@@ -29,13 +27,8 @@ const difficultyOptions = [
   { value: 'hard', label: '困难' },
 ]
 
-const subjectsForLevel = computed(() => subjectStore.subjects.filter(s => s.level_id === auth.selectedLevelId))
-
 onMounted(async () => {
   if (!auth.initialized) await auth.checkAuth()
-  if (subjectStore.levels.length === 0) await subjectStore.fetchLevels()
-  if (auth.selectedLevelId) await subjectStore.ensureSubjects(auth.selectedLevelId)
-  subjectId.value = auth.selectedSubjectId || subjectsForLevel.value[0]?.id || 0
 })
 
 async function start() {
@@ -81,22 +74,13 @@ function reset() {
           </div>
           <div>
             <h2 class="text-base font-semibold tracking-tight text-gray-900">随机抽题模式</h2>
-            <p class="mt-0.5 text-sm text-gray-500">系统将在所选科目的全部题库中随机抽取题目</p>
+            <p class="mt-0.5 text-sm text-gray-500">系统将在当前科目（{{ auth.user?.subject_name || '未选择科目' }}）的全部题库中随机抽取题目</p>
           </div>
         </div>
 
         <div v-if="error" class="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-sm text-red-600">{{ error }}</div>
 
         <div class="space-y-5">
-          <div>
-            <label class="mb-1.5 block text-sm font-medium text-gray-700">选择科目</label>
-            <select
-              v-model="subjectId"
-              class="w-full cursor-pointer rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm shadow-sm transition-colors hover:border-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            >
-              <option v-for="s in subjectsForLevel" :key="s.id" :value="s.id">{{ s.name }}</option>
-            </select>
-          </div>
           <div>
             <label class="mb-1.5 block text-sm font-medium text-gray-700">难度</label>
             <div class="flex flex-wrap gap-2">

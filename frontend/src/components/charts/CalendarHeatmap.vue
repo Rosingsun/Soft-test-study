@@ -28,7 +28,7 @@ watch(() => props.month, () => {
 
 const dataMap = computed(() => {
   const map = new Map<string, CalendarStatsResp>()
-  for (const d of props.data) map.set(d.date, d)
+  for (const d of props.data) map.set(d.date.slice(0, 10), d)
   return map
 })
 
@@ -122,6 +122,11 @@ function accuracyClass(a: number) {
   return 'text-red-500'
 }
 
+function cellTextClass(cell: Cell, onLight: string) {
+  if (cell.level >= 3) return 'text-white'
+  return onLight
+}
+
 function accuracyBar(a: number) {
   if (a >= 80) return 'bg-emerald-500'
   if (a >= 60) return 'bg-indigo-500'
@@ -184,17 +189,45 @@ function cellTitle(cell: Cell) {
         <div
           v-for="(cell, ci) in row"
           :key="ci"
-          class="relative aspect-[7/5] cursor-pointer rounded-lg border transition-all duration-150 hover:-translate-y-0.5 hover:shadow-sm"
+          class="relative aspect-[7/5] cursor-pointer overflow-hidden rounded-lg border transition-all duration-150 hover:-translate-y-0.5 hover:shadow-sm"
           :class="cellClass(cell)"
           :title="cell.day ? cellTitle(cell) : ''"
           @click="selectCell(cell)"
         >
           <template v-if="cell.day">
-            <span class="absolute left-1.5 top-1 text-[11px] font-medium" :class="cell.level >= 3 ? 'text-white' : 'text-gray-600'">{{ cell.day }}</span>
-            <div v-if="cell.count > 0" class="absolute bottom-1.5 left-1.5 flex items-center gap-0.5" :class="cell.level >= 3 ? 'opacity-100' : 'opacity-60'">
-              <span class="h-1 w-1 rounded-full" :class="cell.level >= 3 ? 'bg-white/90' : 'bg-indigo-400'" />
-              <span class="h-1 w-1 rounded-full" :class="cell.level >= 3 ? 'bg-white/90' : 'bg-indigo-400'" />
-              <span class="h-1 w-1 rounded-full" :class="cell.level >= 3 ? 'bg-white/90' : 'bg-indigo-400'" />
+            <span
+              class="absolute left-1.5 top-1 text-[10px] font-semibold leading-none"
+              :class="cell.level >= 3 ? 'text-white/90' : cell.count > 0 ? 'text-gray-500' : 'text-gray-400'"
+            >{{ cell.day }}</span>
+
+            <!-- 正确率（居中主数字） -->
+            <div v-if="cell.count > 0" class="absolute inset-0 flex items-center justify-center">
+              <span
+                class="whitespace-nowrap text-base font-bold leading-none tracking-tight sm:text-lg lg:text-xl"
+                :class="cellTextClass(cell, accuracyClass(cell.accuracy))"
+              >{{ cell.accuracy.toFixed(0) }}<span class="text-[0.62em] font-semibold">%</span></span>
+            </div>
+
+            <!-- 答对 / 答错（底部分隔两角） -->
+            <div v-if="cell.count > 0" class="absolute inset-x-1 bottom-1 hidden items-center justify-between sm:flex">
+              <span
+                class="flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold leading-none lg:text-xs"
+                :class="cell.level >= 3 ? 'bg-white/15 text-white' : 'bg-emerald-50 text-emerald-700'"
+              >
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                {{ cell.correct }}
+              </span>
+              <span
+                class="flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold leading-none lg:text-xs"
+                :class="cell.level >= 3 ? 'bg-white/15 text-white' : 'bg-red-50 text-red-600'"
+              >
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                {{ cell.incorrect }}
+              </span>
             </div>
           </template>
         </div>

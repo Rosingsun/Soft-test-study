@@ -24,6 +24,7 @@ const navGroups = computed(() => {
       items: [
         { label: '数据看板', icon: 'home', to: '/' },
         { label: '科目导航', icon: 'book', to: '/subjects' },
+        { label: '学习资料', icon: 'materials', to: '/materials' },
       ],
     },
     {
@@ -83,7 +84,7 @@ const filteredSubjects = computed(() => {
 
 function isActive(to: string) {
   if (to === '/') return route.path === '/'
-  return route.path.startsWith(to)
+  return route.path === to || route.path.startsWith(to + '/')
 }
 
 function handleClickOutside(e: MouseEvent) {
@@ -161,6 +162,9 @@ function navigate(to: string) {
                 </template>
                 <template v-else-if="item.icon === 'book'">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </template>
+                <template v-else-if="item.icon === 'materials'">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                 </template>
                 <template v-else-if="item.icon === 'random'">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.77 4.769L4 5.5m0 0H4m0 0V4m10.5 15.5h-.582m-15.356-2a8.001 8.001 0 0015.356 1.731L20 18.5m0 0V19m0 0h.5m0 0V14" />

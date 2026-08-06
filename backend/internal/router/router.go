@@ -29,6 +29,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	examRecordRepo := repository.NewExamRecordRepo(db)
 	aiRepo := repository.NewAiRepo(db)
 	essayScoreRepo := repository.NewEssayScoreRepo(db)
+	studyMaterialRepo := repository.NewStudyMaterialRepo(db)
 
 	userSvc := service.NewUserService(userRepo, examLevelRepo, subjectRepo, cfg.JWTSecret, cfg.JWTExpiresIn)
 	examLevelSvc := service.NewExamLevelService(examLevelRepo)
@@ -44,6 +45,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	statsRepo := repository.NewStatsRepo(db)
 	statsSvc := service.NewStatsService(statsRepo, subjectRepo)
 	aiSvc := service.NewAiService(aiRepo, questionRepo, subjectRepo, chapterRepo, examRecordRepo, essayScoreRepo, practiceRecordRepo)
+	studyMaterialSvc := service.NewStudyMaterialService(studyMaterialRepo, subjectRepo)
 
 	userH := handler.NewUserHandler(userSvc)
 	examLevelH := handler.NewExamLevelHandler(examLevelSvc)
@@ -58,6 +60,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	examH := handler.NewExamHandler(examSvc)
 	statsH := handler.NewStatsHandler(statsSvc)
 	aiH := handler.NewAiHandler(aiSvc)
+	studyMaterialH := handler.NewStudyMaterialHandler(studyMaterialSvc)
 
 	rateLimiter := middleware.RateLimit(5, time.Minute)
 
@@ -73,6 +76,8 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	api.GET("/questions/case-studies", questionH.CaseStudies)
 	api.GET("/exam-templates", examH.ListTemplates)
 	api.GET("/ai/providers", aiH.GetProviders)
+	api.GET("/materials", studyMaterialH.List)
+	api.GET("/materials/:id", studyMaterialH.Detail)
 
 	auth := api.Group("")
 	auth.Use(middleware.Auth(cfg.JWTSecret))
@@ -110,6 +115,8 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 		auth.POST("/exam-records/:id/submit", examH.SubmitExam)
 		auth.GET("/exam-records", examH.ListRecords)
 		auth.GET("/exam-records/:id/result", examH.GetResult)
+
+		auth.GET("/materials/:id/download", studyMaterialH.Download)
 
 		auth.GET("/stats/overview", statsH.Overview)
 		auth.GET("/stats/daily", statsH.Daily)

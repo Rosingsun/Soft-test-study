@@ -83,33 +83,44 @@ func (s *AiService) callAIAndParse(config dto.AiApiConfig, subjectID, chapterID 
 		typeNames[i] = typeLabelCN(t)
 	}
 
+	// 论文题判定应基于类型原始编码（essay），而非中文显示名，
+	// 否则 buildGeneratePrompt 永远走不到论文提示词分支
+	isEssay := len(types) == 1 && types[0] == "essay"
+
 	difficultyName := "中等"
 	if difficulty != "" {
 		difficultyName = difficultyLabelCN(difficulty)
 	}
 
-	prompt := buildGeneratePrompt(subjectName, chapterName, strings.Join(typeNames, "、"), difficultyName, count)
-
-	resp, err := llm.Chat(context.Background(), config.Provider, config.BaseURL, config.ApiKey, llm.ChatRequest{
-		Model:       config.Model,
-		Messages:    []llm.ChatMessage{{Role: "user", Content: prompt}},
-		Temperature: 0.7,
-		MaxTokens:   4096,
-	})
-	if err != nil {
-		return nil, err
+	// 分批生成，避免一次性输出过多题目导致 token 截断、JSON 解析失败
+	promptCtx := generatePromptContext{
+		Subject:        subjectName,
+		Chapter:        chapterName,
+		Types:          strings.Join(typeNames, "、"),
+		Difficulty:     difficultyName,
+		DifficultyCode: difficulty,
+		IsEssay:        isEssay,
 	}
-
-	content := resp.Choices[0].Message.Content
-	content = cleanJSONResponse(content)
 
 	var generated []aiGeneratedItem
-	if err := json.Unmarshal([]byte(content), &generated); err != nil {
-		return nil, fmt.Errorf("AI 返回的题目格式解析失败: %w", err)
+	for remaining := count; remaining > 0; {
+		batch := promptCtx.BatchSize()
+		if remaining < batch {
+			batch = remaining
+		}
+		items, err := s.generateWithRetry(config, promptCtx, batch)
+		if err != nil {
+			return nil, err
+		}
+		if len(items) == 0 {
+			return nil, fmt.Errorf("AI 未生成任何题目")
+		}
+		generated = append(generated, items...)
+		remaining = count - len(generated)
 	}
 
-	if len(generated) == 0 {
-		return nil, fmt.Errorf("AI 未生成任何题目")
+	if len(generated) > count {
+		generated = generated[:count]
 	}
 
 	for i := range generated {
@@ -125,6 +136,85 @@ func (s *AiService) callAIAndParse(config dto.AiApiConfig, subjectID, chapterID 
 	}
 
 	return generated, nil
+}
+
+// generatePromptContext 携带构造提示词所需的上下文信息
+type generatePromptContext struct {
+	Subject        string
+	Chapter        string
+	Types          string
+	Difficulty     string
+	DifficultyCode string
+	IsEssay        bool
+}
+
+// BatchSize 根据题型和难度决定单次生成题目数量，control 单次回复长度避免截断
+func (c generatePromptContext) BatchSize() int {
+	if c.IsEssay {
+		return 5
+	}
+	switch c.DifficultyCode {
+	case "hard":
+		return 2
+	case "easy":
+		return 5
+	default:
+		return 3
+	}
+}
+
+// generateWithRetry 单次生成一批题目，解析失败时自动重试一次（追加纠错提示）
+func (s *AiService) generateWithRetry(config dto.AiApiConfig, ctx generatePromptContext, count int) ([]aiGeneratedItem, error) {
+	const maxAttempts = 2
+	var lastErr error
+	lastContent := ""
+
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		prompt := buildGeneratePrompt(ctx.Subject, ctx.Chapter, ctx.Types, ctx.Difficulty, count, ctx.IsEssay)
+		if attempt > 0 {
+			prompt += "\n\n注意：你上一条回复没有被正确解析。请重新只输出一个完整、合法、可直接被 JSON 解析的数组，元素数量严格为上方要求的数量，不要输出任何其他文字或代码块。"
+		}
+
+		resp, err := llm.Chat(context.Background(), config.Provider, config.BaseURL, config.ApiKey, llm.ChatRequest{
+			Model:       config.Model,
+			Messages:    []llm.ChatMessage{{Role: "user", Content: prompt}},
+			Temperature: 0.3,
+			MaxTokens:   8192,
+		})
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		content := cleanJSONResponse(resp.Choices[0].Message.Content)
+		lastContent = content
+
+		var items []aiGeneratedItem
+		if e := json.Unmarshal([]byte(content), &items); e == nil && len(items) > 0 {
+			return items, nil
+		} else if e != nil {
+			lastErr = e
+		}
+
+		// 内容混杂说明文字或被截断时，尝试提取最完整的 JSON 数组
+		if retry := extractJSONArray(content); retry != content {
+			var items2 []aiGeneratedItem
+			if e2 := json.Unmarshal([]byte(retry), &items2); e2 == nil && len(items2) > 0 {
+				return items2, nil
+			} else if e2 != nil {
+				lastErr = e2
+			}
+		}
+	}
+
+	snippet := lastContent
+	if len(snippet) > 200 {
+		snippet = snippet[:200] + "...(已截断)"
+	}
+	if lastErr == nil {
+		lastErr = fmt.Errorf("AI 未返回可解析的题目数组")
+	}
+	return nil, fmt.Errorf("AI 返回的题目格式解析失败: %v（AI 返回内容开头：%s）", lastErr, snippet)
 }
 
 func (s *AiService) saveGenerated(userID, subjectID, chapterID uint, items []aiGeneratedItem) (*dto.GenerateQuestionsResp, error) {
@@ -334,13 +424,12 @@ type aiGeneratedItem struct {
 	KnowledgePoint string   `json:"knowledge_point"`
 }
 
-func buildGeneratePrompt(subject, chapter, types, difficulty string, count int) string {
-	if types == "essay" {
+func buildGeneratePrompt(subject, chapter, types, difficulty string, count int, isEssay bool) string {
+	if isEssay {
 		return fmt.Sprintf(
 			`你是一位软考（计算机技术与软件专业技术资格水平考试）出题专家。请根据以下要求生成论文题目：
 
 - 考试科目：%s
-- 题目类型：论文题
 - 难度：%s
 - 数量：%d 道
 
@@ -353,7 +442,14 @@ func buildGeneratePrompt(subject, chapter, types, difficulty string, count int) 
 6. answer 字段留空字符串
 7. analysis 字段留空字符串
 
-请严格按照以下 JSON 格式输出，不要输出 markdown 代码块标记，也不要输出额外注释：
+输出格式（必须严格遵守）：
+- 只输出一个 JSON 数组，不要输出数组之外的任何文字、解释或问候语
+- 禁止使用 markdown 代码块（即开头和结尾各一行三个反引号组成的围栏）包裹 JSON，也不要输出 "好的"、"以下是" 等开头语
+- 输出必须是完整、合法、可直接被 JSON 解析的数组，禁止截断、禁止用省略号（...）省略内容
+- 数组中所有字符串值必须使用合法 JSON 转义（双引号、反斜杠、换行等）
+- 生成 %d 道题时，请在一条回复中一次性输出完整的 %d 个数组元素，不要分批输出
+
+请严格按照以下 JSON 格式输出：
 [
   {
     "type": "essay",
@@ -365,7 +461,7 @@ func buildGeneratePrompt(subject, chapter, types, difficulty string, count int) 
     "knowledge_point": "知识点名称"
   }
 ]`,
-			subject, difficulty, count,
+			subject, difficulty, count, count, count,
 		)
 	}
 
@@ -378,26 +474,35 @@ func buildGeneratePrompt(subject, chapter, types, difficulty string, count int) 
 - 难度：%s
 - 数量：%d 道
 
-要求：
-1. 题目内容专业、准确，符合软考考试大纲
-2. 每道题的选项控制在 4 个（多选题也是 4 个选项）
-3. 解析要详细，说明为什么对、为什么错
+生成要求：
+1. 题目内容专业、准确，严格符合软考考试大纲，难度必须与「难度」要求匹配
+2. 每道题必须提供 4 个选项（单选题、多选题均为 4 个，选项前不要加字母编号）
+3. 解析要详细，说明正确选项为什么对、干扰项为什么错
 4. type 字段可选值为 single 或 multi
 5. 多选题的 answer 格式为逗号分隔的字母，如 "A,C" 表示选 A 和 C
+6. 每道题都必须给出 knowledge_point（所属知识点）
+7. 难度越高，题目应越有区分度，解析也要更充分，但不要因此省略字段
 
-请严格按照以下 JSON 格式输出，不要输出 markdown 代码块标记，也不要输出额外注释：
+输出格式（必须严格遵守）：
+- 只输出一个 JSON 数组，不要输出数组之外的任何文字、解释或问候语
+- 禁止使用 markdown 代码块（即开头和结尾各一行三个反引号组成的围栏）包裹 JSON，也不要输出 "好的"、"以下是" 等开头语
+- 输出必须是完整、合法、可直接被 JSON 解析的数组，禁止截断、禁止用省略号（...）省略内容
+- 数组中所有字符串值必须使用合法 JSON 转义（双引号、反斜杠、换行等）
+- 生成 %d 道题时，请在一条回复中一次性输出完整的 %d 个数组元素，不要分批输出
+
+必须严格按照以下 JSON 格式输出：
 [
   {
     "type": "single",
     "difficulty": "medium",
     "content": "题目内容（支持Markdown格式）",
-    "options": ["A. 选项内容", "B. 选项内容", "C. 选项内容", "D. 选项内容"],
+    "options": ["选项内容1", "选项内容2", "选项内容3", "选项内容4"],
     "answer": "A",
     "analysis": "本题考查...正确答案是A，因为...B选项错误的原因是...",
     "knowledge_point": "知识点名称"
   }
 ]`,
-		subject, chapter, types, difficulty, count,
+		subject, chapter, types, difficulty, count, count, count,
 	)
 }
 
@@ -408,6 +513,26 @@ func cleanJSONResponse(content string) string {
 	content = strings.TrimSuffix(content, "```")
 	content = strings.TrimSpace(content)
 	return content
+}
+
+// extractJSONArray 从混有说明文字/被截断的返回内容中，尽力提取出一段完整的 JSON 数组。
+// 找不到合法数组时返回原始内容。
+func extractJSONArray(content string) string {
+	trimmed := strings.TrimSpace(content)
+	if trimmed == "" {
+		return content
+	}
+	start := strings.Index(trimmed, "[")
+	end := strings.LastIndex(trimmed, "]")
+	if start < 0 || end < 0 || end <= start {
+		return content
+	}
+	candidate := []byte(trimmed[start : end+1])
+	var probe []json.RawMessage
+	if err := json.Unmarshal(candidate, &probe); err != nil {
+		return content
+	}
+	return trimmed[start : end+1]
 }
 
 func typeLabelCN(t string) string {

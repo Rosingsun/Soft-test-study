@@ -19,33 +19,20 @@ const router = useRouter()
 const templates = ref<ExamTemplateResp[]>([])
 const loading = ref(true)
 const error = ref('')
-const subjectFilter = ref(0)
 
 const aiModalOpen = ref(false)
-const aiSubjectId = ref(0)
 const aiCount = ref(10)
 const aiDuration = ref(20)
 const aiGenerating = ref(false)
 const aiError = ref('')
 
-const filteredTemplates = computed(() => {
-  if (!subjectFilter.value) return templates.value
-  return templates.value.filter(t => t.subject_id === subjectFilter.value)
-})
-
-const subjectOptions = computed(() => {
-  const ids = new Set(templates.value.map(t => t.subject_id))
-  return subjectStore.subjects.filter(s => ids.has(s.id))
-})
-
-const subjectsForLevel = computed(() => subjectStore.subjects.filter(s => s.level_id === auth.selectedLevelId))
+const filteredTemplates = computed(() => templates.value.filter(t => t.subject_id === auth.selectedSubjectId))
 
 const countOptions = [5, 10, 15, 20, 30, 50, 75]
 
 onMounted(async () => {
   try {
     templates.value = await listExamTemplates()
-    subjectFilter.value = auth.selectedSubjectId || 0
   } catch (e) {
     error.value = (e as Error).message
   } finally {
@@ -58,7 +45,6 @@ function goExam(t: ExamTemplateResp) {
 }
 
 function openAiModal() {
-  aiSubjectId.value = auth.selectedSubjectId || subjectsForLevel.value[0]?.id || 0
   aiCount.value = 10
   aiDuration.value = 20
   aiError.value = ''
@@ -66,7 +52,7 @@ function openAiModal() {
 }
 
 async function startAiExamHandler() {
-  if (!aiSubjectId.value) {
+  if (!auth.selectedSubjectId) {
     aiError.value = '请选择科目'
     return
   }
@@ -74,7 +60,7 @@ async function startAiExamHandler() {
   aiError.value = ''
   try {
     const data = await startAiExam({
-      subject_id: aiSubjectId.value,
+      subject_id: auth.selectedSubjectId,
       count: aiCount.value,
       duration: aiDuration.value,
     })
@@ -101,29 +87,6 @@ async function startAiExamHandler() {
         </button>
       </template>
     </BasePageHeader>
-
-    <div class="mb-5 flex flex-wrap items-center gap-2">
-      <button
-        class="cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200"
-        :class="subjectFilter === 0
-          ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm'
-          : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:text-indigo-600'"
-        @click="subjectFilter = 0"
-      >
-        全部科目
-      </button>
-      <button
-        v-for="s in subjectOptions"
-        :key="s.id"
-        class="cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200"
-        :class="subjectFilter === s.id
-          ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm'
-          : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:text-indigo-600'"
-        @click="subjectFilter = s.id"
-      >
-        {{ s.short_name || s.name }}
-      </button>
-    </div>
 
     <BaseSkeleton v-if="loading" variant="grid" :count="6" />
 
@@ -231,16 +194,6 @@ async function startAiExamHandler() {
               </div>
 
               <div v-if="aiError" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{{ aiError }}</div>
-
-              <div>
-                <label class="mb-1.5 block text-sm font-medium text-gray-700">选择科目</label>
-                <select
-                  v-model="aiSubjectId"
-                  class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-                >
-                  <option v-for="s in subjectsForLevel" :key="s.id" :value="s.id">{{ s.name }}</option>
-                </select>
-              </div>
 
               <div>
                 <label class="mb-1.5 block text-sm font-medium text-gray-700">题目数量</label>

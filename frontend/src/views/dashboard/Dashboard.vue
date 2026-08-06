@@ -25,12 +25,12 @@ const greeting = computed(() => {
 
 const chartData = computed(() => {
   const now = new Date()
-  const map = new Map(dailyStats.value.map(d => [d.date, d]))
+  const map = new Map(dailyStats.value.map(d => [d.date.slice(0, 10), d]))
   const days: { label: string; value: number; hint: string }[] = []
   for (let i = 13; i >= 0; i--) {
     const d = new Date(now)
     d.setDate(d.getDate() - i)
-    const key = d.toISOString().split('T')[0]
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const entry = map.get(key)
     const count = entry?.total_count || 0
     days.push({

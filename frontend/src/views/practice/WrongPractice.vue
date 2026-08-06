@@ -46,8 +46,8 @@ onMounted(async () => {
   }
 })
 
-async function submitHandler(questionId: number, answer: string) {
-  const res = await wrongPracticeSubmit({ question_id: questionId, answer, duration: 0 })
+async function submitHandler(questionId: number, answer: string, duration: number) {
+  const res = await wrongPracticeSubmit({ question_id: questionId, answer, duration })
   if (res.is_correct === 1) {
     setTimeout(async () => {
       try {

@@ -25,6 +25,9 @@ func main() {
 
 	router.Setup(db, r, cfg)
 
+	// 静态文件：学习资料的上传文件（预览图 / xmind），相对 backend 运行目录
+	r.Static("/uploads", "./data/uploads")
+
 	if err := r.Run(":" + cfg.ServerPort); err != nil {
 		log.Fatalf("服务启动失败: %v", err)
 	}

@@ -26,11 +26,11 @@ const maxDailyCount = computed(() => {
 
 const chartDays = computed(() => {
   const days: { date: string; count: number; pct: number; label: string }[] = []
-  const dataMap = new Map(dailyStats.value.map(d => [d.date, d]))
+  const dataMap = new Map(dailyStats.value.map(d => [d.date.slice(0, 10), d]))
   for (let i = 29; i >= 0; i--) {
     const d = new Date()
     d.setDate(d.getDate() - i)
-    const key = d.toISOString().split('T')[0]
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const count = dataMap.get(key)?.total_count || 0
     days.push({
       date: key,
@@ -149,7 +149,7 @@ onMounted(async () => {
         <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h2 class="mb-4 text-base font-semibold text-gray-900">近 30 天答题趋势</h2>
           <div class="flex h-36 items-end gap-[3px]">
-            <div v-for="(day, idx) in chartDays" :key="idx" class="group relative flex-1 flex flex-col justify-end">
+            <div v-for="(day, idx) in chartDays" :key="idx" class="group relative flex h-full flex-1 flex-col justify-end">
               <div
                 class="w-full cursor-pointer rounded-t transition-all duration-300"
                 :class="barColor(day.pct)"

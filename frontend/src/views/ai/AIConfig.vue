@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import { useAiStore } from '@/stores/ai'
 import { getAiProviders } from '@/api/ai'
 import type { AiProvider } from '@/types/ai'
 
 const router = useRouter()
+const auth = useAuthStore()
 const aiStore = useAiStore()
 
 const providers = ref<AiProvider[]>([])
@@ -73,7 +75,7 @@ async function testConnection() {
     const { generateQuestions } = await import('@/api/ai')
     await generateQuestions({
       api_config: aiStore.getConfig(),
-      subject_id: 1,
+      subject_id: auth.selectedSubjectId,
       chapter_id: 0,
       types: ['single'],
       difficulty: 'easy',
@@ -216,7 +218,7 @@ function goPractice() {
         <li>前往对应平台获取 API Key（DeepSeek: platform.deepseek.com）</li>
         <li>填入 API Key，点击"保存配置"</li>
         <li>点击"测试连接"确认可用</li>
-        <li>前往 AI 练习页面选择科目和题型，让 AI 为你出题</li>
+        <li>前往 AI 练习页面选择题型，让 AI 为你出题</li>
       </ol>
     </div>
   </div>

@@ -184,11 +184,20 @@ func assignQuestionsToChapters(db *gorm.DB) {
 
 		chapters, ok := chapterPool[key]
 		if !ok {
-			// 优先使用该子科目下的章节，其次使用该科目下任意章节
-			db.Where("sub_subject_id = ? AND subject_id = ?", q.SubSubjectID, q.SubjectID).
-				Order("id asc").Find(&chapters)
+			// 优先使用该子科目下的章节
+			if q.SubSubjectID != 0 {
+				db.Where("sub_subject_id = ? AND subject_id = ?", q.SubSubjectID, q.SubjectID).
+					Order("id asc").Find(&chapters)
+			}
+			// 无子科目(sub_subject_id=0)的孤立题目：只归入该科目的「综合知识/基础知识」主章节，
+			// 避免被随机分派到「论文/案例分析」等非客观题目章节，污染专项练习
 			if len(chapters) == 0 {
-				db.Where("subject_id = ?", q.SubjectID).Order("id asc").Find(&chapters)
+				var primary model.SubSubject
+				if err := db.Where("subject_id = ?", q.SubjectID).
+					Order("sort_order asc, id asc").First(&primary).Error; err == nil {
+					db.Where("sub_subject_id = ? AND subject_id = ?", primary.ID, q.SubjectID).
+						Order("id asc").Find(&chapters)
+				}
 			}
 			chapterPool[key] = chapters
 			poolIndex[key] = 0

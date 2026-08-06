@@ -29,6 +29,8 @@ const completed = ref<Record<number, boolean>>({})
 let timer: number | null = null
 let deadline = 0
 let lastSaveErrorAt = 0
+// 在途的答案保存请求，交卷前需等待落库
+const pendingSaves = new Set<Promise<void>>()
 
 const current = computed((): ExamQuesResp => examData.value?.questions[currentIndex.value] as ExamQuesResp)
 const total = computed(() => examData.value?.questions.length || 0)
@@ -81,7 +83,9 @@ onUnmounted(() => {
 
 onBeforeRouteLeave(() => {
   if (submitted.value || submitting.value) return true
-  return window.confirm('考试尚未交卷，离开后将无法继续本次考试，确定离开吗？')
+  if (!examData.value) return true
+  handleSubmit()
+  return false
 })
 
 function handleBeforeUnload(e: BeforeUnloadEvent) {
@@ -168,13 +172,16 @@ function goToNextUnanswered() {
 
 function saveAnswer(questionId: number, answer: string) {
   if (!examData.value) return
-  submitAnswer(examData.value.record_id, { question_id: questionId, answer }).catch(() => {
+  const req = submitAnswer(examData.value.record_id, { question_id: questionId, answer }).catch(() => {
     const now = Date.now()
     if (now - lastSaveErrorAt > 3000) {
       lastSaveErrorAt = now
       showToast('答案保存失败，请检查网络后重试')
     }
+  }).finally(() => {
+    pendingSaves.delete(req)
   })
+  pendingSaves.add(req)
 }
 
 function isSelected(questionId: number, value: string) {
@@ -196,6 +203,8 @@ async function handleSubmit() {
   submitting.value = true
   stopTimer()
   try {
+    // 等待所有在途答案保存完成，避免最后作答丢失
+    await Promise.allSettled([...pendingSaves])
     await submitExam(examData.value.record_id)
     submitted.value = true
     router.replace(`/exam/${examData.value.record_id}/result`)

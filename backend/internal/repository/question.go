@@ -58,7 +58,8 @@ func (r *QuestionRepo) FindByID(id uint) (*model.Question, error) {
 
 func (r *QuestionRepo) FindRandom(subjectID uint, difficulty string, limit int) ([]model.Question, error) {
 	var list []model.Question
-	query := r.db.Where("subject_id = ? AND status = 1", subjectID)
+	query := r.db.Where("subject_id = ? AND status = 1", subjectID).
+		Where("type NOT IN ?", []string{model.TypeEssay, model.TypeCaseStudy})
 	if difficulty != "" {
 		query = query.Where("difficulty = ?", difficulty)
 	}
@@ -69,6 +70,9 @@ func (r *QuestionRepo) FindRandom(subjectID uint, difficulty string, limit int) 
 func (r *QuestionRepo) FindRandomFiltered(subjectID uint, difficulty, qtype string, limit int) ([]model.Question, error) {
 	var list []model.Question
 	query := r.db.Where("subject_id = ? AND status = 1", subjectID)
+	if qtype == "" {
+		query = query.Where("type NOT IN ?", []string{model.TypeEssay, model.TypeCaseStudy})
+	}
 	if difficulty != "" {
 		query = query.Where("difficulty = ?", difficulty)
 	}

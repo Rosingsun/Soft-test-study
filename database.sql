@@ -1,4 +1,4 @@
--- =============================================================
+﻿-- =============================================================
 -- 软考学系平台 - 数据库初始化脚本
 -- Database: softteststudyt
 -- =============================================================
@@ -343,3 +343,26 @@ VALUES
  '{}', '',
  '集成方式：优先采用基于 API 的集成（REST/消息中间件），通过企业服务总线或 API 网关统一编排；数据一致性：跨系统写操作采用最终一致性，通过事务补偿、幂等设计与消息确认机制保证；需统一主数据口径并做对账。',
  2023, 1);
+
+-- =============================================================
+-- 学习资料表（xmind 笔记分享）
+-- 文件约定: backend/data/uploads/materials/{id}/cover.png + note.xmind
+-- =============================================================
+CREATE TABLE IF NOT EXISTS `study_materials` (
+  `id`             BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  `title`          VARCHAR(200)     NOT NULL COMMENT '资料标题',
+  `description`    TEXT             DEFAULT NULL COMMENT '资料简介',
+  `subject_id`     BIGINT UNSIGNED  DEFAULT NULL COMMENT '关联科目 subjects.id',
+  `cover_url`      VARCHAR(255)     DEFAULT NULL COMMENT '预览图相对路径 /uploads/materials/{id}/cover.png',
+  `file_url`       VARCHAR(255)     NOT NULL COMMENT 'xmind 文件相对路径 /uploads/materials/{id}/note.xmind',
+  `file_name`      VARCHAR(255)     DEFAULT NULL COMMENT '下载时使用的原始文件名',
+  `file_size`      BIGINT           DEFAULT 0 COMMENT '文件大小（字节）',
+  `download_count` INT              DEFAULT 0 COMMENT '下载次数',
+  `view_count`     INT              DEFAULT 0 COMMENT '预览次数',
+  `sort_order`     INT              DEFAULT 0 COMMENT '排序（越大越靠前）',
+  `status`         INT              DEFAULT 1 COMMENT '状态: 1=上线 0=下线',
+  `created_at`     DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`     DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_subject_id` (`subject_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='学习资料表';
