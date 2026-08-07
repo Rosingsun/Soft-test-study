@@ -123,6 +123,31 @@ function barTextClass(item: DistributionItem) {
   return 'text-indigo-400'
 }
 
+// 柱状图 hover 交互
+const hoveredIdx = ref<number>(-1)
+
+// 从 label（如 "0-20%" / "30+ 天"）解析分桶中点值
+function bucketMid(item: DistributionItem): number | null {
+  const m = item.label.match(/^([\d.]+)\s*[-~]\s*([\d.]+)/)
+  if (m) return (parseFloat(m[1]) + parseFloat(m[2])) / 2
+  const m2 = item.label.match(/^([\d.]+)\s*\+/)
+  if (m2) return parseFloat(m2[1])
+  return null
+}
+
+// 与平台均值对比
+function bucketCompare(item: DistributionItem): { text: string; color: string } | null {
+  if (!data.value?.reference || item.count === 0) return null
+  const mid = bucketMid(item)
+  if (mid === null) return null
+  const avg = data.value.reference.avg
+  const diff = mid - avg
+  if (Math.abs(diff) < 0.5) return { text: '与平台均值持平', color: 'text-gray-300' }
+  const fmt = formatValue(Math.abs(diff))
+  if (diff > 0) return { text: `高于均值 ${fmt}`, color: 'text-emerald-400' }
+  return { text: `低于均值 ${fmt}`, color: 'text-amber-400' }
+}
+
 async function load() {
   loading.value = true
   error.value = ''
@@ -253,7 +278,7 @@ watch([category, metric, subjectId], load)
             <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div>
                 <h3 class="text-base font-semibold tracking-tight text-gray-900">各阶段人员分布</h3>
-                <p class="mt-0.5 text-xs text-gray-400">参与者{{ metricLabel() }}分布，柱越高人数越多；高亮柱为你所在阶段</p>
+                <p class="mt-0.5 text-xs text-gray-400">参与者{{ metricLabel() }}分布，柱越高人数越多；高亮柱为你所在阶段；悬停柱子查看详细数据</p>
               </div>
               <BaseBadge v-if="data.my" type="info" dot>{{ data.my.total_participants }} 人参与</BaseBadge>
             </div>
@@ -267,7 +292,7 @@ watch([category, metric, subjectId], load)
               </div>
 
               <!-- 柱状图区域 -->
-              <div class="relative flex-1">
+              <div class="relative flex-1 overflow-visible">
                 <!-- 横向网格线 -->
                 <div class="pointer-events-none absolute inset-0 flex flex-col justify-between pb-9">
                   <div class="border-t border-dashed border-gray-100" />
@@ -280,8 +305,83 @@ watch([category, metric, subjectId], load)
                   <div
                     v-for="(item, idx) in data.distribution"
                     :key="item.label"
-                    class="group relative flex flex-1 flex-col items-center justify-end"
+                    class="group relative flex flex-1 cursor-pointer flex-col items-center justify-end focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1"
+                    :class="{ 'z-20': hoveredIdx === idx }"
+                    tabindex="0"
+                    @mouseenter="hoveredIdx = idx"
+                    @mouseleave="hoveredIdx = -1"
+                    @focus="hoveredIdx = idx"
+                    @blur="hoveredIdx = -1"
                   >
+                    <!-- 悬浮 Tooltip -->
+                    <Transition
+                      enter-active-class="transition duration-200 ease-out"
+                      enter-from-class="opacity-0"
+                      enter-to-class="opacity-100"
+                      leave-active-class="transition duration-150 ease-in"
+                      leave-from-class="opacity-100"
+                      leave-to-class="opacity-0"
+                    >
+                      <div
+                        v-if="hoveredIdx === idx"
+                        class="pointer-events-none absolute -top-1 left-1/2 z-30 -translate-x-1/2 -translate-y-full"
+                      >
+                        <div class="min-w-[150px] rounded-xl bg-gray-900/95 px-3 py-2 text-left shadow-2xl ring-1 ring-white/10 backdrop-blur">
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-semibold text-white">{{ item.label }}</span>
+                            <span
+                              v-if="item.is_mine"
+                              class="inline-flex items-center gap-0.5 rounded-full bg-indigo-500 px-1.5 py-0.5 text-[9px] font-bold text-white"
+                            >
+                              <svg class="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 2.5l2.5 5 5.5.8-4 3.9.9 5.5L10 15.1 5.1 17.7l.9-5.5-4-3.9 5.5-.8L10 2.5z" />
+                              </svg>
+                              你
+                            </span>
+                          </div>
+                          <div class="mt-1.5 flex items-baseline gap-1.5">
+                            <span class="text-base font-bold tabular-nums text-white">{{ item.count }}</span>
+                            <span class="text-[10px] text-gray-300">人</span>
+                            <span class="ml-auto text-[11px] font-semibold tabular-nums text-indigo-300">
+                              {{ (item.ratio * 100).toFixed(1) }}%
+                            </span>
+                          </div>
+                          <div v-if="item.count > 0" class="mt-1.5 border-t border-white/10 pt-1.5 text-[10px] leading-relaxed text-gray-400">
+                            <div>该分段共 {{ item.count }} 名参与者</div>
+                            <div
+                              v-if="bucketCompare(item)"
+                              class="mt-0.5 flex items-center gap-1"
+                              :class="bucketCompare(item)!.color"
+                            >
+                              <svg
+                                v-if="bucketCompare(item)!.text.includes('高于')"
+                                class="h-2.5 w-2.5 shrink-0"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                              >
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                              </svg>
+                              <svg
+                                v-else
+                                class="h-2.5 w-2.5 shrink-0"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                              >
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                              </svg>
+                              <span>{{ bucketCompare(item)!.text }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- 箭头 -->
+                        <div class="absolute left-1/2 top-full -translate-x-1/2 border-x-4 border-t-4 border-x-transparent border-t-gray-900/95" />
+                      </div>
+                    </Transition>
+
                     <!-- 顶部统一标签：「你」徽章 + 人数（高亮柱才有徽章，避免重叠） -->
                     <div class="mb-1.5 flex h-5 w-full items-center justify-center gap-1">
                       <span
@@ -303,8 +403,13 @@ watch([category, metric, subjectId], load)
 
                     <!-- 柱体 -->
                     <div
-                      class="bar-anim relative w-full overflow-hidden rounded-t-md transition-all duration-500"
-                      :class="[barFillClass(item), { 'bar-mine-anim': item.is_mine }]"
+                      class="bar-anim relative w-full overflow-hidden rounded-t-md transition-all duration-300"
+                      :class="[
+                        barFillClass(item),
+                        { 'bar-mine-anim': item.is_mine },
+                        hoveredIdx === idx && !item.is_mine ? 'shadow-lg shadow-indigo-500/30 brightness-110' : '',
+                        hoveredIdx >= 0 && hoveredIdx !== idx ? 'opacity-30' : '',
+                      ]"
                       :style="{
                         height: barHeight(item) + '%',
                         animationDelay: (idx * 70) + 'ms',
@@ -327,10 +432,15 @@ watch([category, metric, subjectId], load)
                 <!-- X 轴标签 -->
                 <div class="absolute bottom-0 left-0 right-0 flex justify-between gap-1.5 sm:gap-2">
                   <div
-                    v-for="item in data.distribution"
+                    v-for="(item, idx) in data.distribution"
                     :key="item.label"
-                    class="flex-1 text-center text-[11px] font-medium transition-colors"
-                    :class="item.is_mine ? 'text-indigo-600' : 'text-gray-500'"
+                    class="flex-1 cursor-pointer text-center text-[11px] font-medium transition-colors"
+                    :class="[
+                      item.is_mine ? 'text-indigo-600' : 'text-gray-500',
+                      hoveredIdx === idx ? 'font-semibold text-gray-900' : '',
+                    ]"
+                    @mouseenter="hoveredIdx = idx"
+                    @mouseleave="hoveredIdx = -1"
                   >
                     {{ item.label }}
                   </div>

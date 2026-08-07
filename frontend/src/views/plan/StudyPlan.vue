@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { listStudyPlans, createStudyPlan, deleteStudyPlan } from '@/api/studyPlan'
 import { useSubjectStore } from '@/stores/subject'
+import { useAuthStore } from '@/stores/auth'
 import type { StudyPlanResp } from '@/types/studyPlan'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
@@ -13,11 +14,13 @@ import BaseEmpty from '@/components/common/BaseEmpty.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
+import BaseDatePicker from '@/components/common/BaseDatePicker.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import { showToast } from '@/utils/toast'
 
 const router = useRouter()
 const subjectStore = useSubjectStore()
+const auth = useAuthStore()
 
 const list = ref<StudyPlanResp[]>([])
 const loading = ref(true)
@@ -57,8 +60,14 @@ async function load() {
 
 onMounted(load)
 
+function defaultSubjectId() {
+  const id = auth.selectedSubjectId
+  if (id && subjectStore.subjects.some(s => s.id === id)) return id
+  return 0
+}
+
 function openCreate() {
-  form.value = { title: '', subject_id: 0, daily_goal: 20, start_date: todayStr(), end_date: todayStr() }
+  form.value = { title: '', subject_id: defaultSubjectId(), daily_goal: 20, start_date: todayStr(), end_date: todayStr() }
   formError.value = ''
   showCreate.value = true
 }
@@ -234,8 +243,8 @@ function pctClass(p: StudyPlanResp) {
         </div>
         <BaseInput v-model.number="form.daily_goal" label="每日目标题数" type="number" min="1" placeholder="如：20" />
         <div class="grid grid-cols-2 gap-3">
-          <BaseInput v-model="form.start_date" label="开始日期" type="date" />
-          <BaseInput v-model="form.end_date" label="结束日期" type="date" />
+          <BaseDatePicker v-model="form.start_date" label="开始日期" :max="form.end_date || undefined" />
+          <BaseDatePicker v-model="form.end_date" label="结束日期" :min="form.start_date || undefined" />
         </div>
         <p v-if="formError" class="text-xs text-red-500">{{ formError }}</p>
         <div class="flex justify-end gap-2 border-t border-gray-50 pt-4">

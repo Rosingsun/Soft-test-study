@@ -28,6 +28,17 @@ export function typeLabel(type: string): string {
   return TYPE_LABELS[type] || type
 }
 
+/** 是否 AI 出题 */
+export function isAiSource(source: string | undefined | null): boolean {
+  return !!source && source.trim().toLowerCase() === 'ai'
+}
+
+/** 题源展示名：AI / 真题；空值返回空串（调用方按需隐藏） */
+export function sourceLabel(source: string | undefined | null): string {
+  if (!source) return ''
+  return isAiSource(source) ? 'AI' : '真题'
+}
+
 // ===== AI 评分维度（论文 / 案例分析）=====
 
 export interface AiScoreDimension {

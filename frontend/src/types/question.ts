@@ -27,6 +27,7 @@ export interface Question {
   answer: string
   analysis: string
   year: number
+  source: string
 }
 
 export interface PracticeSubmitReq {

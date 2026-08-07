@@ -1,5 +1,5 @@
 import { get } from './request'
-import type { ExamLevel, Subject, SubSubject, Chapter, KnowledgePoint } from '@/types/subject'
+import type { ExamLevel, Subject, SubSubject, Chapter } from '@/types/subject'
 
 export function getExamLevels() {
   return get<ExamLevel[]>('/exam-levels')
@@ -19,8 +19,4 @@ export function getSubSubjects(subjectId: number) {
 
 export function getChapters(subSubjectId: number) {
   return get<Chapter[]>(`/sub-subjects/${subSubjectId}/chapters`)
-}
-
-export function getKnowledgePoints(chapterId: number) {
-  return get<KnowledgePoint[]>(`/chapters/${chapterId}/knowledge-points`)
 }

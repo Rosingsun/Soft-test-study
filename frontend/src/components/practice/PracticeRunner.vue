@@ -7,7 +7,7 @@ import { addMark, removeMark, checkMarked } from '@/api/mark'
 import { essayScore, checkEssayScore } from '@/api/ai'
 import { useAiStore } from '@/stores/ai'
 import { sanitizeHtml } from '@/utils/sanitize'
-import { typeLabel, parseOptions, parseBlankOptions, isCorrectAnswer, aiScoreSpec, aiDimensionScore } from '@/utils/question'
+import { typeLabel, parseOptions, parseBlankOptions, isCorrectAnswer, aiScoreSpec, aiDimensionScore, isAiSource, sourceLabel } from '@/utils/question'
 import type { Question, PracticeRecordResp } from '@/types/question'
 import type { EssayScoreResp } from '@/types/ai'
 
@@ -152,6 +152,20 @@ function selectAnswer(questionId: number, value: string) {
   // 单选 / 判断题：选中后自动提交（立即判分并显示解析）
   if (q.type === 'single' || q.type === 'judge') {
     handleSubmit()
+    // 单选题：显示答案后自动跳转下一题（多选、输入框不自动跳转）
+    if (q.type === 'single') {
+      const fromIndex = currentIndex.value
+      setTimeout(() => {
+        // 用户已手动切换题目则不再自动跳转
+        if (currentIndex.value !== fromIndex) return
+        if (currentIndex.value === total.value - 1) {
+          emit('finish')
+          emit('back')
+          return
+        }
+        goTo(currentIndex.value + 1)
+      }, 1000)
+    }
   }
 }
 
@@ -550,7 +564,7 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
     </div>
 
     <!-- 题目卡片 -->
-    <div v-if="current" class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
+    <div v-if="current" class="min-h-[560px] rounded-xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
       <!-- 元信息 -->
       <div class="mb-5 flex flex-wrap items-center gap-2">
         <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-600 ring-1 ring-inset ring-indigo-600/20">
@@ -562,7 +576,15 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
         >
           {{ difficultyMap[current.difficulty]?.label || current.difficulty }}
         </span>
+        <span
+          v-if="current.source"
+          :class="isAiSource(current.source)
+            ? 'bg-violet-50 text-violet-600 ring-violet-600/20'
+            : 'bg-emerald-50 text-emerald-600 ring-emerald-600/20'"
+          class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
+        >{{ sourceLabel(current.source) }}</span>
         <span v-if="current.year" class="text-xs text-gray-400">{{ current.year }} 年真题</span>
+        <span class="text-xs text-gray-400">题号 #{{ current.id }}</span>
         <span v-if="marked[current.id]" class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-600 ring-1 ring-inset ring-amber-600/20">
           <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0l2.77-.693a9 9 0 016.208.682l.108.054a9 9 0 016.086.71l3.114-.732a48.524 48.524 0 01-.005-10.499l-3.11.732a9 9 0 01-6.085-.711l-.108-.054a9 9 0 00-6.208-.682L3 4.5M3 15V4.5" />

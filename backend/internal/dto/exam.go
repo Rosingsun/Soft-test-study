@@ -34,6 +34,7 @@ type ExamQuesResp struct {
 	Difficulty  string `json:"difficulty"`
 	Score       int    `json:"score"`
 	SortOrder   int    `json:"sort_order"`
+	Source      string `json:"source"`
 }
 
 type SubmitAnswerReq struct {

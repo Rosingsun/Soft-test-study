@@ -103,6 +103,7 @@ func toQuestionResp(q model.Question) dto.QuestionResp {
 		Answer:       q.Answer,
 		Analysis:     q.Analysis,
 		Year:         q.Year,
+		Source:       q.Source,
 	}
 }
 

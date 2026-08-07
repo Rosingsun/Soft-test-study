@@ -104,6 +104,7 @@ CREATE TABLE `questions` (
   `answer`         TEXT            NOT NULL COMMENT '正确答案',
   `analysis`       TEXT            DEFAULT NULL COMMENT '解析',
   `year`           INT             DEFAULT NULL COMMENT '考试年份',
+  `source`         VARCHAR(100)    DEFAULT '' COMMENT '题源: ai=AI生成, seed=内置种子, sa-2023=系统分析师2023真题 等',
   `status`         INT             DEFAULT 0 COMMENT '状态: 0=待审核 1=已发布',
   `created_at`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

@@ -15,6 +15,7 @@ type QuestionResp struct {
 	Answer       string `json:"answer"`
 	Analysis     string `json:"analysis"`
 	Year         int    `json:"year"`
+	Source       string `json:"source"`
 }
 
 type PracticeSubmitReq struct {

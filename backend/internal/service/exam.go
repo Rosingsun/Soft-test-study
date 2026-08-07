@@ -167,6 +167,7 @@ func (s *ExamService) loadExam(recordID, userID uint, template *model.ExamTempla
 			Difficulty:  q.Difficulty,
 			Score:       1,
 			SortOrder:   i + 1,
+			Source:      q.Source,
 		})
 	}
 

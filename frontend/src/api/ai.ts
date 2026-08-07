@@ -1,5 +1,5 @@
 import { get, post } from './request'
-import type { AiProvider, GenerateQuestionsReq, GenerateQuestionsResp, AnalyzeReq, AnalyzeResp, StartAiExamReq, EssayScoreReq, EssayScoreResp, EssayScoreCheckResp } from '@/types/ai'
+import type { AiProvider, GenerateQuestionsReq, GenerateQuestionsResp, StartAiExamReq, EssayScoreReq, EssayScoreResp, EssayScoreCheckResp } from '@/types/ai'
 import type { StartExamResp } from '@/types/exam'
 
 export function getAiProviders() {
@@ -8,10 +8,6 @@ export function getAiProviders() {
 
 export function generateQuestions(data: GenerateQuestionsReq) {
   return post<GenerateQuestionsResp>('/ai/generate', data)
-}
-
-export function analyzeQuestion(data: AnalyzeReq) {
-  return post<AnalyzeResp>('/ai/analyze', data)
 }
 
 export function startAiExam(data: StartAiExamReq) {

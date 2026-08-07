@@ -358,6 +358,7 @@ func (s *AiService) StartAiExam(userID uint, req dto.StartAiExamReq) (*dto.Start
 			Difficulty:   q.Difficulty,
 			Score:        1,
 			SortOrder:    i + 1,
+			Source:       q.Source,
 		}
 	}
 

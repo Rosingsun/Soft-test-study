@@ -154,6 +154,7 @@ func (s *CheckInService) buildToday(userID uint, date string, rows []model.Check
 			Answer:       q.Answer,
 			Analysis:     q.Analysis,
 			Year:         q.Year,
+			Source:       q.Source,
 			Answered:     answered,
 		})
 	}

@@ -139,6 +139,7 @@ async function start() {
         answer: q.answer || '',
         analysis: q.analysis || '',
         year: q.year || 0,
+        source: q.source || '',
       }))
     } else {
       questions.value = await getSpecialQuestions(subjectId.value, type.value, difficulty.value || undefined, count.value)

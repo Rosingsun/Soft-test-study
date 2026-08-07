@@ -28,10 +28,3 @@ export interface Chapter {
   name: string
   sort_order: number
 }
-
-export interface KnowledgePoint {
-  id: number
-  chapter_id: number
-  name: string
-  content: string
-}

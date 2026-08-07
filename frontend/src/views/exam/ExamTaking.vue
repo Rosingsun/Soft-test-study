@@ -4,7 +4,7 @@ import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { startExam, submitAnswer, submitExam } from '@/api/exam'
 import { useExamStore } from '@/stores/exam'
 import { sanitizeHtml } from '@/utils/sanitize'
-import { parseOptions, parseBlankOptions, typeLabel } from '@/utils/question'
+import { parseOptions, parseBlankOptions, typeLabel, isAiSource, sourceLabel } from '@/utils/question'
 import { showToast } from '@/utils/toast'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
@@ -379,6 +379,14 @@ async function handleSubmit() {
               <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
                 {{ current.score }} 分
               </span>
+              <span
+                v-if="current.source"
+                :class="isAiSource(current.source)
+                  ? 'bg-violet-50 text-violet-600 ring-violet-600/20'
+                  : 'bg-emerald-50 text-emerald-600 ring-emerald-600/20'"
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
+              >{{ sourceLabel(current.source) }}</span>
+              <span class="text-xs text-gray-400">题号 #{{ current.id }}</span>
             </div>
 
             <!-- 案例材料（案例分析题）：可折叠引用块 -->

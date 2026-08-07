@@ -16,6 +16,7 @@ type CheckInQuestionResp struct {
 	Answer       string `json:"answer"`
 	Analysis     string `json:"analysis"`
 	Year         int    `json:"year"`
+	Source       string `json:"source"`
 	Answered     bool   `json:"answered"`
 }
 

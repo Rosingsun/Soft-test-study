@@ -19,6 +19,7 @@ export interface ExamQuesResp {
   difficulty: string
   score: number
   sort_order: number
+  source: string
 }
 
 export interface StartExamResp {

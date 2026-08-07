@@ -52,6 +52,7 @@ const practiceQuestions = computed<Question[]>(() => {
     answer: q.answer,
     analysis: q.analysis,
     year: 0,
+    source: q.source || 'ai',
   }))
 })
 

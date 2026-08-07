@@ -31,22 +31,11 @@ export interface AiGeneratedQuestion {
   answer: string
   analysis: string
   knowledge_point: string
+  source?: string
 }
 
 export interface GenerateQuestionsResp {
   questions: AiGeneratedQuestion[]
-}
-
-export interface AnalyzeReq {
-  api_config: AiApiConfig
-  question_content: string
-  question_type: string
-  question_answer: string
-  user_answer: string
-}
-
-export interface AnalyzeResp {
-  analysis: string
 }
 
 export interface StartAiExamReq {
