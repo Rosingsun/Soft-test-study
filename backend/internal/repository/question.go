@@ -125,6 +125,24 @@ func (r *QuestionRepo) FindByIDs(ids []uint) ([]model.Question, error) {
 	return list, err
 }
 
+// FindRandomReal 随机取真题客观题（year>0，单选/多选/判断）
+func (r *QuestionRepo) FindRandomReal(limit int) ([]model.Question, error) {
+	var list []model.Question
+	err := r.db.Where("year > 0 AND status = 1").
+		Where("type IN ?", []string{model.TypeSingle, model.TypeMulti, model.TypeJudge}).
+		Order("RAND()").Limit(limit).Find(&list).Error
+	return list, err
+}
+
+// FindRandomObjective 随机取客观题（不限年份），用于真题不足时兜底
+func (r *QuestionRepo) FindRandomObjective(limit int) ([]model.Question, error) {
+	var list []model.Question
+	err := r.db.Where("status = 1").
+		Where("type IN ?", []string{model.TypeSingle, model.TypeMulti, model.TypeJudge}).
+		Order("RAND()").Limit(limit).Find(&list).Error
+	return list, err
+}
+
 func (r *QuestionRepo) CountByChapterID(chapterID uint) (int64, error) {
 	var count int64
 	err := r.db.Model(&model.Question{}).

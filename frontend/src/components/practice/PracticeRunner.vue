@@ -7,7 +7,7 @@ import { addMark, removeMark, checkMarked } from '@/api/mark'
 import { essayScore, checkEssayScore } from '@/api/ai'
 import { useAiStore } from '@/stores/ai'
 import { sanitizeHtml } from '@/utils/sanitize'
-import { typeLabel, parseOptions, isCorrectAnswer, aiScoreSpec, aiDimensionScore } from '@/utils/question'
+import { typeLabel, parseOptions, parseBlankOptions, isCorrectAnswer, aiScoreSpec, aiDimensionScore } from '@/utils/question'
 import type { Question, PracticeRecordResp } from '@/types/question'
 import type { EssayScoreResp } from '@/types/ai'
 
@@ -19,6 +19,8 @@ const props = withDefaults(defineProps<{
   mode?: string
   title?: string
   startIndex?: number
+  initialAnswers?: Record<number, string>
+  initialSubmitted?: Record<number, boolean>
   submitHandler?: (questionId: number, answer: string, duration: number) => Promise<PracticeRecordResp>
 }>(), {
   mode: 'chapter',
@@ -26,11 +28,11 @@ const props = withDefaults(defineProps<{
   startIndex: 0,
 })
 
-const emit = defineEmits<{ (e: 'back'): void }>()
+const emit = defineEmits<{ (e: 'back'): void; (e: 'finish'): void }>()
 
 const currentIndex = ref(props.startIndex ?? 0)
-const answers = ref<Record<number, string>>({})
-const submitted = ref<Record<number, boolean>>({})
+const answers = ref<Record<number, string>>({ ...(props.initialAnswers || {}) })
+const submitted = ref<Record<number, boolean>>({ ...(props.initialSubmitted || {}) })
 // 每道题首次进入的时间戳，用于统计本题作答耗时
 const questionStart = ref<Record<number, number>>({})
 const marked = ref<Record<number, boolean>>({})
@@ -127,6 +129,7 @@ function goTo(index: number) {
 
 function handleNext() {
   if (currentIndex.value === total.value - 1) {
+    emit('finish')
     emit('back')
     return
   }
@@ -150,6 +153,79 @@ function selectAnswer(questionId: number, value: string) {
   if (q.type === 'single' || q.type === 'judge') {
     handleSubmit()
   }
+}
+
+// ===== 多空题（multi_blank）=====
+// 答案以 JSON 数组字符串存储（如 '["A","C"]'），每个空为独立单选
+
+function blankList(q: Question): { blank_index: number; options: { id: string; content: string }[] }[] {
+  return parseBlankOptions(q.blank_options)
+}
+
+// 取某空已选中的选项 id
+function blankAnswer(q: Question, blankIndex: number): string {
+  const arr = parseBlankAnswerList(answers.value[q.id])
+  return arr[blankIndex - 1] || ''
+}
+
+// 解析当前已选的答案数组
+function parseBlankAnswerList(answer: string | undefined): string[] {
+  if (!answer) return []
+  const s = answer.trim()
+  if (s.startsWith('[')) {
+    try {
+      const arr = JSON.parse(s)
+      if (Array.isArray(arr)) return arr.map(String)
+    } catch { /* 忽略 */ }
+  }
+  return s.split(',').map(x => x.trim()).filter(Boolean)
+}
+
+// 选择某空的选项（同空单选，重选覆盖）
+function selectBlankAnswer(q: Question, blankIndex: number, optionId: string) {
+  if (submitted.value[q.id]) return
+  const blanks = blankList(q)
+  const arr = parseBlankAnswerList(answers.value[q.id])
+  // 保证数组长度与空数一致
+  while (arr.length < blanks.length) arr.push('')
+  arr[blankIndex - 1] = optionId
+  answers.value[q.id] = JSON.stringify(arr)
+}
+
+// 某空的选项状态
+function blankOptionState(q: Question, blankIndex: number, optionId: string): string {
+  const isSub = !!submitted.value[q.id]
+  const selected = blankAnswer(q, blankIndex) === optionId
+  if (!isSub) return selected ? 'selected' : 'idle'
+  // 提交后：从正确答案 JSON 解析该空正确答案
+  const correctArr = parseBlankAnswerList(q.answer)
+  const correct = correctArr[blankIndex - 1]
+  if (optionId === correct) return 'correct'
+  if (selected) return 'wrong'
+  return 'dim'
+}
+
+// 多空题是否全部作答完成
+function blankAllAnswered(q: Question): boolean {
+  const blanks = blankList(q)
+  if (!blanks.length) return false
+  const arr = parseBlankAnswerList(answers.value[q.id])
+  return blanks.every(b => arr[b.blank_index - 1])
+}
+
+// 多空题选项字母徽章样式
+function optionBadgeClassForBlank(q: Question, blankIndex: number, optionId: string, state: string): string {
+  const selected = blankAnswer(q, blankIndex) === optionId
+  if (!submitted.value[q.id] && selected) return 'border-indigo-500 bg-indigo-500 text-white'
+  if (state === 'correct') return 'border-emerald-500 bg-emerald-500 text-white'
+  if (state === 'wrong') return 'border-red-500 bg-red-500 text-white'
+  return 'border-gray-300 text-gray-500'
+}
+
+// 正确答案的可读文本（多空题转成每空答案）
+function correctAnswerText(q: Question): string {
+  if (q.type === 'multi_blank') return parseBlankAnswerList(q.answer).join('、')
+  return q.answer
 }
 
 async function toggleMark() {
@@ -290,6 +366,9 @@ function answeredText(q: Question): string {
   }
   if (q.type === 'single' || q.type === 'multi') {
     return ans.split(',').join('、')
+  }
+  if (q.type === 'multi_blank') {
+    return parseBlankAnswerList(ans).join('、')
   }
   return ans
 }
@@ -462,7 +541,7 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
         <button
           v-if="current && !submitted[current.id] && current.type !== 'single' && current.type !== 'judge'"
           class="bg-brand-gradient cursor-pointer rounded-lg px-5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition-all duration-200 hover:shadow-lg hover:brightness-110 active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
-          :disabled="!answers[current.id]"
+          :disabled="current && current.type === 'multi_blank' ? !blankAllAnswered(current) : !answers[current.id]"
           @click="handleSubmit"
         >
           提交答案
@@ -598,6 +677,42 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
         <p class="mt-2 text-xs text-gray-400">案例分析题为主观题，可分段（如要点一、要点二…）作答，作答后仅展示参考答案与解析，不自动判分。</p>
       </div>
 
+      <!-- 多空题：每个空为独立单选 -->
+      <div v-else-if="current.type === 'multi_blank'" class="space-y-5">
+        <p v-if="!submitted[current.id]" class="mb-1 text-xs text-gray-400">本题为多空题，请在下方每个空位选择对应选项</p>
+        <div
+          v-for="blank in blankList(current)"
+          :key="blank.blank_index"
+          class="rounded-xl border border-gray-200 p-4"
+          :class="submitted[current.id] && blankAnswer(current, blank.blank_index) !== parseBlankAnswerList(current.answer)[blank.blank_index - 1] ? 'border-red-300 bg-red-50/30' : ''"
+        >
+          <div class="mb-2.5 flex items-center gap-2">
+            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-600">
+              {{ blank.blank_index }}
+            </span>
+            <span class="text-sm font-medium text-gray-700">第 {{ blank.blank_index }} 空</span>
+            <span v-if="submitted[current.id]" class="ml-auto text-xs" :class="blankAnswer(current, blank.blank_index) === parseBlankAnswerList(current.answer)[blank.blank_index - 1] ? 'text-emerald-600' : 'text-red-500'">
+              {{ blankAnswer(current, blank.blank_index) === parseBlankAnswerList(current.answer)[blank.blank_index - 1] ? '正确' : '错误' }}
+            </span>
+          </div>
+          <div class="grid gap-2 sm:grid-cols-2">
+            <button
+              v-for="opt in blank.options"
+              :key="opt.id"
+              class="flex w-full cursor-pointer items-center gap-3 rounded-xl border-2 px-3.5 py-2.5 text-left text-sm transition-all duration-200"
+              :class="optionClass(blankOptionState(current, blank.blank_index, opt.id))"
+              @click="selectBlankAnswer(current, blank.blank_index, opt.id)"
+            >
+              <span
+                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors"
+                :class="optionBadgeClassForBlank(current, blank.blank_index, opt.id, blankOptionState(current, blank.blank_index, opt.id))"
+              >{{ opt.id }}</span>
+              <span class="leading-6">{{ opt.content }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- 填空 / 简答 / 综合 -->
       <div v-else>
         <textarea
@@ -648,7 +763,7 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
           </div>
           <div v-if="current.type !== 'essay' && !isCorrect(current)" class="flex gap-2">
             <span class="shrink-0 text-gray-500">正确答案</span>
-            <span class="font-medium text-emerald-700">{{ current.answer }}</span>
+            <span class="font-medium text-emerald-700">{{ correctAnswerText(current) }}</span>
           </div>
           <div v-if="current.type !== 'essay' && current.analysis" class="rounded-lg bg-white/70 p-3 leading-6 text-gray-600">
             <span class="font-medium text-gray-800">解析：</span>{{ current.analysis }}

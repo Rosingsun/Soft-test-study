@@ -16,6 +16,7 @@ type ExamService struct {
 	templateRepo *repository.ExamTemplateRepo
 	recordRepo   *repository.ExamRecordRepo
 	questionRepo *repository.QuestionRepo
+	reviewSvc    *ReviewService
 }
 
 const examPaperSize = 75
@@ -24,8 +25,9 @@ func NewExamService(
 	templateRepo *repository.ExamTemplateRepo,
 	recordRepo *repository.ExamRecordRepo,
 	questionRepo *repository.QuestionRepo,
+	reviewSvc *ReviewService,
 ) *ExamService {
-	return &ExamService{templateRepo: templateRepo, recordRepo: recordRepo, questionRepo: questionRepo}
+	return &ExamService{templateRepo: templateRepo, recordRepo: recordRepo, questionRepo: questionRepo, reviewSvc: reviewSvc}
 }
 
 func (s *ExamService) ListTemplates() ([]dto.ExamTemplateResp, error) {
@@ -161,6 +163,7 @@ func (s *ExamService) loadExam(recordID, userID uint, template *model.ExamTempla
 			Content:     q.Content,
 			CaseMaterial: q.CaseMaterial,
 			Options:     q.Options,
+			BlankOptions: q.BlankOptions,
 			Difficulty:  q.Difficulty,
 			Score:       1,
 			SortOrder:   i + 1,
@@ -222,7 +225,7 @@ func (s *ExamService) SubmitAnswer(userID, recordID uint, req dto.SubmitAnswerRe
 	isCorrect := 0
 	score := 0
 	if question.Type != model.TypeEssay {
-		if question.Answer == req.Answer {
+		if IsAnswerCorrect(question.Type, question.Answer, req.Answer) {
 			isCorrect = 1
 		}
 		if isCorrect == 1 {
@@ -289,7 +292,35 @@ func (s *ExamService) finishExam(userID, recordID uint) (*dto.ExamResultResp, er
 		return nil, err
 	}
 
+	// 模考答错的客观题自动收录错题本 + 遗忘曲线复习卡片
+	s.recordWrongAnswers(userID, answers)
+
 	return s.GetResult(userID, recordID)
+}
+
+// recordWrongAnswers 模考中答错的客观题写入错题本与复习卡片
+func (s *ExamService) recordWrongAnswers(userID uint, answers []model.ExamRecordAnswer) {
+	questionIDs := make([]uint, 0, len(answers))
+	for _, a := range answers {
+		if a.IsCorrect == 0 {
+			questionIDs = append(questionIDs, a.QuestionID)
+		}
+	}
+	if len(questionIDs) == 0 {
+		return
+	}
+	questions, err := s.questionRepo.FindByIDs(questionIDs)
+	if err != nil {
+		return
+	}
+	for _, q := range questions {
+		if q.Type == model.TypeEssay {
+			continue
+		}
+		if err := s.reviewSvc.OnWrong(userID, q.ID); err != nil {
+			continue
+		}
+	}
 }
 
 func (s *ExamService) GetResult(userID, recordID uint) (*dto.ExamResultResp, error) {
@@ -368,6 +399,7 @@ func (s *ExamService) GetResult(userID, recordID uint) (*dto.ExamResultResp, err
 			Type:         q.Type,
 			Content:      q.Content,
 			Options:      q.Options,
+			BlankOptions: q.BlankOptions,
 			YourAnswer:   a.Answer,
 			CorrectAns:   q.Answer,
 			IsCorrect:    a.IsCorrect,

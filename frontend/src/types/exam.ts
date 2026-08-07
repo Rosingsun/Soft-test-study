@@ -15,6 +15,7 @@ export interface ExamQuesResp {
   content: string
   case_material?: string
   options: string
+  blank_options?: string
   difficulty: string
   score: number
   sort_order: number
@@ -43,6 +44,7 @@ export interface AnswerDetailResp {
   type: string
   content: string
   options: string
+  blank_options?: string
   your_answer: string
   correct_answer: string
   is_correct: number

@@ -27,6 +27,7 @@ export interface AiGeneratedQuestion {
   difficulty: string
   content: string
   options: string
+  blank_options?: string
   answer: string
   analysis: string
   knowledge_point: string

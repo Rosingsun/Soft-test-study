@@ -34,6 +34,11 @@ onMounted(async () => {
 })
 
 function onProviderChange() {
+  if (!form.value.provider) {
+    form.value.base_url = ''
+    form.value.model = ''
+    return
+  }
   const p = providers.value.find(x => x.provider === form.value.provider)
   if (p) {
     form.value.base_url = p.base_url
@@ -92,10 +97,10 @@ async function testConnection() {
 function clearConfig() {
   aiStore.clearConfig()
   form.value = {
-    provider: 'deepseek',
+    provider: '',
     api_key: '',
-    base_url: 'https://api.deepseek.com',
-    model: 'deepseek-chat',
+    base_url: '',
+    model: '',
   }
   testResult.value = null
 }
@@ -137,6 +142,7 @@ function goPractice() {
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             @change="onProviderChange"
           >
+            <option value="">请选择提供商（或选「自定义」自行填写）</option>
             <option v-for="p in providers" :key="p.provider" :value="p.provider">{{ p.name }}</option>
           </select>
         </div>
@@ -147,7 +153,7 @@ function goPractice() {
             v-model="form.base_url"
             type="text"
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            placeholder="https://api.deepseek.com"
+            placeholder="https://api.example.com/v1"
           />
         </div>
 
@@ -157,7 +163,7 @@ function goPractice() {
             v-model="form.model"
             type="text"
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            placeholder="deepseek-chat"
+            placeholder="模型名称，如 my-model"
           />
         </div>
 
@@ -214,11 +220,11 @@ function goPractice() {
     <div class="mt-6 rounded-lg bg-white p-6 shadow-sm">
       <h3 class="mb-3 text-sm font-semibold text-gray-700">使用说明</h3>
       <ol class="list-decimal space-y-1.5 pl-5 text-sm text-gray-500">
-        <li>选择 AI 提供商（推荐 DeepSeek，性价比高，中文效果好）</li>
-        <li>前往对应平台获取 API Key（DeepSeek: platform.deepseek.com）</li>
-        <li>填入 API Key，点击"保存配置"</li>
-        <li>点击"测试连接"确认可用</li>
-        <li>前往 AI 练习页面选择题型，让 AI 为你出题</li>
+        <li>选择提供商，或选「自定义」自行填写任意 OpenAI 兼容接口</li>
+        <li>前往对应平台获取 API Key（如 DeepSeek: platform.deepseek.com，MiniMax: platform.minimaxi.com）</li>
+        <li>确认 API 地址与模型无误（可手动修改），填入 API Key</li>
+        <li>点击"保存配置"，配置仅保存在浏览器本地</li>
+        <li>点击"测试连接"确认可用，再前往 AI 练习页面让 AI 出题</li>
       </ol>
     </div>
   </div>

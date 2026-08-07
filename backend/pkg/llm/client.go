@@ -70,6 +70,9 @@ func chatOpenAI(ctx context.Context, provider, baseURL, apiKey string, req ChatR
 			return nil, fmt.Errorf("Azure 模型/部署名称不能为空")
 		}
 		httpReqURL = fmt.Sprintf("%s/openai/deployments/%s/chat/completions?api-version=2023-10-01-preview", url, req.Model)
+	} else if strings.HasSuffix(strings.ToLower(url), "/v1") {
+		// 兼容 base_url 已包含 /v1 的情况（如代理地址 http://x.x.x.x:3000/v1）
+		httpReqURL = fmt.Sprintf("%s/chat/completions", url)
 	} else {
 		httpReqURL = fmt.Sprintf("%s/v1/chat/completions", url)
 	}

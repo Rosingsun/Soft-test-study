@@ -11,15 +11,15 @@ import (
 type PracticeService struct {
 	recordRepo   *repository.PracticeRecordRepo
 	questionRepo *repository.QuestionRepo
-	wrongRepo    *repository.WrongQuestionRepo
+	reviewSvc    *ReviewService
 }
 
 func NewPracticeService(
 	recordRepo *repository.PracticeRecordRepo,
 	questionRepo *repository.QuestionRepo,
-	wrongRepo *repository.WrongQuestionRepo,
+	reviewSvc *ReviewService,
 ) *PracticeService {
-	return &PracticeService{recordRepo: recordRepo, questionRepo: questionRepo, wrongRepo: wrongRepo}
+	return &PracticeService{recordRepo: recordRepo, questionRepo: questionRepo, reviewSvc: reviewSvc}
 }
 
 func (s *PracticeService) Submit(userID uint, req dto.PracticeSubmitReq) (*dto.PracticeRecordResp, error) {
@@ -29,7 +29,7 @@ func (s *PracticeService) Submit(userID uint, req dto.PracticeSubmitReq) (*dto.P
 	}
 
 	isCorrect := 0
-	if question.Type != model.TypeEssay && question.Answer == req.Answer {
+	if question.Type != model.TypeEssay && IsAnswerCorrect(question.Type, question.Answer, req.Answer) {
 		isCorrect = 1
 	}
 
@@ -45,10 +45,10 @@ func (s *PracticeService) Submit(userID uint, req dto.PracticeSubmitReq) (*dto.P
 		return nil, err
 	}
 
-	// 答错自动收录错题本（论文题不判分，不收录）
+	// 答错自动收录错题本并进入遗忘曲线复习（论文题不判分，不收录）
 	if isCorrect == 0 && question.Type != model.TypeEssay {
-		if err := s.wrongRepo.Upsert(userID, req.QuestionID); err != nil {
-			log.Printf("错题本收录失败 user_id=%d question_id=%d: %v", userID, req.QuestionID, err)
+		if err := s.reviewSvc.OnWrong(userID, req.QuestionID); err != nil {
+			log.Printf("错题本/复习卡片收录失败 user_id=%d question_id=%d: %v", userID, req.QuestionID, err)
 		}
 	}
 

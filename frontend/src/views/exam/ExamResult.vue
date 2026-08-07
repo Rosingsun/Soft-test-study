@@ -70,6 +70,22 @@ function isSubjective(type: string): boolean {
   return type === 'essay' || type === 'case_study'
 }
 
+// 多空题：把 JSON 数组答案转成可读文本（如 '["A","C"]' -> 'A、C'）
+function readableAnswer(type: string, answer: string | undefined): string {
+  if (!answer) return ''
+  if (type === 'multi_blank') {
+    const s = answer.trim()
+    if (s.startsWith('[')) {
+      try {
+        const arr = JSON.parse(s)
+        if (Array.isArray(arr)) return arr.map(String).join('、')
+      } catch { /* 忽略 */ }
+    }
+    return s.split(',').map(x => x.trim()).filter(Boolean).join('、')
+  }
+  return answer
+}
+
 // AI 评分（论文 / 案例分析）
 async function handleExamAiScore(detail: { question_id: number; exam_answer_id: number; your_answer: string; type: string }) {
   if (!isSubjective(detail.type) || !detail.your_answer) return
@@ -220,10 +236,10 @@ async function handleExamAiScore(detail: { question_id: number; exam_answer_id: 
             <p class="mb-1 text-gray-600">
               <template v-if="isSubjective(d.type)">你的作答：</template>
               <template v-else>你的答案：</template>
-              <span :class="isSubjective(d.type) ? 'text-indigo-600' : (d.is_correct ? 'text-emerald-600' : 'text-red-600')">{{ d.your_answer || '未作答' }}</span>
+              <span :class="isSubjective(d.type) ? 'text-indigo-600' : (d.is_correct ? 'text-emerald-600' : 'text-red-600')">{{ readableAnswer(d.type, d.your_answer) || '未作答' }}</span>
             </p>
             <p v-if="!isSubjective(d.type) && !d.is_correct" class="mb-1 text-gray-600">
-              正确答案：<span class="font-medium text-emerald-600">{{ d.correct_answer }}</span>
+              正确答案：<span class="font-medium text-emerald-600">{{ readableAnswer(d.type, d.correct_answer) }}</span>
             </p>
             <p v-if="!isSubjective(d.type) && d.analysis" class="text-gray-500"><span class="font-medium text-gray-700">解析：</span>{{ stripHtml(d.analysis) }}</p>
 

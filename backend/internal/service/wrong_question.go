@@ -10,14 +10,16 @@ type WrongQuestionService struct {
 	repo         *repository.WrongQuestionRepo
 	questionRepo *repository.QuestionRepo
 	practiceRepo *repository.PracticeRecordRepo
+	reviewSvc    *ReviewService
 }
 
 func NewWrongQuestionService(
 	repo *repository.WrongQuestionRepo,
 	questionRepo *repository.QuestionRepo,
 	practiceRepo *repository.PracticeRecordRepo,
+	reviewSvc *ReviewService,
 ) *WrongQuestionService {
-	return &WrongQuestionService{repo: repo, questionRepo: questionRepo, practiceRepo: practiceRepo}
+	return &WrongQuestionService{repo: repo, questionRepo: questionRepo, practiceRepo: practiceRepo, reviewSvc: reviewSvc}
 }
 
 func (s *WrongQuestionService) List(userID uint, subjectID *uint) ([]dto.WrongQuestionResp, error) {
@@ -60,7 +62,7 @@ func (s *WrongQuestionService) PracticeSubmit(userID uint, req dto.WrongPractice
 	}
 
 	isCorrect := 0
-	if question.Answer == req.Answer {
+	if IsAnswerCorrect(question.Type, question.Answer, req.Answer) {
 		isCorrect = 1
 	}
 
@@ -85,8 +87,8 @@ func (s *WrongQuestionService) PracticeSubmit(userID uint, req dto.WrongPractice
 			s.repo.Delete(userID, req.QuestionID)
 		}
 	} else {
-		// 答错时累加错误次数并更新最近错误时间
-		if err := s.repo.Upsert(userID, req.QuestionID); err != nil {
+		// 答错时累加错误次数、更新最近错误时间并刷新复习卡片
+		if err := s.reviewSvc.OnWrong(userID, req.QuestionID); err != nil {
 			return nil, err
 		}
 	}

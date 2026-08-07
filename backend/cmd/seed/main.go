@@ -21,6 +21,7 @@ func main() {
 	seedSubjects(db)
 	seedSubSubjects(db)
 	seedChapters(db)
+	seedMultiBlankQuestions(db)
 	assignQuestionsToChapters(db)
 	seedExamTemplates(db)
 
@@ -234,6 +235,76 @@ func resolveSAZongheIDs(db *gorm.DB) (uint, uint) {
 	return subject.ID, ss.ID
 }
 
+// seedMultiBlankQuestions 为「软件设计师」补充多空题（multi_blank）示例，用于演示多空题作答与判分（幂等）。
+// blank_options 格式：[{"blank_index":1,"options":[{"id":"A","content":"..."},...]}, ...]
+// answer 存 JSON 数组字符串，如 "[\"A\",\"C\"]"，与每空答案一一对应。
+func seedMultiBlankQuestions(db *gorm.DB) {
+	var subject model.Subject
+	if err := db.Where("name = ?", "软件设计师").First(&subject).Error; err != nil {
+		log.Printf("软件设计师科目不存在，跳过多空题种子数据")
+		return
+	}
+	var ss model.SubSubject
+	if err := db.Where("subject_id = ? AND name = ?", subject.ID, "基础知识").First(&ss).Error; err != nil {
+		log.Printf("软件设计师-基础知识子科目不存在，跳过多空题种子数据")
+		return
+	}
+	var chapter model.Chapter
+	if err := db.Where("sub_subject_id = ? AND name = ?", ss.ID, "数据库系统").First(&chapter).Error; err != nil {
+		// 章节未建时归入该子科目第一个章节
+		if err := db.Where("sub_subject_id = ?", ss.ID).Order("id asc").First(&chapter).Error; err != nil {
+			log.Printf("软件设计师-基础知识无章节，跳过多空题种子数据")
+			return
+		}
+	}
+
+	questions := []model.Question{
+		{
+			SubjectID:    subject.ID,
+			SubSubjectID: ss.ID,
+			ChapterID:    chapter.ID,
+			Type:         model.TypeMultiBlank,
+			Difficulty:   "medium",
+			Content:      "请选出下列各选项中关于 SQL 事务特性（ACID）的描述。第 1 空：保证事务要么全部执行、要么全部不执行的特性是 ____；第 2 空：保证并发事务之间相互隔离、不相互干扰的特性是 ____。",
+			Options:      "[]",
+			BlankOptions: `[{"blank_index":1,"options":[{"id":"A","content":"原子性（Atomicity）"},{"id":"B","content":"一致性（Consistency）"},{"id":"C","content":"隔离性（Isolation）"},{"id":"D","content":"持久性（Durability）"}]},{"blank_index":2,"options":[{"id":"A","content":"原子性（Atomicity）"},{"id":"B","content":"一致性（Consistency）"},{"id":"C","content":"隔离性（Isolation）"},{"id":"D","content":"持久性（Durability）"}]}]`,
+			Answer:       `["A","C"]`,
+			Analysis:     "原子性保证事务要么全部执行要么全部不执行；隔离性保证并发事务之间相互隔离，避免相互干扰。",
+			Year:         2024,
+			Source:       "seed",
+			Status:       1,
+		},
+		{
+			SubjectID:    subject.ID,
+			SubSubjectID: ss.ID,
+			ChapterID:    chapter.ID,
+			Type:         model.TypeMultiBlank,
+			Difficulty:   "easy",
+			Content:      "根据范式的定义，判断下列说法。第 1 空：满足 1NF 且不存在部分函数依赖的关系属于第____范式；第 2 空：满足 2NF 且不存在传递函数依赖的关系属于第____范式。",
+			Options:      "[]",
+			BlankOptions: `[{"blank_index":1,"options":[{"id":"A","content":"第一范式（1NF）"},{"id":"B","content":"第二范式（2NF）"},{"id":"C","content":"第三范式（3NF）"},{"id":"D","content":"BCNF"}]},{"blank_index":2,"options":[{"id":"A","content":"第一范式（1NF）"},{"id":"B","content":"第二范式（2NF）"},{"id":"C","content":"第三范式（3NF）"},{"id":"D","content":"BCNF"}]}]`,
+			Answer:       `["B","C"]`,
+			Analysis:     "2NF 消除非主属性对码的部分函数依赖；3NF 进一步消除非主属性对码的传递函数依赖。",
+			Year:         2024,
+			Source:       "seed",
+			Status:       1,
+		},
+	}
+
+	for _, q := range questions {
+		var existing model.Question
+		err := db.Where("subject_id = ? AND type = ? AND content = ?", q.SubjectID, q.Type, q.Content).First(&existing).Error
+		if err == nil {
+			continue
+		}
+		if err := db.Create(&q).Error; err != nil {
+			log.Printf("创建多空题失败: %v", err)
+			continue
+		}
+		fmt.Printf("已创建多空题: %s\n", q.Content)
+	}
+}
+
 func seedExamTemplates(db *gorm.DB) {
 	// 为有题目的科目生成模拟试卷
 	var subjects []model.Subject
@@ -333,7 +404,7 @@ func seedEssayTemplates(db *gorm.DB) {
 
 func questionScore(qtype string) int {
 	switch qtype {
-	case "multi":
+	case "multi", "multi_blank":
 		return 2
 	case "short", "comprehensive", "case_study":
 		return 5

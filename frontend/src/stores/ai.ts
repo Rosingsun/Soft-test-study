@@ -4,27 +4,28 @@ import type { AiApiConfig } from '@/types/ai'
 
 const STORAGE_KEY = 'ai_api_config'
 
+function emptyConfig(): AiApiConfig {
+  return { provider: '', api_key: '', base_url: '', model: '' }
+}
+
 function loadFromStorage(): AiApiConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      // 校验字段完整，避免旧版本/脏数据带出默认值
+      if (parsed && typeof parsed === 'object' && parsed.api_key && parsed.base_url && parsed.model) {
+        return parsed
+      }
+    }
   } catch {
     // ignore
   }
-  return defaultConfig()
+  return emptyConfig()
 }
 
 function saveToStorage(config: AiApiConfig) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
-}
-
-function defaultConfig(): AiApiConfig {
-  return {
-    provider: 'deepseek',
-    api_key: '',
-    base_url: 'https://api.deepseek.com',
-    model: 'deepseek-chat',
-  }
 }
 
 export const useAiStore = defineStore('ai', () => {
@@ -45,7 +46,7 @@ export const useAiStore = defineStore('ai', () => {
   }
 
   function clearConfig() {
-    config.value = defaultConfig()
+    config.value = emptyConfig()
     localStorage.removeItem(STORAGE_KEY)
   }
 

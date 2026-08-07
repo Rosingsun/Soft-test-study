@@ -366,3 +366,75 @@ CREATE TABLE IF NOT EXISTS `study_materials` (
   PRIMARY KEY (`id`),
   KEY `idx_subject_id` (`subject_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='学习资料表';
+
+-- =============================================================
+-- Check-in / Study Plan / Review Card / Ranking
+-- =============================================================
+CREATE TABLE IF NOT EXISTS `check_ins` (
+  `id`                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`           BIGINT UNSIGNED NOT NULL,
+  `check_date`        DATE            NOT NULL,
+  `total_count`       INT             NOT NULL DEFAULT 10,
+  `correct_count`     INT             NOT NULL DEFAULT 0 COMMENT '当日最新一次答对数（重新打卡会更新）',
+  `accuracy`          DECIMAL(5,2)    NOT NULL DEFAULT 0 COMMENT '当日最新一次正确率（重新打卡会更新）',
+  `duration`          INT             NOT NULL DEFAULT 0 COMMENT '当日最新一次耗时（重新打卡会更新）',
+  `status`            TINYINT         NOT NULL DEFAULT 1,
+  `rank_correct_count` INT            NOT NULL DEFAULT 0 COMMENT '首次打卡快照：答对数（排名/个人平均口径，重打不变）',
+  `rank_accuracy`     DECIMAL(5,2)    NOT NULL DEFAULT 0 COMMENT '首次打卡快照：正确率（排名/个人平均口径，重打不变）',
+  `rank_duration`     INT             NOT NULL DEFAULT 0 COMMENT '首次打卡快照：耗时（重打不变）',
+  `created_at`        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_date` (`user_id`, `check_date`),
+  KEY `idx_date` (`check_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='check-in daily summary';
+
+CREATE TABLE IF NOT EXISTS `check_in_questions` (
+  `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`     BIGINT UNSIGNED NOT NULL,
+  `check_date`  DATE            NOT NULL,
+  `question_id` BIGINT UNSIGNED NOT NULL,
+  `answer`      TEXT            DEFAULT NULL,
+  `is_correct`  TINYINT         NOT NULL DEFAULT 0,
+  `duration`    INT             NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_date` (`user_id`, `check_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='check-in question snapshot';
+
+CREATE TABLE IF NOT EXISTS `study_plans` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`    BIGINT UNSIGNED NOT NULL,
+  `subject_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `title`      VARCHAR(100)    NOT NULL,
+  `daily_goal` INT             NOT NULL DEFAULT 20,
+  `start_date` DATE            NOT NULL,
+  `end_date`   DATE            NOT NULL,
+  `status`     TINYINT         NOT NULL DEFAULT 1,
+  `created_at` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='study plan';
+
+CREATE TABLE IF NOT EXISTS `review_cards` (
+  `id`               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`          BIGINT UNSIGNED NOT NULL,
+  `question_id`      BIGINT UNSIGNED NOT NULL,
+  `repetition`       INT             NOT NULL DEFAULT 0,
+  `interval_days`    INT             NOT NULL DEFAULT 1,
+  `ease_factor`      DECIMAL(4,2)    NOT NULL DEFAULT 2.50,
+  `due_date`         DATE            NOT NULL,
+  `last_reviewed_at` DATETIME        DEFAULT NULL,
+  `status`           TINYINT         NOT NULL DEFAULT 1,
+  `created_at`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_question` (`user_id`, `question_id`),
+  KEY `idx_due` (`user_id`, `status`, `due_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='SM-2 review card';
+
+SET @has_idx := (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'practice_records' AND index_name = 'idx_user_created_at');
+SET @ddl := IF(@has_idx = 0, 'ALTER TABLE practice_records ADD INDEX idx_user_created_at (user_id, created_at)', 'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

@@ -22,6 +22,8 @@ type AiGeneratedQuestionResp struct {
 	Difficulty     string `json:"difficulty"`
 	Content        string `json:"content"`
 	Options        string `json:"options"`
+	// BlankOptions 多空题专用：每空独立选项 JSON
+	BlankOptions   string `json:"blank_options"`
 	Answer         string `json:"answer"`
 	Analysis       string `json:"analysis"`
 	KnowledgePoint string `json:"knowledge_point"`

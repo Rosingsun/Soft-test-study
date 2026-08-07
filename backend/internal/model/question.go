@@ -12,6 +12,8 @@ const (
 	TypeComprehensive = "comprehensive"
 	TypeEssay        = "essay"
 	TypeCaseStudy    = "case_study"
+	// TypeMultiBlank 多空题：题干含多个填空位，每个空为独立单选；整题一次提交、按空独立判分
+	TypeMultiBlank = "multi_blank"
 )
 
 type Question struct {
@@ -24,6 +26,11 @@ type Question struct {
 	Content      string    `gorm:"column:content;type:text;not null"`
 	CaseMaterial string    `gorm:"column:case_material;type:text"`
 	Options      string    `gorm:"column:options;type:json"`
+	// BlankOptions 多空题专用：每空的独立选项 JSON 数组
+	// 格式：[{"blank_index":1,"options":[{"id":"A","content":"..."},...]}, ...]
+	// 仅当 Type=TypeMultiBlank 时使用；其他题型为空
+	BlankOptions string    `gorm:"column:blank_options;type:json"`
+	// Answer 多空题时存 JSON 数组字符串，如 "[\"A\",\"C\"]"；其他题型存原始答案
 	Answer       string    `gorm:"column:answer;type:text;not null"`
 	Analysis     string    `gorm:"column:analysis;type:text"`
 	Year         int       `gorm:"column:year"`

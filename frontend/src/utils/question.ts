@@ -9,6 +9,7 @@ export const TYPE_LABELS: Record<string, string> = {
   comprehensive: '综合题',
   essay: '论文题',
   case_study: '案例分析',
+  multi_blank: '多空题',
 }
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
@@ -107,8 +108,57 @@ export function normalizeAnswer(answer: string | null | undefined): string {
   return (answer || '').trim().toUpperCase()
 }
 
+// 解析多空题答案：JSON 数组字符串（如 '["A","C"]'）或已分割数组
+export function parseBlankAnswer(answer: string | null | undefined): string[] {
+  if (!answer) return []
+  const s = answer.trim()
+  if (s.startsWith('[')) {
+    try {
+      const arr = JSON.parse(s)
+      if (Array.isArray(arr)) return arr.map(String)
+    } catch {
+      /* 忽略解析失败 */
+    }
+  }
+  return s.split(',').map(x => x.trim()).filter(Boolean)
+}
+
+// 解析多空题每题选项 JSON：格式 [{"blank_index":1,"options":[{"id":"A","content":"..."},...]},...]
+export function parseBlankOptions(blankOptionsStr?: string): { blank_index: number; options: { id: string; content: string }[] }[] {
+  if (!blankOptionsStr) return []
+  try {
+    const arr = JSON.parse(blankOptionsStr) as unknown
+    if (!Array.isArray(arr)) return []
+    return (arr as any[])
+      .filter(b => b && typeof b === 'object')
+      .map(b => {
+        const blank = b as { blank_index?: unknown; options?: unknown }
+        return {
+          blank_index: Number(blank.blank_index),
+          options: Array.isArray(blank.options)
+            ? (blank.options as any[])
+                .filter(o => o && typeof o === 'object')
+                .map(o => {
+                  const opt = o as { id?: unknown; content?: unknown }
+                  return { id: String(opt.id), content: String(opt.content) }
+                })
+            : [],
+        }
+      })
+      .filter(b => b.options.length > 0)
+  } catch {
+    return []
+  }
+}
+
 export function isCorrectAnswer(questionType: QuestionType | string, userAnswer: string, correctAnswer: string): boolean {
   const type = questionType as QuestionType
+  if (type === 'multi_blank') {
+    const a = parseBlankAnswer(userAnswer)
+    const b = parseBlankAnswer(correctAnswer)
+    if (a.length !== b.length) return false
+    return a.every((v, i) => v === b[i])
+  }
   if (type === 'multi') {
     const a = (userAnswer || '').split(',').map(s => s.trim()).filter(Boolean).sort().join(',')
     const b = (correctAnswer || '').split(',').map(s => s.trim()).filter(Boolean).sort().join(',')

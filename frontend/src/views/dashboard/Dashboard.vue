@@ -3,17 +3,28 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getStatsOverview, getDailyStats, getSubjectProgress } from '@/api/stats'
+import { getCheckInStats } from '@/api/checkin'
+import { getReviewOverview } from '@/api/review'
+import { listStudyPlans } from '@/api/studyPlan'
 import BarChart from '@/components/charts/BarChart.vue'
 import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import type { StatsOverviewResp, DailyStatsResp, SubjectProgressResp } from '@/types/stats'
+import type { CheckInStatsResp } from '@/types/checkin'
+import type { ReviewOverviewResp } from '@/types/review'
+import type { StudyPlanResp } from '@/types/studyPlan'
 
 const router = useRouter()
 const auth = useAuthStore()
 const overview = ref<StatsOverviewResp | null>(null)
 const dailyStats = ref<DailyStatsResp[]>([])
 const subjectProgress = ref<SubjectProgressResp[]>([])
+const checkIn = ref<CheckInStatsResp | null>(null)
+const review = ref<ReviewOverviewResp | null>(null)
+const plans = ref<StudyPlanResp[]>([])
 const loading = ref(true)
 const error = ref('')
+
+const activePlan = computed(() => plans.value.find(p => p.status === 1) || null)
 
 const greeting = computed(() => {
   const hour = new Date().getHours()
@@ -59,6 +70,13 @@ onMounted(async () => {
     overview.value = ov
     dailyStats.value = daily || []
     subjectProgress.value = subj || []
+    ;[getCheckInStats(), getReviewOverview(), listStudyPlans()].forEach(p =>
+      p.then(v => {
+        if (v && (v as any).current_streak !== undefined) checkIn.value = v as CheckInStatsResp
+        else if (v && (v as any).due_today !== undefined) review.value = v as ReviewOverviewResp
+        else if (Array.isArray(v)) plans.value = v as StudyPlanResp[]
+      }).catch(() => {})
+    )
   } catch (e) {
     error.value = (e as Error).message
   } finally {
@@ -155,6 +173,71 @@ function accuracyBarClass(a: number) {
           </div>
           <p class="text-2xl font-bold tracking-tight text-gray-900">{{ overview.wrong_count }}</p>
           <p class="mt-1 text-xs text-gray-400">待复习错题</p>
+        </div>
+      </div>
+
+      <!-- 今日待办 -->
+      <div class="mb-6 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-base font-semibold tracking-tight text-gray-900">今日待办</h2>
+          <span class="text-xs text-gray-400">坚持每天打卡，知识才能牢固</span>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <button
+            class="card-lift flex cursor-pointer items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 text-left shadow-sm"
+            @click="router.push('/check-in')"
+          >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" :class="checkIn?.today_done ? 'bg-emerald-50' : 'bg-orange-50'">
+              <svg class="h-5 w-5" :class="checkIn?.today_done ? 'text-emerald-600' : 'text-orange-500'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-gray-800">{{ checkIn?.today_done ? '今日已打卡' : '今日打卡' }}</p>
+              <p class="text-xs text-gray-400">
+                {{ checkIn?.today_done ? `已连续打卡 ${checkIn?.current_streak || 0} 天` : '10 道真题 · 完成即打卡' }}
+              </p>
+            </div>
+            <span class="text-xs font-medium text-indigo-600">去打卡 →</span>
+          </button>
+
+          <button
+            class="card-lift flex cursor-pointer items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 text-left shadow-sm"
+            :class="{ 'border-red-100 bg-red-50/40': (review?.due_today || 0) > 0 }"
+            @click="router.push('/review')"
+          >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" :class="(review?.due_today || 0) > 0 ? 'bg-red-50' : 'bg-indigo-50'">
+              <svg class="h-5 w-5" :class="(review?.due_today || 0) > 0 ? 'text-red-500' : 'text-indigo-600'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-gray-800">今日复习</p>
+              <p class="text-xs" :class="(review?.due_today || 0) > 0 ? 'text-red-500' : 'text-gray-400'">
+                {{ (review?.due_today || 0) > 0 ? `${review?.due_today} 道待复习` : '今日无待复习题目' }}
+              </p>
+            </div>
+            <span class="text-xs font-medium text-indigo-600">去复习 →</span>
+          </button>
+
+          <button
+            class="card-lift flex cursor-pointer items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 text-left shadow-sm"
+            @click="router.push('/plan')"
+          >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50">
+              <svg class="h-5 w-5 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-gray-800">{{ activePlan ? activePlan.title : '学习计划' }}</p>
+              <p v-if="activePlan" class="text-xs text-gray-400">
+                今日 {{ Math.min(activePlan.today_done, activePlan.today_goal) }}/{{ activePlan.today_goal }} 题
+              </p>
+              <p v-else class="text-xs text-gray-400">创建计划，设定每日目标</p>
+            </div>
+            <span class="text-xs font-medium text-indigo-600">{{ activePlan ? '去学习 →' : '去创建 →' }}</span>
+          </button>
         </div>
       </div>
 

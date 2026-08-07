@@ -10,6 +10,8 @@ type QuestionResp struct {
 	Content      string `json:"content"`
 	CaseMaterial string `json:"case_material"`
 	Options      string `json:"options"`
+	// BlankOptions 多空题专用：每空独立选项 JSON；其他题型为空字符串
+	BlankOptions string `json:"blank_options"`
 	Answer       string `json:"answer"`
 	Analysis     string `json:"analysis"`
 	Year         int    `json:"year"`

@@ -1,5 +1,16 @@
-export type QuestionType = 'single' | 'multi' | 'judge' | 'fill' | 'short' | 'comprehensive' | 'essay' | 'case_study'
+export type QuestionType = 'single' | 'multi' | 'judge' | 'fill' | 'short' | 'comprehensive' | 'essay' | 'case_study' | 'multi_blank'
 export type Difficulty = 'easy' | 'medium' | 'hard'
+
+// 多空题每空选项结构，与后端 blank_options JSON 格式一致
+export interface BlankOption {
+  blank_index: number
+  options: QuestionOption[]
+}
+
+export interface QuestionOption {
+  id: string
+  content: string
+}
 
 export interface Question {
   id: number
@@ -11,6 +22,8 @@ export interface Question {
   content: string
   case_material?: string
   options: string
+  // 多空题专用：每空独立选项 JSON 字符串
+  blank_options?: string
   answer: string
   analysis: string
   year: number

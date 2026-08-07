@@ -2,12 +2,18 @@ package handler
 
 import (
 	"errors"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/soft-test-study/backend/internal/config"
 	"github.com/soft-test-study/backend/internal/service"
 	"github.com/soft-test-study/backend/pkg/response"
 )
+
+// nowMonth 返回当前月份 YYYY-MM
+func nowMonth() string {
+	return time.Now().Format("2006-01")
+}
 
 // respondError 将 service 层错误映射为统一错误码响应
 func respondError(c *gin.Context, err error, defaultMsg string) {

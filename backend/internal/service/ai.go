@@ -51,6 +51,7 @@ func (s *AiService) GetProviders() dto.AiProvidersResp {
 			{Provider: "openai", Name: "OpenAI", BaseURL: "https://api.openai.com", Models: []string{"gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"}},
 			{Provider: "azure", Name: "Azure OpenAI", BaseURL: "https://<your-resource-name>.openai.azure.com", Models: []string{"gpt-35-turbo", "gpt-4o-mini", "gpt-4o"}},
 			{Provider: "anthropic", Name: "Anthropic", BaseURL: "https://api.anthropic.com", Models: []string{"claude-3.5-mini", "claude-3.5", "claude-4o"}},
+			{Provider: "minimax", Name: "MiniMax", BaseURL: "https://api.minimax.io/v1", Models: []string{"MiniMax-M3"}},
 			{Provider: "custom", Name: "自定义", BaseURL: "", Models: []string{}},
 		},
 	}
@@ -353,6 +354,7 @@ func (s *AiService) StartAiExam(userID uint, req dto.StartAiExamReq) (*dto.Start
 			Content:      q.Content,
 			CaseMaterial: q.CaseMaterial,
 			Options:      q.Options,
+			BlankOptions: q.BlankOptions,
 			Difficulty:   q.Difficulty,
 			Score:        1,
 			SortOrder:    i + 1,

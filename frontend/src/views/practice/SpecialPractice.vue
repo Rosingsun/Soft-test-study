@@ -36,6 +36,7 @@ const typeOptions = [
   { value: 'comprehensive', label: '综合题' },
   { value: 'case_study', label: '案例分析' },
   { value: 'essay', label: '论文题' },
+  { value: 'multi_blank', label: '多空题' },
 ]
 const difficultyOptions = [
   { value: '', label: '全部难度' },

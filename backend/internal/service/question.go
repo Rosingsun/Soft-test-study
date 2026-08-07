@@ -1,6 +1,8 @@
 package service
 
 import (
+	"encoding/json"
+
 	"github.com/soft-test-study/backend/internal/dto"
 	"github.com/soft-test-study/backend/internal/model"
 	"github.com/soft-test-study/backend/internal/repository"
@@ -97,8 +99,33 @@ func toQuestionResp(q model.Question) dto.QuestionResp {
 		Content:      q.Content,
 		CaseMaterial: q.CaseMaterial,
 		Options:      q.Options,
+		BlankOptions: q.BlankOptions,
 		Answer:       q.Answer,
 		Analysis:     q.Analysis,
 		Year:         q.Year,
 	}
+}
+
+// IsAnswerCorrect 客观题通用判分：多空题按 JSON 数组逐空比对，全部正确才算整题正确；其他题型字符串相等
+// 供 service 包内所有判分场景复用（练习 / 考试 / 打卡 / 错题重做 / 复习）
+func IsAnswerCorrect(questionType, correctAnswer, userAnswer string) bool {
+	if questionType == model.TypeMultiBlank {
+		var correctArr, userArr []string
+		if err := json.Unmarshal([]byte(correctAnswer), &correctArr); err != nil {
+			return false
+		}
+		if err := json.Unmarshal([]byte(userAnswer), &userArr); err != nil {
+			return false
+		}
+		if len(correctArr) != len(userArr) {
+			return false
+		}
+		for i := range correctArr {
+			if correctArr[i] != userArr[i] {
+				return false
+			}
+		}
+		return true
+	}
+	return correctAnswer == userAnswer
 }

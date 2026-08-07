@@ -29,6 +29,8 @@ type ExamQuesResp struct {
 	Content     string `json:"content"`
 	CaseMaterial string `json:"case_material"`
 	Options     string `json:"options"`
+	// BlankOptions 多空题专用：每空独立选项 JSON
+	BlankOptions string `json:"blank_options"`
 	Difficulty  string `json:"difficulty"`
 	Score       int    `json:"score"`
 	SortOrder   int    `json:"sort_order"`
@@ -69,6 +71,8 @@ type AnswerDetailResp struct {
 	Type         string `json:"type"`
 	Content      string `json:"content"`
 	Options      string `json:"options"`
+	// BlankOptions 多空题专用：每空独立选项 JSON
+	BlankOptions string `json:"blank_options"`
 	YourAnswer   string `json:"your_answer"`
 	CorrectAns   string `json:"correct_answer"`
 	IsCorrect    int    `json:"is_correct"`

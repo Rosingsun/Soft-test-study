@@ -4,7 +4,7 @@ import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { startExam, submitAnswer, submitExam } from '@/api/exam'
 import { useExamStore } from '@/stores/exam'
 import { sanitizeHtml } from '@/utils/sanitize'
-import { parseOptions, typeLabel } from '@/utils/question'
+import { parseOptions, parseBlankOptions, typeLabel } from '@/utils/question'
 import { showToast } from '@/utils/toast'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
@@ -147,6 +147,47 @@ function selectAnswer(questionId: number, value: string) {
     completed.value[questionId] = true
     goToNextUnanswered()
   }
+}
+
+// ===== 多空题（multi_blank）=====
+// 答案以 JSON 数组字符串存储（如 '["A","C"]'），每个空为独立单选
+
+function blankList(q: ExamQuesResp): { blank_index: number; options: { id: string; content: string }[] }[] {
+  return parseBlankOptions(q.blank_options)
+}
+
+function parseBlankAnswerList(answer: string | undefined): string[] {
+  if (!answer) return []
+  const s = answer.trim()
+  if (s.startsWith('[')) {
+    try {
+      const arr = JSON.parse(s)
+      if (Array.isArray(arr)) return arr.map(String)
+    } catch { /* 忽略 */ }
+  }
+  return s.split(',').map(x => x.trim()).filter(Boolean)
+}
+
+function blankAnswer(q: ExamQuesResp, blankIndex: number): string {
+  const arr = parseBlankAnswerList(answers.value[q.id])
+  return arr[blankIndex - 1] || ''
+}
+
+function selectBlankAnswer(q: ExamQuesResp, blankIndex: number, optionId: string) {
+  const blanks = blankList(q)
+  const arr = parseBlankAnswerList(answers.value[q.id])
+  while (arr.length < blanks.length) arr.push('')
+  arr[blankIndex - 1] = optionId
+  const next = JSON.stringify(arr)
+  answers.value[q.id] = next
+  saveAnswer(q.id, next)
+}
+
+function blankAllAnswered(q: ExamQuesResp): boolean {
+  const blanks = blankList(q)
+  if (!blanks.length) return false
+  const arr = parseBlankAnswerList(answers.value[q.id])
+  return blanks.every(b => arr[b.blank_index - 1])
 }
 
 // 标记当前题完成（多选 / 主观题手动触发）
@@ -322,7 +363,7 @@ async function handleSubmit() {
               <button
                 v-if="!completed[current.id] && current.type !== 'single' && current.type !== 'judge'"
                 class="bg-brand-gradient cursor-pointer rounded-lg px-5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition-all duration-200 hover:shadow-lg hover:brightness-110 active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
-                :disabled="!answers[current.id]"
+                :disabled="current.type === 'multi_blank' ? !blankAllAnswered(current) : !answers[current.id]"
                 @click="completeQuestion"
               >
                 完成本题
@@ -403,6 +444,40 @@ async function handleSubmit() {
                 </svg>
                 {{ val }}
               </button>
+            </div>
+
+            <!-- 多空题：每个空为独立单选 -->
+            <div v-else-if="current.type === 'multi_blank'" class="space-y-5">
+              <p class="mb-1 text-xs text-gray-400">本题为多空题，请在下方每个空位选择对应选项</p>
+              <div
+                v-for="blank in blankList(current)"
+                :key="blank.blank_index"
+                class="rounded-xl border border-gray-200 p-4"
+              >
+                <div class="mb-2.5 flex items-center gap-2">
+                  <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-600">
+                    {{ blank.blank_index }}
+                  </span>
+                  <span class="text-sm font-medium text-gray-700">第 {{ blank.blank_index }} 空</span>
+                </div>
+                <div class="grid gap-2 sm:grid-cols-2">
+                  <button
+                    v-for="opt in blank.options"
+                    :key="opt.id"
+                    class="flex w-full cursor-pointer items-center gap-3 rounded-xl border-2 px-3.5 py-2.5 text-left text-sm transition-all duration-200"
+                    :class="blankAnswer(current, blank.blank_index) === opt.id
+                      ? 'border-indigo-500 bg-indigo-50/70 shadow-sm'
+                      : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-sm'"
+                    @click="selectBlankAnswer(current, blank.blank_index, opt.id)"
+                  >
+                    <span
+                      class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors"
+                      :class="blankAnswer(current, blank.blank_index) === opt.id ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-gray-300 text-gray-500'"
+                    >{{ opt.id }}</span>
+                    <span class="leading-6">{{ opt.content }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div v-else>
