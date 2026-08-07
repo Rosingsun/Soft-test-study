@@ -83,7 +83,7 @@ function rankClass(rank: number, total: number) {
   return 'text-white'
 }
 
-// 击败比例（= 100 - percentile，percentile 是「被超过」的百分比口径，需确认；这里反向使用 = 排名靠前比例）
+// 击败比例 = 100 - percentile，percentile 即「名次/总人数」百分比
 function beatRatio(): number {
   if (!data.value?.my) return 0
   return Math.max(0, 100 - data.value.my.percentile)
@@ -151,7 +151,24 @@ watch([category, metric, subjectId], load)
 
     <!-- 切换 + 筛选 -->
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <BaseTabs v-model="category" :tabs="categoryTabs" class="max-w-xl" />
+      <BaseTabs v-model="category" :tabs="categoryTabs" variant="gradient" class="w-full sm:max-w-xl">
+        <template #icon-practice>
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+          </svg>
+        </template>
+        <template #icon-exam>
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+          </svg>
+        </template>
+        <template #icon-checkin>
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.047 8.287 8.287 0 009 9.601a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1.001A3.75 3.75 0 0012 18z" />
+          </svg>
+        </template>
+      </BaseTabs>
       <div v-if="showSubjectFilter" class="w-full sm:w-56">
         <BaseSelect v-model="subjectId">
           <option :value="0">全部科目</option>
@@ -160,7 +177,7 @@ watch([category, metric, subjectId], load)
       </div>
     </div>
 
-    <BaseTabs v-model="metric" :tabs="metricTabs" class="mb-6 max-w-lg" />
+    <BaseTabs v-model="metric" :tabs="metricTabs" variant="pill" size="sm" class="mb-6 max-w-lg" />
 
     <BaseSkeleton v-if="loading" variant="detail" />
 
@@ -263,14 +280,25 @@ watch([category, metric, subjectId], load)
                   <div
                     v-for="(item, idx) in data.distribution"
                     :key="item.label"
-                    class="group flex flex-1 flex-col items-center justify-end"
+                    class="group relative flex flex-1 flex-col items-center justify-end"
                   >
-                    <!-- 人数标签（柱顶） -->
-                    <div
-                      class="mb-1.5 text-xs font-bold tabular-nums transition-colors duration-300"
-                      :class="barTextClass(item)"
-                    >
-                      {{ item.count > 0 ? item.count : '·' }}
+                    <!-- 顶部统一标签：「你」徽章 + 人数（高亮柱才有徽章，避免重叠） -->
+                    <div class="mb-1.5 flex h-5 w-full items-center justify-center gap-1">
+                      <span
+                        v-if="item.is_mine"
+                        class="inline-flex items-center gap-0.5 rounded-full bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm ring-2 ring-white"
+                      >
+                        <svg class="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 2.5l2.5 5 5.5.8-4 3.9.9 5.5L10 15.1 5.1 17.7l.9-5.5-4-3.9 5.5-.8L10 2.5z" />
+                        </svg>
+                        你
+                      </span>
+                      <span
+                        class="text-xs font-bold tabular-nums transition-colors duration-300"
+                        :class="item.is_mine ? 'text-indigo-600' : barTextClass(item)"
+                      >
+                        {{ item.count > 0 ? item.count : '·' }}
+                      </span>
                     </div>
 
                     <!-- 柱体 -->
@@ -286,20 +314,11 @@ watch([category, metric, subjectId], load)
                       <div v-if="item.is_mine" class="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-transparent" />
                     </div>
 
-                    <!-- 「你」徽章（柱上方） -->
-                    <div v-if="item.is_mine" class="pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full">
-                      <span class="inline-flex items-center gap-1 rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-md ring-2 ring-white">
-                        <svg class="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 2.5l2.5 5 5.5.8-4 3.9.9 5.5L10 15.1 5.1 17.7l.9-5.5-4-3.9 5.5-.8L10 2.5z" />
-                        </svg>
-                        你
-                      </span>
-                      <!-- 向下小三角 -->
-                      <span class="absolute left-1/2 top-full -translate-x-1/2 -translate-y-0.5 border-x-4 border-t-4 border-x-transparent border-t-indigo-600" />
-                    </div>
-
                     <!-- 占比（柱底） -->
-                    <div class="mt-1.5 text-[10px] font-medium tabular-nums text-gray-400">
+                    <div
+                      class="mt-1.5 text-[10px] font-medium tabular-nums transition-colors duration-300"
+                      :class="item.is_mine ? 'font-semibold text-indigo-600' : 'text-gray-400'"
+                    >
                       {{ item.ratio > 0 ? (item.ratio * 100).toFixed(0) + '%' : '0%' }}
                     </div>
                   </div>
