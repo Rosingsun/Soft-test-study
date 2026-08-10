@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSubjectStore } from '@/stores/subject'
+import NotificationBell from '@/components/layout/NotificationBell.vue'
 
 const auth = useAuthStore()
 const subjectStore = useSubjectStore()
@@ -357,6 +358,8 @@ function navigate(to: string) {
             </svg>
             开始练习
           </router-link>
+
+          <NotificationBell />
 
           <div ref="userMenuRef" class="relative">
             <button

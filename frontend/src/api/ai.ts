@@ -1,5 +1,15 @@
 import { get, post } from './request'
-import type { AiProvider, GenerateQuestionsReq, GenerateQuestionsResp, StartAiExamReq, EssayScoreReq, EssayScoreResp, EssayScoreCheckResp } from '@/types/ai'
+import type {
+  AiProvider,
+  GenerateQuestionsReq,
+  GenerateQuestionsResp,
+  StartAiExamReq,
+  EssayScoreReq,
+  EssayScoreResp,
+  EssayScoreCheckResp,
+  AsyncGenerateTask,
+  AsyncSubmitResp,
+} from '@/types/ai'
 import type { StartExamResp } from '@/types/exam'
 
 export function getAiProviders() {
@@ -8,6 +18,19 @@ export function getAiProviders() {
 
 export function generateQuestions(data: GenerateQuestionsReq) {
   return post<GenerateQuestionsResp>('/ai/generate', data)
+}
+
+// 异步 AI 出题：立即返回 task_id，后台生成完成后通过通知告知
+export function submitGenerateAsync(data: GenerateQuestionsReq) {
+  return post<AsyncSubmitResp>('/ai/generate/async', data)
+}
+
+export function getGenerateTask(id: string) {
+  return get<AsyncGenerateTask>(`/ai/tasks/${id}`)
+}
+
+export function listGenerateTasks() {
+  return get<{ list: AsyncGenerateTask[] }>('/ai/tasks')
 }
 
 export function startAiExam(data: StartAiExamReq) {

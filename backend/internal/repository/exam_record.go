@@ -69,3 +69,33 @@ func (r *ExamRecordRepo) FindAnswersByRecord(recordID uint) ([]model.ExamRecordA
 	err := r.db.Where("record_id = ?", recordID).Order("id asc").Find(&list).Error
 	return list, err
 }
+
+// GetSubjectIDsByRecords 批量按 record 拿首道题的 subject_id。
+// AI 考试无 template，需要从 exam_record_answers 关联 questions 反查。
+// 返回 map[record_id]subject_id（同一 record 下的题目共享 subject，仅取首条）。
+func (r *ExamRecordRepo) GetSubjectIDsByRecords(recordIDs []uint) (map[uint]uint, error) {
+	out := make(map[uint]uint, len(recordIDs))
+	if len(recordIDs) == 0 {
+		return out, nil
+	}
+	type row struct {
+		RecordID  uint
+		SubjectID uint
+	}
+	var rows []row
+	err := r.db.Table("exam_record_answers era").
+		Select("era.record_id AS record_id, q.subject_id AS subject_id").
+		Joins("JOIN questions q ON q.id = era.question_id").
+		Where("era.record_id IN ?", recordIDs).
+		Order("era.record_id asc, era.id asc").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		if _, ok := out[row.RecordID]; !ok {
+			out[row.RecordID] = row.SubjectID
+		}
+	}
+	return out, nil
+}

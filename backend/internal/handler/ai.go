@@ -73,6 +73,77 @@ func (h *AiHandler) GenerateQuestions(c *gin.Context) {
 	response.Success(c, resp)
 }
 
+// SubmitGenerateAsync 提交 AI 出题异步任务，立即返回 task_id
+func (h *AiHandler) SubmitGenerateAsync(c *gin.Context) {
+	userIDVal, _ := c.Get("user_id")
+	userID, ok := userIDVal.(uint)
+	if !ok || userID == 0 {
+		response.Error(c, config.CodeUnauthorized, "未登录")
+		return
+	}
+
+	var req dto.GenerateQuestionsReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, config.CodeParamError, "参数校验失败: "+err.Error())
+		return
+	}
+
+	if len(req.Types) == 0 {
+		response.Error(c, config.CodeParamError, "请至少选择一种题型")
+		return
+	}
+	// 异步出题支持 5 种题型
+	for _, t := range req.Types {
+		if t != "single" && t != "multi" && t != "judge" &&
+			t != "case_study" && t != "essay" {
+			response.Error(c, config.CodeParamError, "AI 出题仅支持 single / multi / judge / case_study / essay 类型")
+			return
+		}
+	}
+
+	if req.ApiConfig.ApiKey == "" {
+		response.Error(c, config.CodeParamError, "请先配置 AI API Key")
+		return
+	}
+	if req.ApiConfig.BaseURL == "" {
+		response.Error(c, config.CodeParamError, "请先配置 AI API 地址")
+		return
+	}
+	if req.ApiConfig.Model == "" {
+		response.Error(c, config.CodeParamError, "请先配置 AI 模型")
+		return
+	}
+
+	task, err := h.svc.SubmitGenerateAsync(userID, req)
+	if err != nil {
+		response.Error(c, config.CodeBadRequest, "提交 AI 出题任务失败: "+err.Error())
+		return
+	}
+
+	response.Success(c, dto.AsyncSubmitResp{TaskID: task.ID, Status: task.Status})
+}
+
+// GetGenerateTask 查询异步任务状态
+func (h *AiHandler) GetGenerateTask(c *gin.Context) {
+	taskID := c.Param("id")
+	if taskID == "" {
+		response.Error(c, config.CodeParamError, "task_id 不能为空")
+		return
+	}
+	task, err := h.svc.GetGenerateTask(taskID)
+	if err != nil {
+		response.Error(c, config.CodeBadRequest, err.Error())
+		return
+	}
+	response.Success(c, task)
+}
+
+// ListGenerateTasks 列出最近 20 条 AI 出题任务
+func (h *AiHandler) ListGenerateTasks(c *gin.Context) {
+	tasks := h.svc.ListGenerateTasks()
+	response.Success(c, gin.H{"list": tasks})
+}
+
 func (h *AiHandler) Analyze(c *gin.Context) {
 	var req dto.AnalyzeReq
 	if err := c.ShouldBindJSON(&req); err != nil {

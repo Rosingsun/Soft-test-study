@@ -20,6 +20,22 @@ func (r *ExamTemplateRepo) FindPublic() ([]model.ExamTemplate, error) {
 	return list, err
 }
 
+// FindByIDs 批量按 ID 查询模板（消除 N+1）
+func (r *ExamTemplateRepo) FindByIDs(ids []uint) (map[uint]model.ExamTemplate, error) {
+	out := make(map[uint]model.ExamTemplate, len(ids))
+	if len(ids) == 0 {
+		return out, nil
+	}
+	var list []model.ExamTemplate
+	if err := r.db.Where("id IN ?", ids).Find(&list).Error; err != nil {
+		return nil, err
+	}
+	for _, t := range list {
+		out[t.ID] = t
+	}
+	return out, nil
+}
+
 func (r *ExamTemplateRepo) FindByID(id uint) (*model.ExamTemplate, error) {
 	var t model.ExamTemplate
 	err := r.db.First(&t, id).Error

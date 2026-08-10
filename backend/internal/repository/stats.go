@@ -21,47 +21,51 @@ type StatsOverview struct {
 	StudyDays      int64
 }
 
+// Overview 一次往返拿全 6 个聚合指标。
+//
+// 原实现：4 次独立 SQL（practice/exam/wrong/study_days 各 1 次）+ 4 次 RTT
+// 改造：1 条 SQL 用子查询拼成 6 列，单次 RTT 拿全
 func (r *StatsRepo) Overview(userID uint) (*StatsOverview, error) {
 	var ov StatsOverview
-
-	if err := r.db.Raw(`
+	err := r.db.Raw(`
 		SELECT
-			COUNT(*) AS total_practiced,
-			COALESCE(SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END), 0) AS total_correct
-		FROM practice_records pr
-		JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
-		WHERE pr.user_id = ?
-	`, userID).Scan(&ov).Error; err != nil {
+			COALESCE(p.total_practiced, 0) AS total_practiced,
+			COALESCE(p.total_correct,   0) AS total_correct,
+			COALESCE(e.total_exams,      0) AS total_exams,
+			COALESCE(e.avg_exam_score,   0) AS avg_exam_score,
+			COALESCE(w.wrong_count,      0) AS wrong_count,
+			COALESCE(s.study_days,       0) AS study_days
+		FROM (SELECT 1) x
+		LEFT JOIN (
+			SELECT
+				COUNT(*) AS total_practiced,
+				COALESCE(SUM(CASE WHEN pr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS total_correct
+			FROM practice_records pr
+			JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
+			WHERE pr.user_id = ?
+		) p ON 1=1
+		LEFT JOIN (
+			SELECT
+				COUNT(*) AS total_exams,
+				COALESCE(AVG(er.score), 0) AS avg_exam_score
+			FROM exam_records er
+			JOIN exam_templates t ON t.id = er.template_id AND (t.question_type IS NULL OR t.question_type = '')
+			WHERE er.user_id = ? AND er.status = 'finished'
+		) e ON 1=1
+		LEFT JOIN (
+			SELECT COUNT(*) AS wrong_count
+			FROM wrong_questions WHERE user_id = ?
+		) w ON 1=1
+		LEFT JOIN (
+			SELECT COUNT(DISTINCT DATE(pr.created_at)) AS study_days
+			FROM practice_records pr
+			JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
+			WHERE pr.user_id = ?
+		) s ON 1=1
+	`, userID, userID, userID, userID).Scan(&ov).Error
+	if err != nil {
 		return nil, err
 	}
-
-	if err := r.db.Raw(`
-		SELECT
-			COUNT(*) AS total_exams,
-			COALESCE(AVG(er.score), 0) AS avg_exam_score
-		FROM exam_records er
-		JOIN exam_templates t ON t.id = er.template_id AND (t.question_type IS NULL OR t.question_type = '')
-		WHERE er.user_id = ? AND er.status = 'finished'
-	`, userID).Scan(&ov).Error; err != nil {
-		return nil, err
-	}
-
-	if err := r.db.Raw(`
-		SELECT COUNT(*) AS wrong_count
-		FROM wrong_questions WHERE user_id = ?
-	`, userID).Scan(&ov).Error; err != nil {
-		return nil, err
-	}
-
-	if err := r.db.Raw(`
-		SELECT COUNT(DISTINCT DATE(pr.created_at)) AS study_days
-		FROM practice_records pr
-		JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
-		WHERE pr.user_id = ?
-	`, userID).Scan(&ov).Error; err != nil {
-		return nil, err
-	}
-
 	return &ov, nil
 }
 

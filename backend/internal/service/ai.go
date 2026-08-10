@@ -22,6 +22,7 @@ type AiService struct {
 	examRepo       *repository.ExamRecordRepo
 	essayScoreRepo *repository.EssayScoreRepo
 	practiceRepo   *repository.PracticeRecordRepo
+	notifySvc      *NotificationService
 }
 
 func NewAiService(
@@ -32,6 +33,7 @@ func NewAiService(
 	examRepo *repository.ExamRecordRepo,
 	essayScoreRepo *repository.EssayScoreRepo,
 	practiceRepo *repository.PracticeRecordRepo,
+	notifySvc *NotificationService,
 ) *AiService {
 	return &AiService{
 		aiRepo:         aiRepo,
@@ -41,6 +43,7 @@ func NewAiService(
 		examRepo:       examRepo,
 		essayScoreRepo: essayScoreRepo,
 		practiceRepo:   practiceRepo,
+		notifySvc:      notifySvc,
 	}
 }
 
@@ -79,14 +82,11 @@ func (s *AiService) callAIAndParse(config dto.AiApiConfig, subjectID, chapterID 
 		}
 	}
 
-	typeNames := make([]string, len(types))
-	for i, t := range types {
-		typeNames[i] = typeLabelCN(t)
+	// 单次只出 1 种题型（前端已互斥；兜底取第一个）
+	questionType := ""
+	if len(types) > 0 {
+		questionType = types[0]
 	}
-
-	// 论文题判定应基于类型原始编码（essay），而非中文显示名，
-	// 否则 buildGeneratePrompt 永远走不到论文提示词分支
-	isEssay := len(types) == 1 && types[0] == "essay"
 
 	difficultyName := "中等"
 	if difficulty != "" {
@@ -97,10 +97,9 @@ func (s *AiService) callAIAndParse(config dto.AiApiConfig, subjectID, chapterID 
 	promptCtx := generatePromptContext{
 		Subject:        subjectName,
 		Chapter:        chapterName,
-		Types:          strings.Join(typeNames, "、"),
+		TypeCode:       questionType,
 		Difficulty:     difficultyName,
 		DifficultyCode: difficulty,
-		IsEssay:        isEssay,
 	}
 
 	var generated []aiGeneratedItem
@@ -126,7 +125,7 @@ func (s *AiService) callAIAndParse(config dto.AiApiConfig, subjectID, chapterID 
 
 	for i := range generated {
 		if generated[i].Type == "" {
-			generated[i].Type = types[0]
+			generated[i].Type = questionType
 		}
 		if generated[i].Difficulty == "" {
 			generated[i].Difficulty = difficulty
@@ -143,16 +142,17 @@ func (s *AiService) callAIAndParse(config dto.AiApiConfig, subjectID, chapterID 
 type generatePromptContext struct {
 	Subject        string
 	Chapter        string
-	Types          string
+	TypeCode       string // single / multi / judge / case_study / essay
 	Difficulty     string
 	DifficultyCode string
-	IsEssay        bool
 }
 
-// BatchSize 根据题型和难度决定单次生成题目数量，control 单次回复长度避免截断
+// BatchSize 根据题型和难度决定单次生成题目数量，control 单次回复长度避免截断。
+// 案例分析、论文、单次单道避免 token 截断；判断/多选 token 占用大时也降为 2。
 func (c generatePromptContext) BatchSize() int {
-	if c.IsEssay {
-		return 5
+	switch c.TypeCode {
+	case "essay", "case_study":
+		return 1
 	}
 	switch c.DifficultyCode {
 	case "hard":
@@ -170,8 +170,11 @@ func (s *AiService) generateWithRetry(config dto.AiApiConfig, ctx generatePrompt
 	var lastErr error
 	lastContent := ""
 
+	// 按题型与难度计算 HTTP 超时，避免 prompt 偏大时 60s 旧默认超时截断。
+	timeout := llmTimeoutFor(ctx.TypeCode, ctx.DifficultyCode)
+
 	for attempt := 0; attempt < maxAttempts; attempt++ {
-		prompt := buildGeneratePrompt(ctx.Subject, ctx.Chapter, ctx.Types, ctx.Difficulty, count, ctx.IsEssay)
+		prompt := buildGeneratePrompt(ctx.Subject, ctx.Chapter, ctx.TypeCode, ctx.Difficulty, count)
 		if attempt > 0 {
 			prompt += "\n\n注意：你上一条回复没有被正确解析。请重新只输出一个完整、合法、可直接被 JSON 解析的数组，元素数量严格为上方要求的数量，不要输出任何其他文字或代码块。"
 		}
@@ -181,6 +184,7 @@ func (s *AiService) generateWithRetry(config dto.AiApiConfig, ctx generatePrompt
 			Messages:    []llm.ChatMessage{{Role: "user", Content: prompt}},
 			Temperature: 0.3,
 			MaxTokens:   8192,
+			Timeout:     timeout,
 		})
 		if err != nil {
 			lastErr = err
@@ -218,6 +222,23 @@ func (s *AiService) generateWithRetry(config dto.AiApiConfig, ctx generatePrompt
 	return nil, fmt.Errorf("AI 返回的题目格式解析失败: %v（AI 返回内容开头：%s）", lastErr, snippet)
 }
 
+// llmTimeoutFor 按题型与难度返回建议的 HTTP 超时。
+// 案例分析/论文输出长（800~1500 字 + JSON）需要 5min；其他题型按难度分级。
+func llmTimeoutFor(typeCode, difficulty string) time.Duration {
+	switch typeCode {
+	case "essay", "case_study":
+		return 5 * time.Minute
+	}
+	switch difficulty {
+	case "hard":
+		return 3 * time.Minute
+	case "easy":
+		return 2 * time.Minute
+	default:
+		return 3 * time.Minute
+	}
+}
+
 func (s *AiService) saveGenerated(userID, subjectID, chapterID uint, items []aiGeneratedItem) (*dto.GenerateQuestionsResp, error) {
 	now := time.Now()
 	aiRecords := make([]model.AiGeneratedQuestion, len(items))
@@ -226,18 +247,20 @@ func (s *AiService) saveGenerated(userID, subjectID, chapterID uint, items []aiG
 	for i, item := range items {
 		optionsJSON, _ := json.Marshal(item.Options)
 		questions[i] = model.Question{
-			SubjectID:  subjectID,
-			ChapterID:  chapterID,
-			Type:       item.Type,
-			Difficulty: item.Difficulty,
-			Content:    item.Content,
-			Options:    string(optionsJSON),
-			Answer:     item.Answer,
-			Analysis:   item.Analysis,
-			Source:     "ai",
-			Status:     1,
-			CreatedAt:  now,
-			UpdatedAt:  now,
+			SubjectID:    subjectID,
+			ChapterID:    chapterID,
+			Type:         item.Type,
+			Difficulty:   item.Difficulty,
+			Content:      item.Content,
+			CaseMaterial: item.CaseMaterial,
+			Options:      string(optionsJSON),
+			BlankOptions: "[]",
+			Answer:       item.Answer,
+			Analysis:     item.Analysis,
+			Source:       "ai",
+			Status:       1,
+			CreatedAt:    now,
+			UpdatedAt:    now,
 		}
 		aiRecords[i] = model.AiGeneratedQuestion{
 			UserID:         userID,
@@ -246,6 +269,7 @@ func (s *AiService) saveGenerated(userID, subjectID, chapterID uint, items []aiG
 			Type:           item.Type,
 			Difficulty:     item.Difficulty,
 			Content:        item.Content,
+			CaseMaterial:   item.CaseMaterial,
 			Options:        string(optionsJSON),
 			Answer:         item.Answer,
 			Analysis:       item.Analysis,
@@ -272,6 +296,7 @@ func (s *AiService) saveGenerated(userID, subjectID, chapterID uint, items []aiG
 			Type:           item.Type,
 			Difficulty:     item.Difficulty,
 			Content:        item.Content,
+			CaseMaterial:   item.CaseMaterial,
 			Options:        string(optionsJSON),
 			Answer:         item.Answer,
 			Analysis:       item.Analysis,
@@ -280,6 +305,98 @@ func (s *AiService) saveGenerated(userID, subjectID, chapterID uint, items []aiG
 	}
 
 	return &dto.GenerateQuestionsResp{Questions: result}, nil
+}
+
+// SubmitGenerateAsync 提交 AI 出题异步任务
+// 立即返回 task_id，后台 goroutine 执行实际 LLM 调用。
+// 完成后通过 Notification 通知用户，用户可在通知列表点击跳转。
+func (s *AiService) SubmitGenerateAsync(userID uint, req dto.GenerateQuestionsReq) (*dto.AsyncGenerateTask, error) {
+	if len(req.Types) == 0 {
+		return nil, fmt.Errorf("请至少选择一种题型")
+	}
+	questionType := req.Types[0]
+
+	subjectName := ""
+	if sub, err := s.subjectRepo.FindByID(req.SubjectID); err == nil {
+		subjectName = sub.Name
+	}
+	chapterName := "不限定"
+	if req.ChapterID > 0 {
+		if ch, err := s.chapterRepo.FindByID(req.ChapterID); err == nil {
+			chapterName = ch.Name
+		}
+	}
+
+	task := NewAITask(questionType, req.ChapterID, chapterName, req.Difficulty, req.Count)
+
+	// 启动后台 goroutine 执行
+	go s.runGenerateTask(userID, task.ID, subjectName, req)
+
+	return task, nil
+}
+
+// runGenerateTask 后台执行：调 LLM → 解析 → 入库 → 写通知
+func (s *AiService) runGenerateTask(userID uint, taskID, subjectName string, req dto.GenerateQuestionsReq) {
+	SetAITaskRunning(taskID)
+
+	items, err := s.callAIAndParse(req.ApiConfig, req.SubjectID, req.ChapterID, req.Types, req.Difficulty, req.Count)
+	if err != nil {
+		SetAITaskFailed(taskID, err.Error())
+		s.pushGenerateFailedNotification(userID, taskID, err.Error())
+		return
+	}
+
+	resp, err := s.saveGenerated(userID, req.SubjectID, req.ChapterID, items)
+	if err != nil {
+		SetAITaskFailed(taskID, err.Error())
+		s.pushGenerateFailedNotification(userID, taskID, "题目入库失败: "+err.Error())
+		return
+	}
+
+	SetAITaskSuccess(taskID, resp)
+	s.pushGenerateSuccessNotification(userID, taskID, subjectName, len(items))
+}
+
+// pushGenerateSuccessNotification 推送完成通知
+func (s *AiService) pushGenerateSuccessNotification(userID uint, taskID, subjectName string, count int) {
+	if s.notifySvc == nil {
+		return
+	}
+	title := "AI 出题完成"
+	content := fmt.Sprintf("你的「%s」AI 出题任务已完成，共生成 %d 道题，点击查看。", subjectName, count)
+	link := "/ai/practice?task_id=" + taskID
+	_ = s.notifySvc.Push(userID, "ai_generate_done", title, content, link)
+}
+
+// pushGenerateFailedNotification 推送失败通知
+func (s *AiService) pushGenerateFailedNotification(userID uint, taskID, errMsg string) {
+	if s.notifySvc == nil {
+		return
+	}
+	// 错误信息截断，避免通知超长
+	short := errMsg
+	if len(short) > 200 {
+		short = short[:200] + "..."
+	}
+	title := "AI 出题失败"
+	content := "AI 出题任务失败：" + short + "。请稍后重试或调整参数。"
+	link := "/ai/practice?task_id=" + taskID
+	_ = s.notifySvc.Push(userID, "ai_generate_failed", title, content, link)
+}
+
+// GetGenerateTask 查询任务状态（按 task_id + userID 鉴权）
+func (s *AiService) GetGenerateTask(taskID string) (*dto.AsyncGenerateTask, error) {
+	task := GetAITask(taskID)
+	if task == nil {
+		return nil, fmt.Errorf("任务不存在或已过期")
+	}
+	return task, nil
+}
+
+// ListGenerateTasks 列当前用户最近 20 条任务
+// 当前内存 store 没有按 userID 索引，这里返回全部最新 20 条（鉴权由路由处理）
+func (s *AiService) ListGenerateTasks() []*dto.AsyncGenerateTask {
+	return ListAITasksByUser(0, 20)
 }
 
 func (s *AiService) StartAiExam(userID uint, req dto.StartAiExamReq) (*dto.StartExamResp, error) {
@@ -421,92 +538,76 @@ type aiGeneratedItem struct {
 	Type           string   `json:"type"`
 	Difficulty     string   `json:"difficulty"`
 	Content        string   `json:"content"`
+	CaseMaterial   string   `json:"case_material"`
 	Options        []string `json:"options"`
 	Answer         string   `json:"answer"`
 	Analysis       string   `json:"analysis"`
 	KnowledgePoint string   `json:"knowledge_point"`
 }
 
-func buildGeneratePrompt(subject, chapter, types, difficulty string, count int, isEssay bool) string {
-	if isEssay {
-		return fmt.Sprintf(
-			`你是一位软考（计算机技术与软件专业技术资格水平考试）出题专家。请根据以下要求生成论文题目：
+// buildGeneratePrompt 按题型（typeCode）选择对应的 5 套模板之一。
+// 章节命中大纲时注入细分考点清单；未命中（如选了"不限定章节"或非系统分析师科目）
+// 则用通用提示词，避免硬塞无关考点。
+//
+// 参数：
+//   subject   - 科目名（如"系统分析师"）
+//   chapter   - 章节名（来自 chapter.name；"不限定"表示全章节随机）
+//   typeCode  - 题型编码：single / multi / judge / case_study / essay
+//   difficulty - 中文难度描述：简单 / 中等 / 困难
+//   count     - 本次生成题目数
+func buildGeneratePrompt(subject, chapter, typeCode, difficulty string, count int) string {
+	countStr := fmt.Sprintf("%d", count)
 
-- 考试科目：%s
-- 难度：%s
-- 数量：%d 道
-
-要求：
-1. 题目内容需符合系统分析师考试论文题风格
-2. 题目内容务必简洁清晰，可直接作为写作命题
-3. 输出内容仅为题目描述，不需要给出答案或解析
-4. type 字段固定为 essay
-5. options 字段应该是一个空数组 []
-6. answer 字段留空字符串
-7. analysis 字段留空字符串
-
-输出格式（必须严格遵守）：
-- 只输出一个 JSON 数组，不要输出数组之外的任何文字、解释或问候语
-- 禁止使用 markdown 代码块（即开头和结尾各一行三个反引号组成的围栏）包裹 JSON，也不要输出 "好的"、"以下是" 等开头语
-- 输出必须是完整、合法、可直接被 JSON 解析的数组，禁止截断、禁止用省略号（...）省略内容
-- 数组中所有字符串值必须使用合法 JSON 转义（双引号、反斜杠、换行等）
-- 生成 %d 道题时，请在一条回复中一次性输出完整的 %d 个数组元素，不要分批输出
-
-请严格按照以下 JSON 格式输出：
-[
-  {
-    "type": "essay",
-    "difficulty": "medium",
-    "content": "论文题目内容",
-    "options": [],
-    "answer": "",
-    "analysis": "",
-    "knowledge_point": "知识点名称"
-  }
-]`,
-			subject, difficulty, count, count, count,
-		)
+	// 1. 准备考点清单（仅在系统分析师 + 已维护大纲章节时注入）
+	var kpBlock string
+	if hasChapterSyllabus(subject) {
+		if ch := getChapterByName(chapter); ch != nil {
+			kpBlock = formatChapterKPBlock(ch)
+		} else {
+			// 章节名不在大纲中（如选了"不限定章节"）：只给章→节两层，
+			// 不展开全部考点，避免 prompt 体积过大（4-5K tokens）导致 LLM 响应超时。
+			// 让 LLM 自行从这些节中任选知识点命制，knowledge_point 字段用细分名即可。
+			var b []byte
+			b = append(b, "未限定具体章节，请从「系统分析师」以下章→节中任选知识点命制（knowledge_point 填写细分考点名）：\n"...)
+			for _, ch := range systemAnalystChapters {
+				b = append(b, "- "...)
+				b = append(b, ch.Name...)
+				b = append(b, '\n')
+				for _, sec := range ch.Sections {
+					b = append(b, "    · "...)
+					b = append(b, sec.Name...)
+					b = append(b, '\n')
+				}
+			}
+			kpBlock = string(b)
+		}
+	} else {
+		kpBlock = "（科目「" + subject + "」暂未维护考点大纲，请按该科目官方考试大纲常见考点命制。）"
 	}
 
-	return fmt.Sprintf(
-		`你是一位软考（计算机技术与软件专业技术资格水平考试）出题专家。请根据以下要求生成题目：
+	// 2. 选择 Few-shot 示例 + 输出格式
+	var fewShot, outputFormat string
+	switch typeCode {
+	case "essay":
+		fewShot = fewShotEssay
+		outputFormat = outputFormatEssay
+	case "case_study":
+		fewShot = fewShotCaseStudy
+		outputFormat = outputFormatCaseStudy
+	case "judge":
+		fewShot = fewShotJudge
+		outputFormat = outputFormatJudge
+	case "multi":
+		fewShot = fewShotMulti
+		outputFormat = outputFormatMulti
+	default: // single 或未知类型
+		fewShot = fewShotSingle
+		outputFormat = outputFormatSingle
+	}
 
-- 考试科目：%s
-- 知识点范围：%s
-- 题目类型：%s
-- 难度：%s
-- 数量：%d 道
-
-生成要求：
-1. 题目内容专业、准确，严格符合软考考试大纲，难度必须与「难度」要求匹配
-2. 每道题必须提供 4 个选项（单选题、多选题均为 4 个，选项前不要加字母编号）
-3. 解析要详细，说明正确选项为什么对、干扰项为什么错
-4. type 字段可选值为 single 或 multi
-5. 多选题的 answer 格式为逗号分隔的字母，如 "A,C" 表示选 A 和 C
-6. 每道题都必须给出 knowledge_point（所属知识点）
-7. 难度越高，题目应越有区分度，解析也要更充分，但不要因此省略字段
-
-输出格式（必须严格遵守）：
-- 只输出一个 JSON 数组，不要输出数组之外的任何文字、解释或问候语
-- 禁止使用 markdown 代码块（即开头和结尾各一行三个反引号组成的围栏）包裹 JSON，也不要输出 "好的"、"以下是" 等开头语
-- 输出必须是完整、合法、可直接被 JSON 解析的数组，禁止截断、禁止用省略号（...）省略内容
-- 数组中所有字符串值必须使用合法 JSON 转义（双引号、反斜杠、换行等）
-- 生成 %d 道题时，请在一条回复中一次性输出完整的 %d 个数组元素，不要分批输出
-
-必须严格按照以下 JSON 格式输出：
-[
-  {
-    "type": "single",
-    "difficulty": "medium",
-    "content": "题目内容（支持Markdown格式）",
-    "options": ["选项内容1", "选项内容2", "选项内容3", "选项内容4"],
-    "answer": "A",
-    "analysis": "本题考查...正确答案是A，因为...B选项错误的原因是...",
-    "knowledge_point": "知识点名称"
-  }
-]`,
-		subject, chapter, types, difficulty, count, count, count,
-	)
+	// 3. 拼装：通用头部 + Few-shot + 输出格式约束
+	head := commonPromptHead(chapter, kpBlock, difficulty, countStr)
+	return head + "\n" + fewShot + "\n" + outputFormat
 }
 
 func cleanJSONResponse(content string) string {

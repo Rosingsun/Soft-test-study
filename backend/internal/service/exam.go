@@ -30,20 +30,45 @@ func NewExamService(
 	return &ExamService{templateRepo: templateRepo, recordRepo: recordRepo, questionRepo: questionRepo, reviewSvc: reviewSvc}
 }
 
+// ListTemplates 公开考试模板列表。
+//
+// 原实现：N 个模板 → 循环 N 次 questionRepo.CountBySubjectAndType（N+1）
+// 改造：先用 templateRepo.FindPublic 一次拉全；再调用 questionRepo.CountBySubjectTypes
+//       按 (subject_id, type) 一次性 GROUP BY 聚合
 func (s *ExamService) ListTemplates() ([]dto.ExamTemplateResp, error) {
 	templates, err := s.templateRepo.FindPublic()
 	if err != nil {
 		return nil, err
 	}
+	if len(templates) == 0 {
+		return []dto.ExamTemplateResp{}, nil
+	}
+
+	// 收集需要按 type 统计题量的模板
+	pairs := make([]repository.SubjectTypePair, 0, len(templates))
+	for _, t := range templates {
+		if t.QuestionType != "" && t.QuestionType != model.TypeEssay {
+			pairs = append(pairs, repository.SubjectTypePair{
+				SubjectID: t.SubjectID,
+				Type:      t.QuestionType,
+			})
+		}
+	}
+	countMap, err := s.questionRepo.CountBySubjectTypes(pairs)
+	if err != nil {
+		return nil, err
+	}
+
 	resp := make([]dto.ExamTemplateResp, len(templates))
 	for i, t := range templates {
 		questionCount := examPaperSize
 		if t.QuestionType == model.TypeEssay {
 			questionCount = 1
 		} else if t.QuestionType != "" {
-			if n, err := s.questionRepo.CountBySubjectAndType(t.SubjectID, t.QuestionType); err == nil {
-				questionCount = int(n)
-			}
+			questionCount = int(countMap[repository.SubjectTypePair{
+				SubjectID: t.SubjectID,
+				Type:      t.QuestionType,
+			}])
 		}
 		resp[i] = dto.ExamTemplateResp{
 			ID:            t.ID,
@@ -158,16 +183,16 @@ func (s *ExamService) loadExam(recordID, userID uint, template *model.ExamTempla
 			continue
 		}
 		questionList = append(questionList, dto.ExamQuesResp{
-			ID:          q.ID,
-			Type:        q.Type,
-			Content:     q.Content,
+			ID:           q.ID,
+			Type:         q.Type,
+			Content:      q.Content,
 			CaseMaterial: q.CaseMaterial,
-			Options:     q.Options,
+			Options:      q.Options,
 			BlankOptions: q.BlankOptions,
-			Difficulty:  q.Difficulty,
-			Score:       1,
-			SortOrder:   i + 1,
-			Source:      q.Source,
+			Difficulty:   q.Difficulty,
+			Score:        1,
+			SortOrder:    i + 1,
+			Source:       q.Source,
 		})
 	}
 
@@ -299,7 +324,10 @@ func (s *ExamService) finishExam(userID, recordID uint) (*dto.ExamResultResp, er
 	return s.GetResult(userID, recordID)
 }
 
-// recordWrongAnswers 模考中答错的客观题写入错题本与复习卡片
+// recordWrongAnswers 模考中答错的客观题写入错题本与复习卡片。
+//
+// 原实现：N 道错题 → 循环 N 次 reviewSvc.OnWrong，每次内部 3+ 次 DB 往返（75 题考试 = 300+ 次）
+// 改造：先按题型过滤出客观题错题，2 次批量 SQL 完成（一次错题 upsert + 一次复习卡 upsert）
 func (s *ExamService) recordWrongAnswers(userID uint, answers []model.ExamRecordAnswer) {
 	questionIDs := make([]uint, 0, len(answers))
 	for _, a := range answers {
@@ -314,13 +342,18 @@ func (s *ExamService) recordWrongAnswers(userID uint, answers []model.ExamRecord
 	if err != nil {
 		return
 	}
+	objIDs := make([]uint, 0, len(questions))
 	for _, q := range questions {
 		if q.Type == model.TypeEssay {
 			continue
 		}
-		if err := s.reviewSvc.OnWrong(userID, q.ID); err != nil {
-			continue
-		}
+		objIDs = append(objIDs, q.ID)
+	}
+	if len(objIDs) == 0 {
+		return
+	}
+	if err := s.reviewSvc.OnWrongBatch(userID, objIDs); err != nil {
+		return
 	}
 }
 
@@ -441,8 +474,35 @@ func (s *ExamService) GetResult(userID, recordID uint) (*dto.ExamResultResp, err
 	}, nil
 }
 
+// ListRecords 考试记录列表。
+//
+// 原实现：N 条记录 → 循环 N 次 templateRepo.FindByID 或 getAISubjectID（N+1）
+// 改造：先 FindByUser 一次拿全量；用 templateRepo.FindByIDs 批量补齐模板信息；
+//       AI 考试用 recordRepo.GetSubjectIDsByRecords 一次性 JOIN 反查
 func (s *ExamService) ListRecords(userID uint) ([]dto.ExamRecordResp, error) {
 	records, err := s.recordRepo.FindByUser(userID)
+	if err != nil {
+		return nil, err
+	}
+	if len(records) == 0 {
+		return []dto.ExamRecordResp{}, nil
+	}
+
+	// 收集需要查的 templateID
+	templateIDs := make([]uint, 0, len(records))
+	aiRecordIDs := make([]uint, 0)
+	for _, r := range records {
+		if r.TemplateID == 0 {
+			aiRecordIDs = append(aiRecordIDs, r.ID)
+		} else {
+			templateIDs = append(templateIDs, r.TemplateID)
+		}
+	}
+	templates, err := s.templateRepo.FindByIDs(templateIDs)
+	if err != nil {
+		return nil, err
+	}
+	aiSubjects, err := s.recordRepo.GetSubjectIDsByRecords(aiRecordIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -452,12 +512,9 @@ func (s *ExamService) ListRecords(userID uint) ([]dto.ExamRecordResp, error) {
 		templateName := ""
 		subjectID := r.TemplateID
 		if r.TemplateID == 0 {
-			// AI 考试：从答卷关联的题目中获取科目
-			if sub, err := s.getAISubjectID(r); err == nil {
-				subjectID = sub
-			}
+			subjectID = aiSubjects[r.ID]
 			templateName = "AI 智能组卷"
-		} else if t, err := s.templateRepo.FindByID(r.TemplateID); err == nil {
+		} else if t, ok := templates[r.TemplateID]; ok {
 			templateName = t.Name
 			subjectID = t.SubjectID
 		}
@@ -478,23 +535,6 @@ func (s *ExamService) ListRecords(userID uint) ([]dto.ExamRecordResp, error) {
 		})
 	}
 	return resp, nil
-}
-
-// getAISubjectID 通过 AI 考试成绩记录的题目，反查科目 ID
-func (s *ExamService) getAISubjectID(record model.ExamRecord) (uint, error) {
-	answers, err := s.recordRepo.FindAnswersByRecord(record.ID)
-	if err != nil || len(answers) == 0 {
-		return 0, ErrNotFound
-	}
-	questionIDs := make([]uint, len(answers))
-	for i, a := range answers {
-		questionIDs[i] = a.QuestionID
-	}
-	questions, err := s.questionRepo.FindByIDs(questionIDs)
-	if err != nil || len(questions) == 0 {
-		return 0, ErrNotFound
-	}
-	return questions[0].SubjectID, nil
 }
 
 func formatTime(t time.Time) string {

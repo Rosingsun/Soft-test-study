@@ -11,6 +11,7 @@ type AiGeneratedQuestion struct {
 	Type           string    `gorm:"column:type;type:varchar(20);not null"`
 	Difficulty     string    `gorm:"column:difficulty;type:varchar(20);not null"`
 	Content        string    `gorm:"column:content;type:text;not null"`
+	CaseMaterial   string    `gorm:"column:case_material;type:text"`
 	Options        string    `gorm:"column:options;type:json"`
 	Answer         string    `gorm:"column:answer;type:varchar(500);not null"`
 	Analysis       string    `gorm:"column:analysis;type:text"`

@@ -26,6 +26,8 @@ export interface AiGeneratedQuestion {
   type: string
   difficulty: string
   content: string
+  // 案例分析题专用：800~1500 字背景材料
+  case_material?: string
   options: string
   blank_options?: string
   answer: string
@@ -70,4 +72,26 @@ export interface EssayScoreResp {
 export interface EssayScoreCheckResp {
   has_score: boolean
   score?: EssayScoreResp
+}
+
+// AI 异步出题任务
+// Status: pending / running / success / failed
+export interface AsyncGenerateTask {
+  id: string
+  status: 'pending' | 'running' | 'success' | 'failed' | string
+  question_type: string
+  chapter_id: number
+  chapter_name: string
+  difficulty: string
+  count: number
+  created_at: string
+  updated_at: string
+  finished_at?: string
+  error?: string
+  result?: GenerateQuestionsResp
+}
+
+export interface AsyncSubmitResp {
+  task_id: string
+  status: string
 }

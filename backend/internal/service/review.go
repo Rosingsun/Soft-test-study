@@ -68,6 +68,21 @@ func (s *ReviewService) OnWrong(userID, questionID uint) error {
 	})
 }
 
+// OnWrongBatch 批量收录错题。
+//
+// 原实现：N 道错题 → 循环 N 次 OnWrong，每次内部 2 次 DB 往返
+//        75 题全错 = 150+ 次 RTT
+// 改造：2 次批量 upsert（错题本 + 复习卡），固定 2 次 RTT
+func (s *ReviewService) OnWrongBatch(userID uint, questionIDs []uint) error {
+	if len(questionIDs) == 0 {
+		return nil
+	}
+	if err := s.wrongRepo.UpsertBatch(userID, questionIDs); err != nil {
+		return err
+	}
+	return s.cardRepo.UpsertBatch(userID, questionIDs)
+}
+
 // OnCorrect 重新打卡答对时解除错题联动：从错题本移除该题，并将复习卡片置为已掌握
 func (s *ReviewService) OnCorrect(userID, questionID uint) error {
 	if err := s.wrongRepo.Delete(userID, questionID); err != nil {
@@ -208,38 +223,30 @@ func (s *ReviewService) Answer(userID uint, req dto.ReviewAnswerReq) (*dto.Revie
 	}, nil
 }
 
-// Overview 复习概览
+// Overview 复习概览。
+//
+// 原实现：4 次 review_card count + 1 次 practice count = 5 次 RTT
+// 改造：reviewCardRepo.Stats 一次聚合拿 4 项，practice count 1 次 = 2 次 RTT
 func (s *ReviewService) Overview(userID uint) (*dto.ReviewOverviewResp, error) {
 	today := time.Now()
 	todayStr := today.Format("2006-01-02")
 	tomorrowStr := today.AddDate(0, 0, 1).Format("2006-01-02")
 
-	dueToday, err := s.cardRepo.CountDue(userID, todayStr)
+	stats, err := s.cardRepo.Stats(userID, todayStr, tomorrowStr)
 	if err != nil {
 		return nil, err
 	}
-	dueTomorrow, err := s.cardRepo.CountDueBetween(userID, tomorrowStr, tomorrowStr)
-	if err != nil {
-		return nil, err
-	}
-	mastered, err := s.cardRepo.CountByStatus(userID, 0)
-	if err != nil {
-		return nil, err
-	}
-	reviewing, err := s.cardRepo.CountByStatus(userID, 1)
-	if err != nil {
-		return nil, err
-	}
+
 	totalReviews, err := s.practiceRepo.CountByMode(userID, "review")
 	if err != nil {
 		return nil, err
 	}
 
 	return &dto.ReviewOverviewResp{
-		DueToday:     dueToday,
-		DueTomorrow:  dueTomorrow,
-		Mastered:     mastered,
-		Reviewing:    reviewing,
+		DueToday:     stats.DueToday,
+		DueTomorrow:  stats.DueTomorrow,
+		Mastered:     stats.Mastered,
+		Reviewing:    stats.Reviewing,
 		TotalReviews: totalReviews,
 	}, nil
 }

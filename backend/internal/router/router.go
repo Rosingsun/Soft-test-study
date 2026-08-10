@@ -15,6 +15,9 @@ import (
 func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	api := r.Group("/api/v1")
 
+	// 启动 AI 异步任务清理后台 goroutine
+	service.StartTaskJanitor()
+
 	userRepo := repository.NewUserRepo(db)
 	examLevelRepo := repository.NewExamLevelRepo(db)
 	subjectRepo := repository.NewSubjectRepo(db)
@@ -35,6 +38,8 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	studyPlanRepo := repository.NewStudyPlanRepo(db)
 	rankingRepo := repository.NewRankingRepo(db)
 
+	notifySvc := service.NewNotificationService(db)
+
 	userSvc := service.NewUserService(userRepo, examLevelRepo, subjectRepo, cfg.JWTSecret, cfg.JWTExpiresIn)
 	examLevelSvc := service.NewExamLevelService(examLevelRepo)
 	subjectSvc := service.NewSubjectService(subjectRepo)
@@ -49,7 +54,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	examSvc := service.NewExamService(examTemplateRepo, examRecordRepo, questionRepo, reviewSvc)
 	statsRepo := repository.NewStatsRepo(db)
 	statsSvc := service.NewStatsService(statsRepo, subjectRepo)
-	aiSvc := service.NewAiService(aiRepo, questionRepo, subjectRepo, chapterRepo, examRecordRepo, essayScoreRepo, practiceRecordRepo)
+	aiSvc := service.NewAiService(aiRepo, questionRepo, subjectRepo, chapterRepo, examRecordRepo, essayScoreRepo, practiceRecordRepo, notifySvc)
 	studyMaterialSvc := service.NewStudyMaterialService(studyMaterialRepo, subjectRepo)
 	checkInSvc := service.NewCheckInService(checkInRepo, questionRepo, practiceRecordRepo, reviewSvc)
 	studyPlanSvc := service.NewStudyPlanService(studyPlanRepo, practiceRecordRepo)
@@ -73,6 +78,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	reviewH := handler.NewReviewHandler(reviewSvc)
 	studyPlanH := handler.NewStudyPlanHandler(studyPlanSvc)
 	rankingH := handler.NewRankingHandler(rankingSvc)
+	notifyH := handler.NewNotificationHandler(notifySvc)
 
 	rateLimiter := middleware.RateLimit(5, time.Minute)
 
@@ -156,9 +162,19 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 
 		aiRateLimiter := middleware.RateLimit(10, time.Minute)
 		auth.POST("/ai/generate", aiRateLimiter, aiH.GenerateQuestions)
+		// 异步 AI 出题：立即返回 task_id，后台生成完成后通过通知告知
+		auth.POST("/ai/generate/async", aiRateLimiter, aiH.SubmitGenerateAsync)
+		auth.GET("/ai/tasks", aiH.ListGenerateTasks)
+		auth.GET("/ai/tasks/:id", aiH.GetGenerateTask)
 		auth.POST("/ai/analyze", aiRateLimiter, aiH.Analyze)
 		auth.POST("/ai/exam/start", aiRateLimiter, aiH.StartExam)
 		auth.POST("/ai/essay-score", aiRateLimiter, aiH.EssayScore)
 		auth.GET("/ai/essay-score/check", aiH.CheckEssayScore)
+
+		// 通知中心
+		auth.GET("/notifications", notifyH.List)
+		auth.GET("/notifications/unread-count", notifyH.UnreadCount)
+		auth.POST("/notifications/:id/read", notifyH.MarkRead)
+		auth.POST("/notifications/read-all", notifyH.MarkAllRead)
 	}
 }

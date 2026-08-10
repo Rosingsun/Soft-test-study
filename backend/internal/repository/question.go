@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/soft-test-study/backend/internal/model"
@@ -56,31 +58,39 @@ func (r *QuestionRepo) FindByID(id uint) (*model.Question, error) {
 	return &q, err
 }
 
+// FindRandom 按条件随机抽 N 道题。
+//
+// 实现：用"主键洗牌"替代 ORDER BY RAND()：
+//   1. 仅 Pluck 命中条件的主键（只走索引，单次查询极快）
+//   2. 应用层 Fisher-Yates 洗牌后取前 N 个
+//   3. 用 IN 一次回表取完整行
+//
+// 相对原方案（每行生成随机数 + 全结果集 filesort）复杂度从 O(N log N) 降到 O(N)。
 func (r *QuestionRepo) FindRandom(subjectID uint, difficulty string, limit int) ([]model.Question, error) {
-	var list []model.Question
-	query := r.db.Where("subject_id = ? AND status = 1", subjectID).
-		Where("type NOT IN ?", []string{model.TypeEssay, model.TypeCaseStudy})
-	if difficulty != "" {
-		query = query.Where("difficulty = ?", difficulty)
+	ids, err := r.randomIDs(r.db.Model(&model.Question{}).
+		Where("subject_id = ? AND status = 1", subjectID).
+		Where("type NOT IN ?", []string{model.TypeEssay, model.TypeCaseStudy}),
+		"difficulty", difficulty, limit)
+	if err != nil {
+		return nil, err
 	}
-	err := query.Order("RAND()").Limit(limit).Find(&list).Error
-	return list, err
+	return r.findByIDsOrdered(ids)
 }
 
+// FindRandomFiltered 按条件随机抽 N 道题
 func (r *QuestionRepo) FindRandomFiltered(subjectID uint, difficulty, qtype string, limit int) ([]model.Question, error) {
-	var list []model.Question
-	query := r.db.Where("subject_id = ? AND status = 1", subjectID)
+	q := r.db.Model(&model.Question{}).
+		Where("subject_id = ? AND status = 1", subjectID)
 	if qtype == "" {
-		query = query.Where("type NOT IN ?", []string{model.TypeEssay, model.TypeCaseStudy})
+		q = q.Where("type NOT IN ?", []string{model.TypeEssay, model.TypeCaseStudy})
+	} else {
+		q = q.Where("type = ?", qtype)
 	}
-	if difficulty != "" {
-		query = query.Where("difficulty = ?", difficulty)
+	ids, err := r.randomIDs(q, "difficulty", difficulty, limit)
+	if err != nil {
+		return nil, err
 	}
-	if qtype != "" {
-		query = query.Where("type = ?", qtype)
-	}
-	err := query.Order("RAND()").Limit(limit).Find(&list).Error
-	return list, err
+	return r.findByIDsOrdered(ids)
 }
 
 func (r *QuestionRepo) CountBySubjectAndType(subjectID uint, qtype string) (int64, error) {
@@ -94,25 +104,73 @@ func (r *QuestionRepo) CountBySubjectAndType(subjectID uint, qtype string) (int6
 	return count, err
 }
 
-func (r *QuestionRepo) FindSpecial(subjectID uint, qtype, difficulty string, limit int) ([]model.Question, error) {
-	var list []model.Question
-	query := r.db.Where("subject_id = ? AND status = 1", subjectID)
-	if qtype != "" {
-		query = query.Where("type = ?", qtype)
+// CountBySubjectTypes 批量按 (subject_id, type) 统计题量，返回 map。
+// 用于 exam.ListTemplates 消除 N+1。
+func (r *QuestionRepo) CountBySubjectTypes(pairs []SubjectTypePair) (map[SubjectTypePair]int64, error) {
+	out := make(map[SubjectTypePair]int64, len(pairs))
+	if len(pairs) == 0 {
+		return out, nil
 	}
-	if difficulty != "" {
-		query = query.Where("difficulty = ?", difficulty)
+	// 一次 IN 查询，过滤所有命中 (subject_id, type) 的题
+	subjectIDs := make([]uint, 0, len(pairs))
+	typeSeen := make(map[string]bool)
+	for _, p := range pairs {
+		if p.SubjectID == 0 {
+			continue
+		}
+		subjectIDs = append(subjectIDs, p.SubjectID)
+		if p.Type != "" && !typeSeen[p.Type] {
+			typeSeen[p.Type] = true
+		}
 	}
-	err := query.Order("RAND()").Limit(limit).Find(&list).Error
-	return list, err
+	if len(subjectIDs) == 0 {
+		return out, nil
+	}
+	type rows struct {
+		SubjectID uint
+		Type      string
+		Count     int64
+	}
+	var rs []rows
+	if err := r.db.Model(&model.Question{}).
+		Select("subject_id, type, COUNT(*) AS count").
+		Where("status = 1 AND subject_id IN ?", subjectIDs).
+		Group("subject_id, type").Scan(&rs).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range rs {
+		out[SubjectTypePair{SubjectID: row.SubjectID, Type: row.Type}] = row.Count
+	}
+	return out, nil
 }
 
+// SubjectTypePair 复合 key
+type SubjectTypePair struct {
+	SubjectID uint
+	Type      string
+}
+
+// FindSpecial 专项练习：按题型/难度随机抽题
+func (r *QuestionRepo) FindSpecial(subjectID uint, qtype, difficulty string, limit int) ([]model.Question, error) {
+	q := r.db.Model(&model.Question{}).
+		Where("subject_id = ? AND status = 1", subjectID)
+	if qtype != "" {
+		q = q.Where("type = ?", qtype)
+	}
+	ids, err := r.randomIDs(q, "difficulty", difficulty, limit)
+	if err != nil {
+		return nil, err
+	}
+	return r.findByIDsOrdered(ids)
+}
+
+// FindEssayQuestions 论文题：按年份范围返回全部（不随机）
 func (r *QuestionRepo) FindEssayQuestions(subjectID uint, years int) ([]model.Question, error) {
-	var list []model.Question
 	if years <= 0 {
 		years = 5
 	}
 	thresholdYear := time.Now().Year() - years + 1
+	var list []model.Question
 	err := r.db.Where("subject_id = ? AND type = ? AND status = 1 AND year >= ?", subjectID, model.TypeEssay, thresholdYear).
 		Order("year desc, id asc").Find(&list).Error
 	return list, err
@@ -120,6 +178,9 @@ func (r *QuestionRepo) FindEssayQuestions(subjectID uint, years int) ([]model.Qu
 
 func (r *QuestionRepo) FindByIDs(ids []uint) ([]model.Question, error) {
 	var list []model.Question
+	if len(ids) == 0 {
+		return list, nil
+	}
 	err := r.db.Where("id IN ? AND status = 1", ids).
 		Order("id asc").Find(&list).Error
 	return list, err
@@ -127,20 +188,26 @@ func (r *QuestionRepo) FindByIDs(ids []uint) ([]model.Question, error) {
 
 // FindRandomReal 随机取真题客观题（year>0，单选/多选/判断）
 func (r *QuestionRepo) FindRandomReal(limit int) ([]model.Question, error) {
-	var list []model.Question
-	err := r.db.Where("year > 0 AND status = 1").
-		Where("type IN ?", []string{model.TypeSingle, model.TypeMulti, model.TypeJudge}).
-		Order("RAND()").Limit(limit).Find(&list).Error
-	return list, err
+	ids, err := r.randomIDs(r.db.Model(&model.Question{}).
+		Where("year > 0 AND status = 1").
+		Where("type IN ?", []string{model.TypeSingle, model.TypeMulti, model.TypeJudge}),
+		"", "", limit)
+	if err != nil {
+		return nil, err
+	}
+	return r.findByIDsOrdered(ids)
 }
 
 // FindRandomObjective 随机取客观题（不限年份），用于真题不足时兜底
 func (r *QuestionRepo) FindRandomObjective(limit int) ([]model.Question, error) {
-	var list []model.Question
-	err := r.db.Where("status = 1").
-		Where("type IN ?", []string{model.TypeSingle, model.TypeMulti, model.TypeJudge}).
-		Order("RAND()").Limit(limit).Find(&list).Error
-	return list, err
+	ids, err := r.randomIDs(r.db.Model(&model.Question{}).
+		Where("status = 1").
+		Where("type IN ?", []string{model.TypeSingle, model.TypeMulti, model.TypeJudge}),
+		"", "", limit)
+	if err != nil {
+		return nil, err
+	}
+	return r.findByIDsOrdered(ids)
 }
 
 func (r *QuestionRepo) CountByChapterID(chapterID uint) (int64, error) {
@@ -156,4 +223,38 @@ func (r *QuestionRepo) BatchCreate(questions []model.Question) error {
 		return nil
 	}
 	return r.db.CreateInBatches(questions, 50).Error
+}
+
+// randomIDs 主键洗牌：在给定 query（已拼好 WHERE 条件）上随机抽取 N 个主键。
+// filterField / filterValue 可选：用于加一个 WHERE 条件。
+func (r *QuestionRepo) randomIDs(q *gorm.DB, filterField, filterValue string, limit int) ([]uint, error) {
+	if limit <= 0 {
+		return nil, nil
+	}
+	if filterField != "" && filterValue != "" {
+		q = q.Where(fmt.Sprintf("%s = ?", filterField), filterValue)
+	}
+	var ids []uint
+	if err := q.Pluck("id", &ids).Error; err != nil {
+		return nil, err
+	}
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	rand.Shuffle(len(ids), func(i, j int) { ids[i], ids[j] = ids[j], ids[i] })
+	if len(ids) > limit {
+		ids = ids[:limit]
+	}
+	return ids, nil
+}
+
+// findByIDsOrdered 保持入参顺序回表查询（Pluck 后顺序已被打乱，按 id 升序重新排列）
+func (r *QuestionRepo) findByIDsOrdered(ids []uint) ([]model.Question, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var list []model.Question
+	err := r.db.Where("id IN ? AND status = 1", ids).
+		Order("id asc").Find(&list).Error
+	return list, err
 }

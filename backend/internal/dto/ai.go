@@ -21,8 +21,9 @@ type AiGeneratedQuestionResp struct {
 	Type           string `json:"type"`
 	Difficulty     string `json:"difficulty"`
 	Content        string `json:"content"`
+	// CaseMaterial 案例分析题专用：800~1500 字背景材料
+	CaseMaterial   string `json:"case_material"`
 	Options        string `json:"options"`
-	// BlankOptions 多空题专用：每空独立选项 JSON
 	BlankOptions   string `json:"blank_options"`
 	Answer         string `json:"answer"`
 	Analysis       string `json:"analysis"`
@@ -91,4 +92,27 @@ type EssayScoreResp struct {
 type EssayScoreCheckResp struct {
 	HasScore bool            `json:"has_score"`
 	Score    *EssayScoreResp `json:"score,omitempty"`
+}
+
+// AsyncGenerateTask 异步 AI 出题任务状态
+// Status: pending（已提交） / running（生成中） / success（完成） / failed（失败）
+type AsyncGenerateTask struct {
+	ID           string                  `json:"id"`
+	Status       string                  `json:"status"`
+	QuestionType string                  `json:"question_type"`
+	ChapterID    uint                    `json:"chapter_id"`
+	ChapterName  string                  `json:"chapter_name"`
+	Difficulty   string                  `json:"difficulty"`
+	Count        int                     `json:"count"`
+	CreatedAt    string                  `json:"created_at"`
+	UpdatedAt    string                  `json:"updated_at"`
+	FinishedAt   string                  `json:"finished_at,omitempty"`
+	Error        string                  `json:"error,omitempty"`
+	Result       *GenerateQuestionsResp  `json:"result,omitempty"`
+}
+
+// AsyncSubmitResp 异步任务提交响应
+type AsyncSubmitResp struct {
+	TaskID string `json:"task_id"`
+	Status string `json:"status"`
 }

@@ -65,10 +65,23 @@ func (s *StatsService) GetDailyStats(userID uint, days int) ([]dto.DailyStatsRes
 	return resp, nil
 }
 
+// GetSubjectProgress 学科进度。
+//
+// 原实现：N 个学科 → 循环 N 次 subjectRepo.FindByID（典型 N+1）
+// 改造：先 subjectRepo.FindAll 一次拿全量，再 map 拼装，固定 2 次 DB 往返
 func (s *StatsService) GetSubjectProgress(userID uint) ([]dto.SubjectProgressResp, error) {
 	list, err := s.repo.SubjectProgress(userID)
 	if err != nil {
 		return nil, err
+	}
+
+	subjects, err := s.subjectRepo.FindAll()
+	if err != nil {
+		return nil, err
+	}
+	sMap := make(map[uint]string, len(subjects))
+	for _, sub := range subjects {
+		sMap[sub.ID] = sub.Name
 	}
 
 	resp := make([]dto.SubjectProgressResp, 0, len(list))
@@ -77,12 +90,10 @@ func (s *StatsService) GetSubjectProgress(userID uint) ([]dto.SubjectProgressRes
 			SubjectID:    r.SubjectID,
 			TotalCount:   r.TotalCount,
 			CorrectCount: r.CorrectCount,
+			SubjectName:  sMap[r.SubjectID],
 		}
 		if r.TotalCount > 0 {
 			item.Accuracy = float64(r.CorrectCount) / float64(r.TotalCount) * 100
-		}
-		if subject, err := s.subjectRepo.FindByID(r.SubjectID); err == nil {
-			item.SubjectName = subject.Name
 		}
 		resp = append(resp, item)
 	}

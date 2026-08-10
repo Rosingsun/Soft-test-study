@@ -265,33 +265,12 @@ func (s *CheckInService) Complete(userID uint) (*dto.CheckInResultResp, error) {
 		accuracy = math.Round(float64(correct)/float64(total)*10000) / 100
 	}
 
-	// 重新打卡：清理旧练习记录，统一写入本次作答并同步错题/复习卡
+	// 重新打卡：清理旧练习记录 + 批量写入本次作答 + 批量错题/复习卡联动
 	if isRetake {
 		if err := s.practiceRepo.DeleteCheckInRecordsByUserAndDate(userID, today); err != nil {
 			return nil, err
 		}
-		for _, row := range rows {
-			record := &model.PracticeRecord{
-				UserID:     userID,
-				QuestionID: row.QuestionID,
-				Mode:       "checkin",
-				Answer:     row.Answer,
-				IsCorrect:  row.IsCorrect,
-				Duration:   row.Duration,
-			}
-			if err := s.practiceRepo.Create(record); err != nil {
-				return nil, err
-			}
-			if row.IsCorrect == 1 {
-				if err := s.reviewSvc.OnCorrect(userID, row.QuestionID); err != nil {
-					return nil, err
-				}
-			} else {
-				if err := s.reviewSvc.OnWrong(userID, row.QuestionID); err != nil {
-					return nil, err
-				}
-			}
-		}
+		s.retakeBatchUpsert(userID, today, rows)
 		if err := s.checkInRepo.UpdateSummary(existing.ID, correct, accuracy, duration); err != nil {
 			return nil, err
 		}
@@ -307,13 +286,13 @@ func (s *CheckInService) Complete(userID uint) (*dto.CheckInResultResp, error) {
 	// 首次完成：创建汇总行（含首次快照）
 	date, _ := time.Parse("2006-01-02", today)
 	ci := &model.CheckIn{
-		UserID:          userID,
-		CheckDate:       date,
-		TotalCount:      total,
-		CorrectCount:    correct,
-		Accuracy:        accuracy,
-		Duration:        duration,
-		Status:          1,
+		UserID:           userID,
+		CheckDate:        date,
+		TotalCount:       total,
+		CorrectCount:     correct,
+		Accuracy:         accuracy,
+		Duration:         duration,
+		Status:           1,
 		RankCorrectCount: correct,
 		RankAccuracy:     accuracy,
 		RankDuration:     duration,
@@ -341,6 +320,40 @@ func (s *CheckInService) Complete(userID uint) (*dto.CheckInResultResp, error) {
 		Accuracy:     ci.Accuracy,
 		Duration:     ci.Duration,
 	}, nil
+}
+
+// retakeBatchUpsert 重新打卡时一次性批量写练习记录 + 错题/复习卡。
+//
+// 原实现：每题循环 Create + OnCorrect/OnWrong，10 题 = 30+ 次 RTT
+// 改造：1 次批量写 practice_records + 1 次批量 upsert 错题/复习卡，固定 3 次 RTT
+func (s *CheckInService) retakeBatchUpsert(userID uint, today string, rows []model.CheckInQuestion) {
+	records := make([]model.PracticeRecord, 0, len(rows))
+	wrongIDs := make([]uint, 0, len(rows))
+	for _, row := range rows {
+		records = append(records, model.PracticeRecord{
+			UserID:     userID,
+			QuestionID: row.QuestionID,
+			Mode:       "checkin",
+			Answer:     row.Answer,
+			IsCorrect:  row.IsCorrect,
+			Duration:   row.Duration,
+		})
+		if row.IsCorrect == 1 {
+			s.deleteOneWrongCard(userID, row.QuestionID)
+		} else {
+			wrongIDs = append(wrongIDs, row.QuestionID)
+		}
+	}
+	_ = s.practiceRepo.CreateBatch(records)
+	if len(wrongIDs) > 0 {
+		_ = s.reviewSvc.OnWrongBatch(userID, wrongIDs)
+	}
+}
+
+// deleteOneWrongCard 答对的题，从错题本移除（保持原语义）。
+// 之所以拆出来是因为重打场景下答对题的清理需求轻量，单条删除可接受。
+func (s *CheckInService) deleteOneWrongCard(userID, questionID uint) {
+	s.reviewSvc.OnCorrect(userID, questionID)
 }
 
 // Reset 重置今日打卡的作答（清空已答答案，保留题目快照），用于未完成态下的"重新打卡"

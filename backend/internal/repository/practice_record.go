@@ -17,6 +17,14 @@ func (r *PracticeRecordRepo) Create(record *model.PracticeRecord) error {
 	return r.db.Create(record).Error
 }
 
+// CreateBatch 批量写入练习记录（重打/AI 收题场景）
+func (r *PracticeRecordRepo) CreateBatch(records []model.PracticeRecord) error {
+	if len(records) == 0 {
+		return nil
+	}
+	return r.db.CreateInBatches(records, 100).Error
+}
+
 func (r *PracticeRecordRepo) FindByUserAndQuestion(userID, questionID uint) (*model.PracticeRecord, error) {
 	var record model.PracticeRecord
 	err := r.db.Where("user_id = ? AND question_id = ?", userID, questionID).
@@ -24,10 +32,16 @@ func (r *PracticeRecordRepo) FindByUserAndQuestion(userID, questionID uint) (*mo
 	return &record, err
 }
 
+// FindByUserAndChapter 错题重做：按章节拉取所有练习记录。
+// 原实现：question_id IN (SELECT id FROM questions WHERE chapter_id=?) 嵌套子查询
+// 改造：JOIN questions 一次取齐
 func (r *PracticeRecordRepo) FindByUserAndChapter(userID, chapterID uint) ([]model.PracticeRecord, error) {
 	var list []model.PracticeRecord
-	err := r.db.Where("user_id = ? AND question_id IN (SELECT id FROM questions WHERE chapter_id = ?)",
-		userID, chapterID).Find(&list).Error
+	err := r.db.Table("practice_records pr").
+		Select("pr.*").
+		Joins("JOIN questions q ON q.id = pr.question_id").
+		Where("pr.user_id = ? AND q.chapter_id = ?", userID, chapterID).
+		Find(&list).Error
 	return list, err
 }
 

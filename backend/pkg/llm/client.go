@@ -21,7 +21,14 @@ type ChatRequest struct {
 	Messages    []ChatMessage `json:"messages"`
 	Temperature float64       `json:"temperature,omitempty"`
 	MaxTokens   int           `json:"max_tokens,omitempty"`
+	// Timeout 单次 HTTP 调用的超时时间；0 表示使用默认（defaultLLMTimeout = 180s）。
+	// AI 出题/评分等场景可按题型与难度调高，避免 prompt 偏大时被截断。
+	Timeout time.Duration `json:"-"`
 }
+
+// defaultLLMTimeout 默认 LLM 调用超时。新版 AI 出题 prompt 因注入完整大纲与
+// Few-shot，体积显著增大（章→节→考点 100+ 条），60s 已不够；统一提到 180s。
+const defaultLLMTimeout = 180 * time.Second
 
 type ChatChoice struct {
 	Index        int         `json:"index"`
@@ -88,7 +95,11 @@ func chatOpenAI(ctx context.Context, provider, baseURL, apiKey string, req ChatR
 		httpReq.Header.Set("Authorization", "Bearer "+apiKey)
 	}
 
-	client := &http.Client{Timeout: 60 * time.Second}
+	timeout := req.Timeout
+	if timeout <= 0 {
+		timeout = defaultLLMTimeout
+	}
+	client := &http.Client{Timeout: timeout}
 	resp, err := client.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("请求 AI 接口失败: %w", err)
@@ -141,7 +152,11 @@ func chatAnthropic(ctx context.Context, baseURL, apiKey string, req ChatRequest)
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("x-api-key", apiKey)
 
-	client := &http.Client{Timeout: 60 * time.Second}
+	timeout := req.Timeout
+	if timeout <= 0 {
+		timeout = defaultLLMTimeout
+	}
+	client := &http.Client{Timeout: timeout}
 	resp, err := client.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("请求 AI 接口失败: %w", err)
