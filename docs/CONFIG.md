@@ -33,6 +33,11 @@ go run cmd/server/main.go   # 自动读取 .env
 | `JWT_SECRET` | 是 | JWT 签名密钥，**生产环境必须使用强随机值** | `dev-secret-change-me`（启动会告警） |
 | `JWT_EXPIRES_IN` | 否 | Token 有效期（小时） | `168`（7 天） |
 | `SERVER_PORT` | 否 | HTTP 服务监听端口 | `8080` |
+| `SMTP_HOST` | 否 | SMTP 服务器域名（如 `smtp.qq.com`） | （空，未配置时验证码仅打印到日志） |
+| `SMTP_PORT` | 否 | SMTP 端口 | `465` |
+| `SMTP_USER` | 否 | 发件邮箱账号 | （空） |
+| `SMTP_PASSWORD` | 否 | 发件邮箱授权码（非登录密码） | （空） |
+| `SMTP_FROM_NAME` | 否 | 发件人显示名 | `软考学系` |
 
 ## 3. 本地初始化步骤
 
@@ -56,6 +61,13 @@ JWT_SECRET=本地任意非空字符串即可
 JWT_EXPIRES_IN=168
 
 SERVER_PORT=8080
+
+# 邮箱验证（可选；不配则验证码仅打印到日志，便于开发联调）
+# SMTP_HOST=smtp.qq.com
+# SMTP_PORT=465
+# SMTP_USER=your-account@qq.com
+# SMTP_PASSWORD=your-smtp-authorization-code
+# SMTP_FROM_NAME=软考学系
 ```
 
 ### 3.2 初始化数据库

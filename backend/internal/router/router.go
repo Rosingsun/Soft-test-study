@@ -1,6 +1,7 @@
 package router
 
 import (
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -15,9 +16,6 @@ import (
 func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	api := r.Group("/api/v1")
 
-	// 启动 AI 异步任务清理后台 goroutine
-	service.StartTaskJanitor()
-
 	userRepo := repository.NewUserRepo(db)
 	examLevelRepo := repository.NewExamLevelRepo(db)
 	subjectRepo := repository.NewSubjectRepo(db)
@@ -31,12 +29,15 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	examTemplateRepo := repository.NewExamTemplateRepo(db)
 	examRecordRepo := repository.NewExamRecordRepo(db)
 	aiRepo := repository.NewAiRepo(db)
+	// 修复 #20：AI 异步出题任务持久化仓库（DB 为权威存储，内存仅作热缓存）
+	aiTaskRepo := repository.NewAiGeneratedTaskRepo(db)
 	essayScoreRepo := repository.NewEssayScoreRepo(db)
 	studyMaterialRepo := repository.NewStudyMaterialRepo(db)
 	checkInRepo := repository.NewCheckInRepo(db)
 	reviewCardRepo := repository.NewReviewCardRepo(db)
 	studyPlanRepo := repository.NewStudyPlanRepo(db)
 	rankingRepo := repository.NewRankingRepo(db)
+	emailCodeRepo := repository.NewEmailVerificationCodeRepo(db)
 
 	notifySvc := service.NewNotificationService(db)
 
@@ -52,15 +53,50 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	markSvc := service.NewQuestionMarkService(markRepo)
 	wrongSvc := service.NewWrongQuestionService(wrongRepo, questionRepo, practiceRecordRepo, reviewSvc)
 	examSvc := service.NewExamService(examTemplateRepo, examRecordRepo, questionRepo, reviewSvc)
+	// 注册并启动考试超时 janitor（每 30s 扫描 pending 记录并自动交卷）
+	service.SetExamJanitor(examSvc)
+	service.StartExamJanitor()
 	statsRepo := repository.NewStatsRepo(db)
 	statsSvc := service.NewStatsService(statsRepo, subjectRepo)
-	aiSvc := service.NewAiService(aiRepo, questionRepo, subjectRepo, chapterRepo, examRecordRepo, essayScoreRepo, practiceRecordRepo, notifySvc)
+	// 修复 #20：传入 aiTaskRepo；NewAiService 内部会调用 SetAITaskRepo 注入包级变量
+	aiSvc := service.NewAiService(aiRepo, aiTaskRepo, questionRepo, subjectRepo, chapterRepo, examRecordRepo, essayScoreRepo, practiceRecordRepo, notifySvc)
+	// 注册 AI 出题超时通知回调（janitor 标记失败后调用）
+	service.RegisterTimeoutNotifier(func(userID uint, taskID, msg string) {
+		short := msg
+		if len(short) > 200 {
+			short = short[:200] + "..."
+		}
+		if err := notifySvc.Push(userID, "ai_generate_failed", "AI 出题失败",
+			"任务超时："+short+"。请稍后重试或调整参数。",
+			"/ai/practice?task_id="+taskID); err != nil {
+			// 修复 #20：通知失败不再静默吞错
+			log.Printf("[ai task] timeout notifier push failed user_id=%d task_id=%s: %v",
+				userID, taskID, err)
+		}
+	})
+	// 启动 AI 出题超时 janitor（每 1min 扫描 pending > 5min / running > 30min 的任务并标记 failed）
+	service.StartAITaskJanitor(aiTaskRepo)
+	// 启动时恢复 in-flight 任务（把 DB 中 status='running' 的行加回内存）
+	if err := aiSvc.RecoverInflightTasks(); err != nil {
+		log.Printf("[ai task] recover inflight failed: %v", err)
+	}
 	studyMaterialSvc := service.NewStudyMaterialService(studyMaterialRepo, subjectRepo)
 	checkInSvc := service.NewCheckInService(checkInRepo, questionRepo, practiceRecordRepo, reviewSvc)
 	studyPlanSvc := service.NewStudyPlanService(studyPlanRepo, practiceRecordRepo)
 	rankingSvc := service.NewRankingService(rankingRepo, userRepo)
 
-	userH := handler.NewUserHandler(userSvc)
+	// 邮件发送器：未配置 SMTP 时降级为日志发送器
+	var emailSender service.EmailSender
+	if cfg.SMTPHost != "" && cfg.SMTPUser != "" && cfg.SMTPPassword != "" {
+		emailSender = service.NewSMTPEmailSender(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPassword, cfg.SMTPFromName)
+		log.Printf("[email] 使用 SMTP 发送器 host=%s port=%d", cfg.SMTPHost, cfg.SMTPPort)
+	} else {
+		emailSender = service.NewLogEmailSender()
+		log.Println("[email] SMTP 未配置，验证码将仅打印到日志（开发模式）")
+	}
+	emailSvc := service.NewEmailService(emailCodeRepo, userRepo, emailSender)
+
+	userH := handler.NewUserHandler(userSvc, emailSvc)
 	examLevelH := handler.NewExamLevelHandler(examLevelSvc)
 	subjectH := handler.NewSubjectHandler(subjectSvc)
 	subSubjectH := handler.NewSubSubjectHandler(subSubjectSvc)
@@ -84,6 +120,8 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 
 	api.POST("/auth/register", rateLimiter, userH.Register)
 	api.POST("/auth/login", rateLimiter, userH.Login)
+	// 发送邮箱验证码：需要登录态（避免匿名刷验证码），加限流防刷
+	api.POST("/auth/email/send-code", middleware.Auth(cfg.JWTSecret), rateLimiter, userH.SendEmailCode)
 
 	api.GET("/exam-levels", examLevelH.List)
 	api.GET("/subjects", subjectH.ListByLevel)
@@ -103,6 +141,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 		auth.GET("/auth/user-info", userH.GetUserInfo)
 		auth.PUT("/auth/profile", userH.UpdateProfile)
 		auth.PUT("/auth/password", userH.ChangePassword)
+		auth.POST("/auth/email/verify", userH.VerifyEmailCode)
 
 		auth.POST("/practice/submit", practiceH.Submit)
 

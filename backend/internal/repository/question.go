@@ -78,13 +78,17 @@ func (r *QuestionRepo) FindRandom(subjectID uint, difficulty string, limit int) 
 }
 
 // FindRandomFiltered 按条件随机抽 N 道题
-func (r *QuestionRepo) FindRandomFiltered(subjectID uint, difficulty, qtype string, limit int) ([]model.Question, error) {
+// excludeSource 非空时排除 source = excludeSource 的题（如排除 AI 生成的题，仅抽真题）
+func (r *QuestionRepo) FindRandomFiltered(subjectID uint, difficulty, qtype, excludeSource string, limit int) ([]model.Question, error) {
 	q := r.db.Model(&model.Question{}).
 		Where("subject_id = ? AND status = 1", subjectID)
 	if qtype == "" {
 		q = q.Where("type NOT IN ?", []string{model.TypeEssay, model.TypeCaseStudy})
 	} else {
 		q = q.Where("type = ?", qtype)
+	}
+	if excludeSource != "" {
+		q = q.Where("source <> ?", excludeSource)
 	}
 	ids, err := r.randomIDs(q, "difficulty", difficulty, limit)
 	if err != nil {
@@ -106,7 +110,8 @@ func (r *QuestionRepo) CountBySubjectAndType(subjectID uint, qtype string) (int6
 
 // CountBySubjectTypes 批量按 (subject_id, type) 统计题量，返回 map。
 // 用于 exam.ListTemplates 消除 N+1。
-func (r *QuestionRepo) CountBySubjectTypes(pairs []SubjectTypePair) (map[SubjectTypePair]int64, error) {
+// excludeSource 非空时排除 source = excludeSource 的题（如排除 AI 生成的题，仅统计真题题量）
+func (r *QuestionRepo) CountBySubjectTypes(pairs []SubjectTypePair, excludeSource string) (map[SubjectTypePair]int64, error) {
 	out := make(map[SubjectTypePair]int64, len(pairs))
 	if len(pairs) == 0 {
 		return out, nil
@@ -132,10 +137,13 @@ func (r *QuestionRepo) CountBySubjectTypes(pairs []SubjectTypePair) (map[Subject
 		Count     int64
 	}
 	var rs []rows
-	if err := r.db.Model(&model.Question{}).
+	q := r.db.Model(&model.Question{}).
 		Select("subject_id, type, COUNT(*) AS count").
-		Where("status = 1 AND subject_id IN ?", subjectIDs).
-		Group("subject_id, type").Scan(&rs).Error; err != nil {
+		Where("status = 1 AND subject_id IN ?", subjectIDs)
+	if excludeSource != "" {
+		q = q.Where("source <> ?", excludeSource)
+	}
+	if err := q.Group("subject_id, type").Scan(&rs).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range rs {
@@ -151,9 +159,11 @@ type SubjectTypePair struct {
 }
 
 // FindSpecial 专项练习：按题型/难度随机抽题
+// 专项练习题源只取题库真题：过滤 source='ai' 的 AI 生成题
 func (r *QuestionRepo) FindSpecial(subjectID uint, qtype, difficulty string, limit int) ([]model.Question, error) {
 	q := r.db.Model(&model.Question{}).
-		Where("subject_id = ? AND status = 1", subjectID)
+		Where("subject_id = ? AND status = 1", subjectID).
+		Where("(source IS NULL OR source <> ?)", "ai")
 	if qtype != "" {
 		q = q.Where("type = ?", qtype)
 	}

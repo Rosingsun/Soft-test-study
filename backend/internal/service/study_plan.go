@@ -2,12 +2,21 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/soft-test-study/backend/internal/dto"
 	"github.com/soft-test-study/backend/internal/model"
 	"github.com/soft-test-study/backend/internal/repository"
 )
+
+// subjectLabelOf 错误信息里用的科目名：subjectID=0 走"全科目"通识文案
+func subjectLabelOf(subjectID uint) string {
+	if subjectID == 0 {
+		return "全科目"
+	}
+	return fmt.Sprintf("科目#%d", subjectID)
+}
 
 // StudyPlanService 学习计划
 type StudyPlanService struct {
@@ -42,7 +51,8 @@ func (s *StudyPlanService) List(userID uint) ([]dto.StudyPlanResp, error) {
 	return resp, nil
 }
 
-// Create 创建计划（同一用户仅允许 1 个进行中）
+// Create 创建计划（同一用户同一科目仅允许 1 个进行中；不同科目 / 全科目互不影响）
+// subjectID=0 表示"全科目"通识计划，独立维度去重
 func (s *StudyPlanService) Create(userID uint, req dto.StudyPlanCreateReq) (*dto.StudyPlanResp, error) {
 	start, err := time.Parse("2006-01-02", req.StartDate)
 	if err != nil {
@@ -56,12 +66,14 @@ func (s *StudyPlanService) Create(userID uint, req dto.StudyPlanCreateReq) (*dto
 		return nil, errors.New("结束日期不能早于开始日期")
 	}
 
-	active, err := s.repo.FindActiveByUser(userID)
+	// 同 subject 防冲突：允许"软设 + 高项 + 通识"多计划并行
+	active, err := s.repo.FindActiveByUserAndSubject(userID, req.SubjectID)
 	if err != nil {
 		return nil, err
 	}
 	if len(active) > 0 {
-		return nil, errors.New("已存在进行中的计划，请先完成或删除")
+		subjectLabel := subjectLabelOf(req.SubjectID)
+		return nil, fmt.Errorf("「%s」已存在进行中的计划，请先完成或删除", subjectLabel)
 	}
 
 	plan := &model.StudyPlan{
@@ -96,7 +108,18 @@ func (s *StudyPlanService) Update(userID, planID uint, req dto.StudyPlanUpdateRe
 	if req.Title != "" {
 		plan.Title = req.Title
 	}
-	if req.SubjectID != nil {
+	// 修改 subject 时，校验新 subject 不存在其他进行中计划（排除自身）
+	if req.SubjectID != nil && *req.SubjectID != plan.SubjectID {
+		active, err := s.repo.FindActiveByUserAndSubject(userID, *req.SubjectID)
+		if err != nil {
+			return nil, err
+		}
+		for _, p := range active {
+			if p.ID != plan.ID {
+				subjectLabel := subjectLabelOf(*req.SubjectID)
+				return nil, fmt.Errorf("「%s」已存在进行中的计划，请先完成或删除", subjectLabel)
+			}
+		}
 		plan.SubjectID = *req.SubjectID
 	}
 	if req.DailyGoal != nil && *req.DailyGoal > 0 {

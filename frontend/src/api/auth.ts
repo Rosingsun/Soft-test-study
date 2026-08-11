@@ -1,5 +1,5 @@
 import { get, post, put } from './request'
-import type { LoginReq, RegisterReq, LoginResp, UserInfo, UpdateProfileReq, ChangePasswordReq } from '@/types/user'
+import type { LoginReq, RegisterReq, LoginResp, UserInfo, UpdateProfileReq, ChangePasswordReq, SendEmailCodeReq, VerifyEmailCodeReq } from '@/types/user'
 
 export function login(data: LoginReq) {
   return post<LoginResp>('/auth/login', data)
@@ -19,4 +19,12 @@ export function updateProfile(data: UpdateProfileReq) {
 
 export function changePassword(data: ChangePasswordReq) {
   return put<null>('/auth/password', data)
+}
+
+export function sendEmailCode(data: SendEmailCodeReq) {
+  return post<null>('/auth/email/send-code', data)
+}
+
+export function verifyEmailCode(data: VerifyEmailCodeReq) {
+  return post<null>('/auth/email/verify', data)
 }

@@ -89,15 +89,16 @@ func (s *UserService) validateSubjectBelongsToLevel(levelID, subjectID uint) err
 
 func (s *UserService) buildUserInfo(user *model.User) *dto.UserInfo {
 	info := &dto.UserInfo{
-		ID:         user.ID,
-		Username:   user.Username,
-		Email:      user.Email,
-		Nickname:   user.Nickname,
-		Avatar:     user.Avatar,
-		Role:       user.Role,
-		LevelID:    user.LevelID,
-		SubjectID:  user.SubjectID,
-		Difficulty: user.Difficulty,
+		ID:            user.ID,
+		Username:      user.Username,
+		Email:         user.Email,
+		EmailVerified: user.EmailVerified,
+		Nickname:      user.Nickname,
+		Avatar:        user.Avatar,
+		Role:          user.Role,
+		LevelID:       user.LevelID,
+		SubjectID:     user.SubjectID,
+		Difficulty:    user.Difficulty,
 	}
 	if user.LevelID > 0 {
 		if level, err := s.levelRepo.FindByID(user.LevelID); err == nil {

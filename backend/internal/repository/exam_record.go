@@ -99,3 +99,31 @@ func (r *ExamRecordRepo) GetSubjectIDsByRecords(recordIDs []uint) (map[uint]uint
 	}
 	return out, nil
 }
+
+// ExpiredExamRecord 待自动交卷的过期考试记录
+type ExpiredExamRecord struct {
+	RecordID   uint
+	UserID     uint
+	TemplateID uint
+}
+
+// FindExpiredPending 扫描已过期但仍为 pending 的考试记录。
+// 仅处理 template_id > 0 的常规考试（AI 考试依赖客户端定时器 / StartExam 入口防御）。
+// 限定 limit 防止 janitor 单次扫描过载；分批处理直至清空。
+func (r *ExamRecordRepo) FindExpiredPending(limit int) ([]ExpiredExamRecord, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	var rows []ExpiredExamRecord
+	err := r.db.Raw(`
+		SELECT er.id AS record_id, er.user_id, er.template_id
+		FROM exam_records er
+		JOIN exam_templates t ON t.id = er.template_id
+		WHERE er.status = 'pending'
+		  AND er.template_id > 0
+		  AND DATE_ADD(er.started_at, INTERVAL t.duration MINUTE) < NOW()
+		ORDER BY er.id ASC
+		LIMIT ?
+	`, limit).Scan(&rows).Error
+	return rows, err
+}

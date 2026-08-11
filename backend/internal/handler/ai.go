@@ -124,23 +124,37 @@ func (h *AiHandler) SubmitGenerateAsync(c *gin.Context) {
 }
 
 // GetGenerateTask 查询异步任务状态
+// 必须从 JWT context 取 userID 并传给 service 做归属校验。
+// 越权访问（任务存在但不属于当前用户）与"不存在"统一返回 10005，避免泄露任务存在性。
 func (h *AiHandler) GetGenerateTask(c *gin.Context) {
 	taskID := c.Param("id")
 	if taskID == "" {
 		response.Error(c, config.CodeParamError, "task_id 不能为空")
 		return
 	}
-	task, err := h.svc.GetGenerateTask(taskID)
+	userIDVal, _ := c.Get("user_id")
+	userID, ok := userIDVal.(uint)
+	if !ok || userID == 0 {
+		response.Error(c, config.CodeUnauthorized, "未登录")
+		return
+	}
+	task, err := h.svc.GetGenerateTask(taskID, userID)
 	if err != nil {
-		response.Error(c, config.CodeBadRequest, err.Error())
+		response.Error(c, config.CodeNotFound, err.Error())
 		return
 	}
 	response.Success(c, task)
 }
 
-// ListGenerateTasks 列出最近 20 条 AI 出题任务
+// ListGenerateTasks 列出当前用户最近 20 条 AI 出题任务（按 userID 严格过滤）
 func (h *AiHandler) ListGenerateTasks(c *gin.Context) {
-	tasks := h.svc.ListGenerateTasks()
+	userIDVal, _ := c.Get("user_id")
+	userID, ok := userIDVal.(uint)
+	if !ok || userID == 0 {
+		response.Error(c, config.CodeUnauthorized, "未登录")
+		return
+	}
+	tasks := h.svc.ListGenerateTasks(userID)
 	response.Success(c, gin.H{"list": tasks})
 }
 

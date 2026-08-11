@@ -60,6 +60,11 @@ func (s *WrongQuestionService) List(userID uint, subjectID *uint, source, sort s
 		if !ok {
 			continue
 		}
+		// 防御性过滤：主观题不应出现在错题本里。历史脏数据 / 直接 SQL 写入等情况
+		// 可能混入主观题（essay / case_study），前端展示"永远答错"会破坏体验，故静默隐藏。
+		if IsSubjectiveType(q.Type) {
+			continue
+		}
 		resp = append(resp, dto.WrongQuestionResp{
 			ID:           wq.ID,
 			QuestionID:   wq.QuestionID,
@@ -82,8 +87,13 @@ func (s *WrongQuestionService) PracticeSubmit(userID uint, req dto.WrongPractice
 		return nil, err
 	}
 
+	// 主观题（论文 / 案例分析）不应进入错题本与复习卡流程：
+	//   - 不做客观题判分（占位答案 vs 用户答案永远不等），否则会强制 0 分
+	//   - 不触发 OnWrong()，否则每次练习都会把复习卡重置到 DueDate=today，
+	//     形成"主观题永远待复习"的死循环
+	//   - 仍记录 practice_records（保留作答痕迹），但 is_correct 置 0 表示"未判分"
 	isCorrect := 0
-	if IsAnswerCorrect(question.Type, question.Answer, req.Answer) {
+	if !IsSubjectiveType(question.Type) && IsAnswerCorrect(question.Type, question.Answer, req.Answer) {
 		isCorrect = 1
 	}
 
@@ -97,6 +107,18 @@ func (s *WrongQuestionService) PracticeSubmit(userID uint, req dto.WrongPractice
 	}
 	if err := s.practiceRepo.Create(record); err != nil {
 		return nil, err
+	}
+
+	// 主观题：跳过所有错题本/复习卡联动，仅返回作答记录
+	if IsSubjectiveType(question.Type) {
+		return &dto.PracticeRecordResp{
+			ID:         record.ID,
+			QuestionID: record.QuestionID,
+			Mode:       record.Mode,
+			Answer:     record.Answer,
+			IsCorrect:  record.IsCorrect,
+			Duration:   record.Duration,
+		}, nil
 	}
 
 	if isCorrect == 1 {

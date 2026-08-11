@@ -26,9 +26,12 @@ func (r *StudyPlanRepo) FindByID(id uint) (*model.StudyPlan, error) {
 	return &p, err
 }
 
-func (r *StudyPlanRepo) FindActiveByUser(userID uint) ([]model.StudyPlan, error) {
+// FindActiveByUserAndSubject 查询某用户某科目下的进行中计划。
+// subjectID=0 表示"全科目"通识计划，仍按独立维度去重（同一用户最多 1 个全科 active）。
+func (r *StudyPlanRepo) FindActiveByUserAndSubject(userID, subjectID uint) ([]model.StudyPlan, error) {
 	var list []model.StudyPlan
-	err := r.db.Where("user_id = ? AND status = 1", userID).Find(&list).Error
+	err := r.db.Where("user_id = ? AND status = 1 AND subject_id = ?", userID, subjectID).
+		Find(&list).Error
 	return list, err
 }
 

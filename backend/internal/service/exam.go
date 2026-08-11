@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"log"
 	"math"
 	"sort"
 	"time"
@@ -54,7 +55,7 @@ func (s *ExamService) ListTemplates() ([]dto.ExamTemplateResp, error) {
 			})
 		}
 	}
-	countMap, err := s.questionRepo.CountBySubjectTypes(pairs)
+	countMap, err := s.questionRepo.CountBySubjectTypes(pairs, "ai")
 	if err != nil {
 		return nil, err
 	}
@@ -95,10 +96,9 @@ func (s *ExamService) StartExam(userID, templateID uint) (*dto.StartExamResp, er
 		return nil, err
 	}
 	if pending != nil && pending.ID > 0 {
-		if int(time.Since(pending.StartedAt).Seconds()) >= template.Duration*60 {
-			if _, err := s.finishExam(userID, pending.ID); err != nil {
-				return nil, err
-			}
+		// pending 已超时：自动交卷（与 janitor 同路径，结果一致）
+		if _, err := s.settleIfExpired(pending, template, userID); err != nil {
+			return nil, err
 		}
 		return s.loadExam(pending.ID, userID, template)
 	}
@@ -120,7 +120,8 @@ func (s *ExamService) StartExam(userID, templateID uint) (*dto.StartExamResp, er
 	if template.QuestionType == model.TypeEssay {
 		limit = 1
 	}
-	questions, err := s.questionRepo.FindRandomFiltered(template.SubjectID, "", template.QuestionType, limit)
+	// 普通模拟考试：排除 AI 生成的题目（AI 智能组卷走 StartAiExam 单独通道）
+	questions, err := s.questionRepo.FindRandomFiltered(template.SubjectID, "", template.QuestionType, "ai", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -146,6 +147,22 @@ func (s *ExamService) StartExam(userID, templateID uint) (*dto.StartExamResp, er
 	}
 
 	return s.loadExam(record.ID, userID, template)
+}
+
+// settleIfExpired 若 record 仍 pending 且已超过 template 时限，则自动 finishExam。
+// 返回 settled=true 表示本次调用完成了一次超时结算。
+// 行为复用：StartExam 入口防御 + 后台 janitor 周期扫描。
+func (s *ExamService) settleIfExpired(record *model.ExamRecord, template *model.ExamTemplate, userID uint) (settled bool, err error) {
+	if record.Status != "pending" {
+		return record.Status == "finished", nil
+	}
+	if int(time.Since(record.StartedAt).Seconds()) < template.Duration*60 {
+		return false, nil
+	}
+	if _, err := s.finishExam(userID, record.ID); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (s *ExamService) loadExam(recordID, userID uint, template *model.ExamTemplate) (*dto.StartExamResp, error) {
@@ -226,6 +243,18 @@ func (s *ExamService) SubmitAnswer(userID, recordID uint, req dto.SubmitAnswerRe
 	}
 	if record.Status != "pending" {
 		return errors.New("考试已交卷，无法修改答案")
+	}
+
+	// 超时防御：即使 janitor 尚未跑、客户端定时器还显示正数，服务器侧也拒绝继续保存答案。
+	// 引导前端"考试已超时"提示并刷新查看结果页。
+	// AI 考试（template_id=0）依赖客户端 / StartExam 入口防御，这里跳过。
+	if record.TemplateID > 0 {
+		template, terr := s.templateRepo.FindByID(record.TemplateID)
+		if terr == nil && int(time.Since(record.StartedAt).Seconds()) >= template.Duration*60 {
+			// 顺手触发结算，让下次刷新直接看到结果
+			_, _ = s.finishExam(userID, record.ID)
+			return errors.New("考试已超时，请刷新页面查看结果")
+		}
 	}
 
 	question, err := s.questionRepo.FindByID(req.QuestionID)
@@ -542,4 +571,60 @@ func formatTime(t time.Time) string {
 		return ""
 	}
 	return t.Format("2006-01-02 15:04")
+}
+
+// examJanitor 持有后台 janitor 引用的 ExamService 实例
+// 由 router.go 通过 SetExamJanitor 注册；janitor 启动后周期性扫描并自动交卷过期 pending 记录
+var examJanitor *ExamService
+
+// SetExamJanitor 注册 janitor 使用的 ExamService。
+// 必须在 StartExamJanitor 之前调用。
+func SetExamJanitor(svc *ExamService) {
+	examJanitor = svc
+}
+
+// StartExamJanitor 启动后台 goroutine，每 30s 扫描一次过期 pending 考试并自动交卷。
+// 仅处理 template_id > 0 的常规考试（AI 考试依赖客户端定时器 / StartExam 入口防御）。
+// 首次启动延迟 5s 等待服务就绪。
+func StartExamJanitor() {
+	if examJanitor == nil {
+		log.Println("[exam janitor] ExamService 未注册，janitor 启动跳过")
+		return
+	}
+	go func() {
+		time.Sleep(5 * time.Second)
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			examJanitor.settleExpiredRecords()
+		}
+	}()
+}
+
+// settleExpiredRecords 扫描并自动交卷所有已过期的 pending 考试。
+// 分批处理：每批 limit=50 条，直至本轮无过期记录。
+func (s *ExamService) settleExpiredRecords() {
+	const batch = 50
+	for {
+		rows, err := s.recordRepo.FindExpiredPending(batch)
+		if err != nil {
+			log.Printf("[exam janitor] 扫描过期考试失败: %v", err)
+			return
+		}
+		if len(rows) == 0 {
+			return
+		}
+		for _, r := range rows {
+			if _, err := s.finishExam(r.UserID, r.RecordID); err != nil {
+				log.Printf("[exam janitor] 自动交卷失败 record_id=%d user_id=%d: %v",
+					r.RecordID, r.UserID, err)
+			} else {
+				log.Printf("[exam janitor] 已自动交卷 record_id=%d user_id=%d", r.RecordID, r.UserID)
+			}
+		}
+		// 本批已处理完；如 batch 满则继续下一批
+		if len(rows) < batch {
+			return
+		}
+	}
 }

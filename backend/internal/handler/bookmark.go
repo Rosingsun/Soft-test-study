@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/soft-test-study/backend/internal/config"
 	"github.com/soft-test-study/backend/internal/dto"
 	"github.com/soft-test-study/backend/internal/service"
 	"github.com/soft-test-study/backend/pkg/response"
@@ -54,7 +56,11 @@ func (h *BookmarkHandler) AddFavorite(c *gin.Context) {
 	}
 
 	if err := h.svc.AddFavorite(userID.(uint), uint(questionID), uint(folderID)); err != nil {
-		response.Error(c, 10001, "收藏失败")
+		if errors.Is(err, service.ErrForbidden) {
+			response.Error(c, config.CodeForbidden, "收藏夹不存在或无权使用")
+			return
+		}
+		response.Error(c, config.CodeBadRequest, "收藏失败")
 		return
 	}
 	response.Success(c, gin.H{"favorited": true})

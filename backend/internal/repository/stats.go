@@ -4,6 +4,11 @@ import (
 	"gorm.io/gorm"
 )
 
+// practiceSubjectiveFilter 主观题过滤 SQL 片段
+// 主观题（essay / case_study）is_correct 被强制 0，不应计入训练/统计指标
+// 集中维护，避免散点 hardcode 与 service.IsSubjectiveType 失同步
+const practiceSubjectiveFilter = "q.type NOT IN ('essay', 'case_study')"
+
 type StatsRepo struct {
 	db *gorm.DB
 }
@@ -41,7 +46,7 @@ func (r *StatsRepo) Overview(userID uint) (*StatsOverview, error) {
 				COUNT(*) AS total_practiced,
 				COALESCE(SUM(CASE WHEN pr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS total_correct
 			FROM practice_records pr
-			JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
+			JOIN questions q ON q.id = pr.question_id AND ` + practiceSubjectiveFilter + `
 			WHERE pr.user_id = ?
 		) p ON 1=1
 		LEFT JOIN (
@@ -59,7 +64,7 @@ func (r *StatsRepo) Overview(userID uint) (*StatsOverview, error) {
 		LEFT JOIN (
 			SELECT COUNT(DISTINCT DATE(pr.created_at)) AS study_days
 			FROM practice_records pr
-			JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
+			JOIN questions q ON q.id = pr.question_id AND ` + practiceSubjectiveFilter + `
 			WHERE pr.user_id = ?
 		) s ON 1=1
 	`, userID, userID, userID, userID).Scan(&ov).Error
@@ -82,7 +87,7 @@ func (r *StatsRepo) Daily(userID uint, startDate string) ([]DailyStat, error) {
 		       COUNT(*) AS total_count,
 		       COALESCE(SUM(CASE WHEN pr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_count
 		FROM practice_records pr
-		JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
+		JOIN questions q ON q.id = pr.question_id AND `+practiceSubjectiveFilter+`
 		WHERE pr.user_id = ? AND pr.created_at >= ?
 		GROUP BY DATE(pr.created_at)
 		ORDER BY date ASC
@@ -104,7 +109,7 @@ func (r *StatsRepo) SubjectProgress(userID uint) ([]SubjectProgressStat, error) 
 		       COALESCE(SUM(CASE WHEN pr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_count
 		FROM practice_records pr
 		JOIN questions q ON q.id = pr.question_id
-		WHERE pr.user_id = ? AND q.type <> 'essay'
+		WHERE pr.user_id = ? AND `+practiceSubjectiveFilter+`
 		GROUP BY q.subject_id
 		ORDER BY total_count DESC
 	`, userID).Scan(&list).Error
@@ -126,7 +131,7 @@ func (r *StatsRepo) Calendar(userID uint, startDate, endDate string) ([]Calendar
 		       COALESCE(SUM(CASE WHEN pr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_count,
 		       COALESCE(SUM(pr.duration), 0) AS duration
 		FROM practice_records pr
-		JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
+		JOIN questions q ON q.id = pr.question_id AND `+practiceSubjectiveFilter+`
 		WHERE pr.user_id = ? AND pr.created_at >= ? AND pr.created_at < ?
 		GROUP BY DATE(pr.created_at)
 		ORDER BY date ASC
@@ -151,7 +156,7 @@ func (r *StatsRepo) ChapterProgress(userID uint) ([]ChapterProgressStat, error) 
 		       COUNT(*) AS total_count,
 		       COALESCE(SUM(CASE WHEN pr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct_count
 		FROM practice_records pr
-		JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'
+		JOIN questions q ON q.id = pr.question_id AND `+practiceSubjectiveFilter+`
 		JOIN chapters c ON c.id = q.chapter_id
 		WHERE pr.user_id = ? AND q.chapter_id > 0
 		GROUP BY c.id, c.name, c.sub_subject_id

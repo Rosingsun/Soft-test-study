@@ -6,6 +6,7 @@ type User struct {
 	ID             uint       `gorm:"primarykey"`
 	Username       string     `gorm:"column:username;type:varchar(50);uniqueIndex;not null"`
 	Email          string     `gorm:"column:email;type:varchar(100);uniqueIndex;not null"`
+	EmailVerified  bool       `gorm:"column:email_verified;type:tinyint(1);default:0"`
 	PasswordHash   string     `gorm:"column:password_hash;type:varchar(255);not null"`
 	Nickname       string     `gorm:"column:nickname;type:varchar(50)"`
 	Avatar         string     `gorm:"column:avatar;type:varchar(255)"`

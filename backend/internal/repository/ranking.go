@@ -3,6 +3,7 @@ package repository
 import (
 	"time"
 
+	"github.com/soft-test-study/backend/internal/model"
 	"gorm.io/gorm"
 )
 
@@ -107,12 +108,14 @@ func (r *RankingRepo) ExamScores(levelID, subjectID uint) ([]ExamScoreRow, error
 	return list, err
 }
 
-// PracticeAccuracy 各用户训练正确率（仅统计练习类模式，排除打卡/复习）
+// PracticeAccuracy 各用户训练正确率（仅统计练习类模式，排除打卡/复习/主观题）
+// 排除主观题（essay/case_study）：主观题 is_correct 被强制 0，会拉低正确率且不具可比性
 func (r *RankingRepo) PracticeAccuracy(levelID, subjectID uint) ([]PracticeRankRow, error) {
 	var list []PracticeRankRow
 	q := r.db.Table("practice_records pr").
 		Select("pr.user_id AS user_id, COALESCE(SUM(pr.is_correct),0) AS correct, COUNT(*) AS total").
-		Joins("JOIN questions q ON q.id = pr.question_id AND q.type <> 'essay'").
+		Joins("JOIN questions q ON q.id = pr.question_id AND q.type NOT IN ?",
+			[]string{model.TypeEssay, model.TypeCaseStudy}).
 		Where("pr.mode IN ?", []string{"chapter", "random", "special", "wrong", "ai"})
 	if levelID > 0 {
 		q = q.Joins("JOIN users u ON u.id = pr.user_id AND u.level_id = ?", levelID)

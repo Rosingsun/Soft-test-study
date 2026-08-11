@@ -96,19 +96,21 @@ type EssayScoreCheckResp struct {
 
 // AsyncGenerateTask 异步 AI 出题任务状态
 // Status: pending（已提交） / running（生成中） / success（完成） / failed（失败）
+// UserID 仅在内存中用于归属校验，不暴露给前端。
 type AsyncGenerateTask struct {
-	ID           string                  `json:"id"`
-	Status       string                  `json:"status"`
-	QuestionType string                  `json:"question_type"`
-	ChapterID    uint                    `json:"chapter_id"`
-	ChapterName  string                  `json:"chapter_name"`
-	Difficulty   string                  `json:"difficulty"`
-	Count        int                     `json:"count"`
-	CreatedAt    string                  `json:"created_at"`
-	UpdatedAt    string                  `json:"updated_at"`
-	FinishedAt   string                  `json:"finished_at,omitempty"`
-	Error        string                  `json:"error,omitempty"`
-	Result       *GenerateQuestionsResp  `json:"result,omitempty"`
+	ID           string                 `json:"id"`
+	UserID       uint                   `json:"-"`
+	Status       string                 `json:"status"`
+	QuestionType string                 `json:"question_type"`
+	ChapterID    uint                   `json:"chapter_id"`
+	ChapterName  string                 `json:"chapter_name"`
+	Difficulty   string                 `json:"difficulty"`
+	Count        int                    `json:"count"`
+	CreatedAt    string                 `json:"created_at"`
+	UpdatedAt    string                 `json:"updated_at"`
+	FinishedAt   string                 `json:"finished_at,omitempty"`
+	Error        string                 `json:"error,omitempty"`
+	Result       *GenerateQuestionsResp `json:"result,omitempty"`
 }
 
 // AsyncSubmitResp 异步任务提交响应

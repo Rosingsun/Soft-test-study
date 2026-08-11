@@ -17,6 +17,11 @@ type Config struct {
 	JWTSecret    string
 	JWTExpiresIn int
 	ServerPort   string
+	SMTPHost     string
+	SMTPPort     int
+	SMTPUser     string
+	SMTPPassword string
+	SMTPFromName string
 }
 
 func Load() *Config {
@@ -32,6 +37,11 @@ func Load() *Config {
 		JWTSecret:    getEnv("JWT_SECRET", "dev-secret-change-me"),
 		JWTExpiresIn: getEnvInt("JWT_EXPIRES_IN", 168),
 		ServerPort:   getEnv("SERVER_PORT", "8080"),
+		SMTPHost:     getEnv("SMTP_HOST", ""),
+		SMTPPort:     getEnvInt("SMTP_PORT", 465),
+		SMTPUser:     getEnv("SMTP_USER", ""),
+		SMTPPassword: os.Getenv("SMTP_PASSWORD"),
+		SMTPFromName: getEnv("SMTP_FROM_NAME", "软考学系"),
 	}
 
 	if cfg.DBPassword == "" {

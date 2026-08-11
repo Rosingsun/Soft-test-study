@@ -23,6 +23,7 @@ export interface UserInfo {
   id: number
   username: string
   email: string
+  email_verified: boolean
   nickname: string
   avatar: string
   role: string
@@ -44,4 +45,18 @@ export interface UpdateProfileReq {
 export interface ChangePasswordReq {
   old_password: string
   new_password: string
+}
+
+// 邮箱验证码用途
+export type EmailPurpose = 'verify' | 'change'
+
+export interface SendEmailCodeReq {
+  email: string
+  purpose: EmailPurpose
+}
+
+export interface VerifyEmailCodeReq {
+  email: string
+  code: string
+  purpose: EmailPurpose
 }

@@ -279,6 +279,9 @@ const aiScoring = ref<Record<number, boolean>>({})
 const aiScoreResults = ref<Record<number, EssayScoreResp>>({})
 const aiScoreError = ref<Record<number, string>>({})
 const practiceRecordIds = ref<Record<number, number>>({})
+// 练习上报状态：用于解决"上报失败 → 永远卡在'记录提交中' → AI 评分按钮不可见"的问题
+const submitting = ref<Record<number, boolean>>({})
+const submitError = ref<Record<number, string>>({})
 
 // 检查是否已有评分
 async function checkExistingScore(_questionId: number, recordId: number) {
@@ -304,7 +307,13 @@ async function handleAiScore() {
   }
 
   const recordId = practiceRecordIds.value[q.id]
-  if (!recordId) return
+  if (!recordId) {
+    // 练习记录未上报成功（网络异常 / 后端报错），不允许静默退出 AI 评分；
+    // 显式提示用户先重新提交练习记录
+    const reason = submitError.value[q.id] || '练习记录尚未上报成功'
+    aiScoreError.value[q.id] = `AI 评分需要练习记录，请先重新提交练习。原因：${reason}`
+    return
+  }
 
   // 检查是否已有评分
   const existing = await checkExistingScore(q.id, recordId)
@@ -337,15 +346,18 @@ async function handleAiScore() {
 
 async function handleSubmit() {
   const q = current.value
-  if (!q || !answers.value[q.id] || submitted.value[q.id]) return
-  // 已存在练习记录，无需重复提交
+  if (!q || !answers.value[q.id]) return
+  // 已在请求中（防双击/防重入）
+  if (submitting.value[q.id]) return
+  // 已有练习记录（重做 / 二次进入），仅置已提交位即可
   if (practiceRecordIds.value[q.id]) {
     submitted.value[q.id] = true
     return
   }
-  // 本地即时判分：题目查询已带回正确答案与解析，先同步置为已提交以立即渲染解析与对错，
-  // 再异步上报练习记录（统计/错题入库/AI 评分 record_id），不阻塞判分展示。
+  // 乐观提交：先同步置位已提交，立即渲染解析与对错
   submitted.value[q.id] = true
+  submitting.value[q.id] = true
+  submitError.value[q.id] = ''
   const duration = Math.max(1, Math.round((Date.now() - (questionStart.value[q.id] || Date.now())) / 1000))
   try {
     const submit = props.submitHandler
@@ -360,8 +372,12 @@ async function handleSubmit() {
     if (res.answer) answers.value[q.id] = res.answer
     // 保存练习记录ID，供后续 AI 评分使用
     practiceRecordIds.value[q.id] = res.id
-  } catch {
-    // 上报失败仅影响统计/错题入库，不打断已完成的本地判分展示
+  } catch (e) {
+    // 上报失败：保留 submitted 状态（用户仍能看到解析），但暴露错误与重提入口，
+    // 避免"记录提交中…"永久悬挂、AI 评分按钮永不可用
+    submitError.value[q.id] = (e as Error)?.message || '练习记录上报失败，AI 评分暂不可用'
+  } finally {
+    submitting.value[q.id] = false
   }
 }
 
@@ -794,15 +810,32 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
 
         <!-- AI 评分按钮与结果（论文 / 案例分析） -->
         <div v-if="isSubjective(current)" class="mt-4 border-t border-indigo-100 pt-4">
+          <!-- 提交失败：明确错误 + 重新提交入口（避免 AI 评分按钮永远不出现） -->
+          <div
+            v-if="submitError[current.id] && !practiceRecordIds[current.id]"
+            class="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+          >
+            <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            <span class="flex-1 min-w-0">练习记录未上报，AI 评分暂不可用：{{ submitError[current.id] }}</span>
+            <button
+              class="cursor-pointer rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-amber-700 disabled:opacity-50"
+              :disabled="submitting[current.id]"
+              @click="handleSubmit"
+            >
+              {{ submitting[current.id] ? '重试中…' : '重新提交' }}
+            </button>
+          </div>
           <button
-            v-if="!aiScoring[current.id] && !aiScoreResults[current.id] && !practiceRecordIds[current.id]"
+            v-if="!aiScoring[current.id] && !aiScoreResults[current.id] && !practiceRecordIds[current.id] && !submitError[current.id]"
             class="cursor-pointer rounded-lg px-4 py-2 text-sm font-medium text-gray-400 ring-1 ring-inset ring-gray-200"
             disabled
           >
             记录提交中…
           </button>
           <button
-            v-else-if="!aiScoring[current.id] && !aiScoreResults[current.id]"
+            v-else-if="!aiScoring[current.id] && !aiScoreResults[current.id] && practiceRecordIds[current.id]"
             class="bg-brand-gradient cursor-pointer rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:shadow-md hover:brightness-110"
             @click="handleAiScore"
           >

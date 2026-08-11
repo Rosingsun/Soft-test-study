@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 
 type AiService struct {
 	aiRepo         *repository.AiRepo
+	aiTaskRepo     *repository.AiGeneratedTaskRepo
 	questionRepo   *repository.QuestionRepo
 	subjectRepo    *repository.SubjectRepo
 	chapterRepo    *repository.ChapterRepo
@@ -27,6 +29,7 @@ type AiService struct {
 
 func NewAiService(
 	aiRepo *repository.AiRepo,
+	aiTaskRepo *repository.AiGeneratedTaskRepo,
 	questionRepo *repository.QuestionRepo,
 	subjectRepo *repository.SubjectRepo,
 	chapterRepo *repository.ChapterRepo,
@@ -35,8 +38,11 @@ func NewAiService(
 	practiceRepo *repository.PracticeRecordRepo,
 	notifySvc *NotificationService,
 ) *AiService {
+	// 把 repo 注入到 ai_task.go 的包级变量，让 SetAITask* 等函数也能双写 DB
+	SetAITaskRepo(aiTaskRepo)
 	return &AiService{
 		aiRepo:         aiRepo,
+		aiTaskRepo:     aiTaskRepo,
 		questionRepo:   questionRepo,
 		subjectRepo:    subjectRepo,
 		chapterRepo:    chapterRepo,
@@ -45,6 +51,17 @@ func NewAiService(
 		practiceRepo:   practiceRepo,
 		notifySvc:      notifySvc,
 	}
+}
+
+// RecoverInflightTasks 服务启动时调用：把 DB 中所有 status='running' 的任务
+// 重新加入内存（跨用户），让 janitor 接管超时检查。
+// 修复 #20：服务重启后原 goroutine 丢失，DB 记录仍在，janitor 在下一轮扫描时会自动
+// 标记为 failed（30min running 超时）并推送通知，避免任务永久 hang。
+func (s *AiService) RecoverInflightTasks() error {
+	if s.aiTaskRepo == nil {
+		return nil
+	}
+	return RecoverInflightTasks()
 }
 
 func (s *AiService) GetProviders() dto.AiProvidersResp {
@@ -355,7 +372,7 @@ func (s *AiService) SubmitGenerateAsync(userID uint, req dto.GenerateQuestionsRe
 		}
 	}
 
-	task := NewAITask(questionType, req.ChapterID, chapterName, req.Difficulty, req.Count)
+	task := NewAITask(userID, questionType, req.ChapterID, chapterName, req.Difficulty, req.Count)
 
 	// 启动后台 goroutine 执行
 	go s.runGenerateTask(userID, task.ID, subjectName, req)
@@ -402,7 +419,11 @@ func (s *AiService) pushGenerateSuccessNotification(userID uint, taskID, subject
 	title := "AI 出题完成"
 	content := fmt.Sprintf("你的「%s」AI 出题任务已完成，共生成 %d 道题，点击查看。", subjectName, count)
 	link := "/ai/practice?task_id=" + taskID
-	_ = s.notifySvc.Push(userID, "ai_generate_done", title, content, link)
+	// 修复 #20：通知失败不再静默吞错；任务状态已为 success，不回滚。
+	if err := s.notifySvc.Push(userID, "ai_generate_done", title, content, link); err != nil {
+		log.Printf("[ai task] push success notification failed user_id=%d task_id=%s: %v",
+			userID, taskID, err)
+	}
 }
 
 // pushGenerateFailedNotification 推送失败通知
@@ -418,12 +439,20 @@ func (s *AiService) pushGenerateFailedNotification(userID uint, taskID, errMsg s
 	title := "AI 出题失败"
 	content := "AI 出题任务失败：" + short + "。请稍后重试或调整参数。"
 	link := "/ai/practice?task_id=" + taskID
-	_ = s.notifySvc.Push(userID, "ai_generate_failed", title, content, link)
+	// 修复 #20：通知失败不再静默吞错；任务状态已为 failed，不回滚。
+	if err := s.notifySvc.Push(userID, "ai_generate_failed", title, content, link); err != nil {
+		log.Printf("[ai task] push failed notification failed user_id=%d task_id=%s: %v",
+			userID, taskID, err)
+	}
 }
 
 // GetGenerateTask 查询任务状态（按 task_id + userID 鉴权）
-func (s *AiService) GetGenerateTask(taskID string) (*dto.AsyncGenerateTask, error) {
-	task := GetAITask(taskID)
+// userID=0 或任务不属于该用户时返回"不存在"，避免泄露存在性。
+func (s *AiService) GetGenerateTask(taskID string, userID uint) (*dto.AsyncGenerateTask, error) {
+	if userID == 0 {
+		return nil, fmt.Errorf("任务不存在或已过期")
+	}
+	task := GetAITask(taskID, userID)
 	if task == nil {
 		return nil, fmt.Errorf("任务不存在或已过期")
 	}
@@ -431,9 +460,9 @@ func (s *AiService) GetGenerateTask(taskID string) (*dto.AsyncGenerateTask, erro
 }
 
 // ListGenerateTasks 列当前用户最近 20 条任务
-// 当前内存 store 没有按 userID 索引，这里返回全部最新 20 条（鉴权由路由处理）
-func (s *AiService) ListGenerateTasks() []*dto.AsyncGenerateTask {
-	return ListAITasksByUser(0, 20)
+// 严格按调用方传入的 userID 过滤；handler 已从 JWT 上下文取 userID，无需再次校验。
+func (s *AiService) ListGenerateTasks(userID uint) []*dto.AsyncGenerateTask {
+	return ListAITasksByUser(userID, 20)
 }
 
 // ListGenerateHistory 列出某用户的 AI 生成题历史批次（按时间倒序）

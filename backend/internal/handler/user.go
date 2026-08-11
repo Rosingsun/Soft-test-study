@@ -12,11 +12,12 @@ import (
 )
 
 type UserHandler struct {
-	svc *service.UserService
+	svc        *service.UserService
+	emailSvc   *service.EmailService
 }
 
-func NewUserHandler(svc *service.UserService) *UserHandler {
-	return &UserHandler{svc: svc}
+func NewUserHandler(svc *service.UserService, emailSvc *service.EmailService) *UserHandler {
+	return &UserHandler{svc: svc, emailSvc: emailSvc}
 }
 
 func translateBindingError(err error) string {
@@ -52,6 +53,10 @@ func translateBindingError(err error) string {
 				return "昵称不超过50个字符"
 			case "Avatar":
 				return "头像地址过长"
+			case "Code":
+				return "请输入 6 位数字验证码"
+			case "Purpose":
+				return "purpose 必须为 verify 或 change"
 			}
 		}
 	}
@@ -122,6 +127,40 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 	}
 	userID := c.GetUint("user_id")
 	if err := h.svc.ChangePassword(userID, &req); err != nil {
+		response.Error(c, 10001, err.Error())
+		return
+	}
+	response.Success(c, nil)
+}
+
+// SendEmailCode 发送邮箱验证码（公开接口，带限流）
+func (h *UserHandler) SendEmailCode(c *gin.Context) {
+	var req dto.SendEmailCodeReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 10002, translateBindingError(err))
+		return
+	}
+	userID := c.GetUint("user_id")
+	if userID == 0 {
+		response.Error(c, 10003, "请先登录")
+		return
+	}
+	if err := h.emailSvc.SendCode(userID, req.Email, req.Purpose); err != nil {
+		response.Error(c, 10001, err.Error())
+		return
+	}
+	response.Success(c, nil)
+}
+
+// VerifyEmailCode 校验邮箱验证码（鉴权接口）
+func (h *UserHandler) VerifyEmailCode(c *gin.Context) {
+	var req dto.VerifyEmailCodeReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 10002, translateBindingError(err))
+		return
+	}
+	userID := c.GetUint("user_id")
+	if err := h.emailSvc.VerifyAndBind(userID, req.Email, req.Code, req.Purpose); err != nil {
 		response.Error(c, 10001, err.Error())
 		return
 	}
