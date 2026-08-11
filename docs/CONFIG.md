@@ -38,6 +38,7 @@ go run cmd/server/main.go   # 自动读取 .env
 | `SMTP_USER` | 否 | 发件邮箱账号 | （空） |
 | `SMTP_PASSWORD` | 否 | 发件邮箱授权码（非登录密码） | （空） |
 | `SMTP_FROM_NAME` | 否 | 发件人显示名 | `软考学系` |
+| `ADMIN_BYPASS_USERNAMES` | 否 | 注册时绕过邀请码的用户名白名单（逗号分隔，大小写不敏感），命中后自动获得 `admin` 角色 | `ross` |
 
 ## 3. 本地初始化步骤
 

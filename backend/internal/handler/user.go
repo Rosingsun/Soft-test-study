@@ -57,6 +57,8 @@ func translateBindingError(err error) string {
 				return "请输入 6 位数字验证码"
 			case "Purpose":
 				return "purpose 必须为 verify 或 change"
+			case "InviteCode":
+				return "邀请码格式不正确"
 			}
 		}
 	}

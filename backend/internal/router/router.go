@@ -38,10 +38,17 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	studyPlanRepo := repository.NewStudyPlanRepo(db)
 	rankingRepo := repository.NewRankingRepo(db)
 	emailCodeRepo := repository.NewEmailVerificationCodeRepo(db)
+	invitationCodeRepo := repository.NewInvitationCodeRepo(db)
 
 	notifySvc := service.NewNotificationService(db)
 
-	userSvc := service.NewUserService(userRepo, examLevelRepo, subjectRepo, cfg.JWTSecret, cfg.JWTExpiresIn)
+	userSvc := service.NewUserService(
+		db,
+		userRepo, examLevelRepo, subjectRepo,
+		service.NewInvitationCodeService(invitationCodeRepo),
+		cfg.JWTSecret, cfg.JWTExpiresIn,
+		cfg.AdminBypassUsernames,
+	)
 	examLevelSvc := service.NewExamLevelService(examLevelRepo)
 	subjectSvc := service.NewSubjectService(subjectRepo)
 	subSubjectSvc := service.NewSubSubjectService(subSubjectRepo)

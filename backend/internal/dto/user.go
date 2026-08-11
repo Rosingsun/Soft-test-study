@@ -8,6 +8,7 @@ type RegisterReq struct {
 	LevelID         uint   `json:"level_id" binding:"required,gt=0"`
 	SubjectID       uint   `json:"subject_id" binding:"required,gt=0"`
 	Difficulty      string `json:"difficulty"`
+	InviteCode      string `json:"invite_code" binding:"omitempty,min=6,max=32"`
 }
 
 type LoginReq struct {

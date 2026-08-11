@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 	"unicode"
 
@@ -12,18 +13,47 @@ import (
 	"github.com/soft-test-study/backend/internal/repository"
 	jwtutil "github.com/soft-test-study/backend/pkg/jwt"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type UserService struct {
-	repo        *repository.UserRepo
-	levelRepo   *repository.ExamLevelRepo
-	subjectRepo *repository.SubjectRepo
-	jwtSecret   string
-	jwtExpires  int
+	db                     *gorm.DB
+	repo                   *repository.UserRepo
+	levelRepo              *repository.ExamLevelRepo
+	subjectRepo            *repository.SubjectRepo
+	invitationCodeSvc      *InvitationCodeService
+	jwtSecret              string
+	jwtExpires             int
+	adminBypassUsernames   map[string]struct{}
 }
 
-func NewUserService(repo *repository.UserRepo, levelRepo *repository.ExamLevelRepo, subjectRepo *repository.SubjectRepo, jwtSecret string, jwtExpires int) *UserService {
-	return &UserService{repo: repo, levelRepo: levelRepo, subjectRepo: subjectRepo, jwtSecret: jwtSecret, jwtExpires: jwtExpires}
+func NewUserService(
+	db *gorm.DB,
+	repo *repository.UserRepo,
+	levelRepo *repository.ExamLevelRepo,
+	subjectRepo *repository.SubjectRepo,
+	invitationCodeSvc *InvitationCodeService,
+	jwtSecret string,
+	jwtExpires int,
+	adminBypassUsernames []string,
+) *UserService {
+	bypass := make(map[string]struct{}, len(adminBypassUsernames))
+	for _, name := range adminBypassUsernames {
+		n := strings.ToLower(strings.TrimSpace(name))
+		if n != "" {
+			bypass[n] = struct{}{}
+		}
+	}
+	return &UserService{
+		db:                   db,
+		repo:                 repo,
+		levelRepo:            levelRepo,
+		subjectRepo:          subjectRepo,
+		invitationCodeSvc:    invitationCodeSvc,
+		jwtSecret:            jwtSecret,
+		jwtExpires:           jwtExpires,
+		adminBypassUsernames: bypass,
+	}
 }
 
 func validatePassword(password string) error {
@@ -127,6 +157,14 @@ func (s *UserService) Register(req *dto.RegisterReq) (*dto.LoginResp, error) {
 		return nil, err
 	}
 
+	isAdminBypass := s.isAdminBypass(req.Username)
+	// 非管理员：必须提供有效邀请码
+	if !isAdminBypass {
+		if strings.TrimSpace(req.InviteCode) == "" {
+			return nil, errors.New("请输入邀请码")
+		}
+	}
+
 	existing, _ := s.repo.FindByUsername(req.Username)
 	if existing != nil && existing.ID > 0 {
 		return nil, errors.New("用户名已被注册")
@@ -142,18 +180,46 @@ func (s *UserService) Register(req *dto.RegisterReq) (*dto.LoginResp, error) {
 		return nil, errors.New("密码加密失败")
 	}
 
+	role := "student"
+	if isAdminBypass {
+		role = "admin"
+	}
+
 	user := &model.User{
 		Username:     req.Username,
 		Email:        req.Email,
 		PasswordHash: string(hash),
-		Role:         "student",
+		Role:         role,
 		Status:       1,
 		LevelID:      req.LevelID,
 		SubjectID:    req.SubjectID,
 		Difficulty:   req.Difficulty,
 	}
-	if err := s.repo.Create(user); err != nil {
-		return nil, errors.New("注册失败，请稍后重试")
+
+	// 注册流程：
+	//   1. 管理员绕过 → 直接 INSERT users
+	//   2. 普通用户 → 事务里「消费邀请码 + INSERT users」二合一，任一步失败整体回滚
+	if isAdminBypass {
+		if err := s.repo.Create(user); err != nil {
+			return nil, errors.New("注册失败，请稍后重试")
+		}
+	} else {
+		err := s.db.Transaction(func(tx *gorm.DB) error {
+			if err := s.invitationCodeSvc.ValidateAndLockInTx(tx, strings.TrimSpace(req.InviteCode)); err != nil {
+				return err
+			}
+			if err := tx.Create(user).Error; err != nil {
+				return errors.New("注册失败，请稍后重试")
+			}
+			// 用户已落库，标记邀请码使用人为 user.ID
+			if err := s.invitationCodeSvc.MarkUsedInTx(tx, strings.TrimSpace(req.InviteCode), user.ID); err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	expiresIn := time.Duration(s.jwtExpires) * time.Hour
@@ -167,6 +233,12 @@ func (s *UserService) Register(req *dto.RegisterReq) (*dto.LoginResp, error) {
 		ExpiresIn:   s.jwtExpires * 3600,
 		UserInfo:    *s.buildUserInfo(user),
 	}, nil
+}
+
+// isAdminBypass 判定用户名是否命中管理员绕过白名单（大小写不敏感）
+func (s *UserService) isAdminBypass(username string) bool {
+	_, ok := s.adminBypassUsernames[strings.ToLower(strings.TrimSpace(username))]
+	return ok
 }
 
 func (s *UserService) Login(req *dto.LoginReq) (*dto.LoginResp, error) {

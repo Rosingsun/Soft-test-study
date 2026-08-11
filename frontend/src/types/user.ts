@@ -11,6 +11,7 @@ export interface RegisterReq {
   level_id?: number
   subject_id?: number
   difficulty?: string
+  invite_code?: string
 }
 
 export interface LoginResp {
