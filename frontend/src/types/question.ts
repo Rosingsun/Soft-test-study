@@ -78,6 +78,7 @@ export interface WrongQuestionResp {
   content: string
   type: QuestionType
   subject_id: number
+  source?: string
 }
 
 export interface WrongPracticeSubmitReq {

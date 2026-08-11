@@ -93,6 +93,37 @@ func (r *WrongQuestionRepo) FindByUserAndSubject(userID, subjectID uint) ([]mode
 	return list, err
 }
 
+// Query 错题本列表：支持按科目/来源筛选与排序。
+//   - subjectID 为 nil 时不限制科目
+//   - source 支持 all / real（非 AI）/ ai；为空等价于 all
+//   - sort 支持 wrong_count（答错次数降序，默认）/ last_wrong_at（最近错误时间降序）
+func (r *WrongQuestionRepo) Query(userID uint, subjectID *uint, source, sort string) ([]model.WrongQuestion, error) {
+	q := r.db.Table("wrong_questions wq").
+		Select("wq.*").
+		Joins("JOIN questions q ON q.id = wq.question_id").
+		Where("wq.user_id = ?", userID)
+
+	if subjectID != nil {
+		q = q.Where("q.subject_id = ?", *subjectID)
+	}
+	switch source {
+	case "ai":
+		q = q.Where("q.source = 'ai'")
+	case "real":
+		q = q.Where("q.source <> 'ai' OR q.source IS NULL OR q.source = ''")
+	}
+
+	if sort == "wrong_count" {
+		q = q.Order("wq.wrong_count desc, wq.last_wrong_at desc")
+	} else {
+		q = q.Order("wq.last_wrong_at desc")
+	}
+
+	var list []model.WrongQuestion
+	err := q.Find(&list).Error
+	return list, err
+}
+
 func (r *WrongQuestionRepo) FindByUserAndQuestion(userID, questionID uint) (*model.WrongQuestion, error) {
 	var wq model.WrongQuestion
 	err := r.db.Where("user_id = ? AND question_id = ?", userID, questionID).First(&wq).Error

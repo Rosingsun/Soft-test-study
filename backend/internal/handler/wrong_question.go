@@ -26,7 +26,15 @@ func (h *WrongQuestionHandler) List(c *gin.Context) {
 			subjectID = &v
 		}
 	}
-	list, err := h.svc.List(userID.(uint), subjectID)
+	source := c.Query("source")
+	if source != "ai" && source != "real" {
+		source = "all"
+	}
+	sort := c.Query("sort")
+	if sort != "wrong_count" && sort != "last_wrong_at" {
+		sort = "wrong_count"
+	}
+	list, err := h.svc.List(userID.(uint), subjectID, source, sort)
 	if err != nil {
 		response.Error(c, 10001, "获取错题列表失败")
 		return

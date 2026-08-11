@@ -116,3 +116,26 @@ type AsyncSubmitResp struct {
 	TaskID string `json:"task_id"`
 	Status string `json:"status"`
 }
+
+// AiBatchHistoryItem AI 生成题历史记录（一次生成 = 一个批次）
+type AiBatchHistoryItem struct {
+	BatchID        string   `json:"batch_id"`
+	SubjectID      uint     `json:"subject_id"`
+	SubjectName    string   `json:"subject_name"`
+	ChapterID      uint     `json:"chapter_id"`
+	ChapterName    string   `json:"chapter_name"`
+	Type           string   `json:"type"`
+	TypeLabel      string   `json:"type_label"`
+	Difficulty     string   `json:"difficulty"`
+	Count          int64    `json:"count"`
+	CreatedAt      string   `json:"created_at"`
+	AnsweredCount  int64    `json:"answered_count"`
+	CorrectCount   int64    `json:"correct_count"`
+	KnowledgePoints []string `json:"knowledge_points"`
+}
+
+// AiBatchHistoryResp AI 生成题历史列表响应
+type AiBatchHistoryResp struct {
+	List  []AiBatchHistoryItem `json:"list"`
+	Total int64                `json:"total"`
+}

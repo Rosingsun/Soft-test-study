@@ -95,3 +95,25 @@ export interface AsyncSubmitResp {
   task_id: string
   status: string
 }
+
+// AI 生成题历史记录（一次生成 = 一个批次）
+export interface AiBatchHistoryItem {
+  batch_id: string
+  subject_id: number
+  subject_name: string
+  chapter_id: number
+  chapter_name: string
+  type: string
+  type_label: string
+  difficulty: string
+  count: number
+  created_at: string
+  answered_count: number
+  correct_count: number
+  knowledge_points?: string[]
+}
+
+export interface AiBatchHistoryResp {
+  list: AiBatchHistoryItem[]
+  total: number
+}

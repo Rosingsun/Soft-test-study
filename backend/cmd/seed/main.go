@@ -99,9 +99,30 @@ var chapterNamesBySubject = map[string][]string{
 	"数据库系统工程师": {
 		"数据库系统概论", "关系数据模型", "SQL语言", "数据库设计", "事务管理与并发控制", "数据库管理与安全",
 	},
+	// 信息系统项目管理师「综合知识」按《信息系统项目管理师教程》（第 3 版）22 章重建
 	"信息系统项目管理师": {
-		"项目管理基础", "项目立项与整体管理", "范围与时间管理", "成本与质量管理",
-		"人力资源与沟通管理", "风险与采购管理", "配置与变更管理", "信息系统综合知识", "信息技术知识",
+		"信息化和信息系统",
+		"信息技术发展",
+		"信息系统服务",
+		"信息系统治理",
+		"信息系统工程",
+		"项目管理概论",
+		"项目立项与招投标管理",
+		"项目整体管理",
+		"项目范围管理",
+		"项目进度管理",
+		"项目成本管理",
+		"项目质量管理",
+		"项目资源管理",
+		"项目沟通管理",
+		"项目风险管理",
+		"项目采购管理",
+		"项目合同管理",
+		"项目变更管理",
+		"组织通用治理",
+		"组织通用管理",
+		"流程管理",
+		"项目集、项目组合与组织战略",
 	},
 	"网络管理员": {"网络基础", "网络设备与配置", "网络安全与管理"},
 	"信息处理技术员": {"信息处理基础", "办公软件应用", "信息安全与法规"},
@@ -131,6 +152,20 @@ func seedChapters(db *gorm.DB) {
 				Delete(&model.Question{})
 			db.Unscoped().Where("subject_id = ? AND sub_subject_id = ?", subject.ID, ss.ID).
 				Delete(&model.Chapter{})
+		}
+
+		// 信息系统项目管理师-综合知识按第3版教程22章重建：先将该子科目下题目的 chapter_id 重置为 0，
+		// 再删除旧章节，避免残留旧 9 章分类（assignQuestionsToChapters 仅处理 chapter_id=0 的题目，会重新按 22 章平均分配）
+		if subject.Name == "信息系统项目管理师" && ss.Name == "综合知识" {
+			if err := db.Model(&model.Question{}).
+				Where("subject_id = ? AND sub_subject_id = ?", subject.ID, ss.ID).
+				Update("chapter_id", 0).Error; err != nil {
+				log.Printf("重置高项-综合知识题目的 chapter_id 失败: %v", err)
+			}
+			if err := db.Unscoped().Where("subject_id = ? AND sub_subject_id = ?", subject.ID, ss.ID).
+				Delete(&model.Chapter{}).Error; err != nil {
+				log.Printf("删除高项-综合知识旧章节失败: %v", err)
+			}
 		}
 
 		names := chapterNames(subject.Name, ss.Name)

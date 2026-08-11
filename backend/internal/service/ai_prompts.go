@@ -8,20 +8,32 @@ package service
 // 难度定义、分析三段式、Few-shot、输出格式约束。
 
 // commonPromptHead 5 套模板共用的头部。
-// 占位符：
-//   %s = 章节名
-//   %s = 考点清单（formatChapterKPBlock 格式化后的字符串）
-//   %s = 难度描述（easy / medium / hard）
-//   %s = 数量
-func commonPromptHead(chapterName, kpBlock, difficulty, count string) string {
-	return `【角色】你是《系统分析师教程（第 2 版）》命题专家，深度熟悉系统分析师考试 9 章全部考点。
+// 注入：角色、考试结构、本次范围（科目+章节+难度+数量）、考点清单、
+// 难度定义、分析三段式、Few-shot、输出格式约束。
+//
+// 参数：
+//   subject    - 科目名（用于头部「本次范围」展示）
+//   chapter    - 章节名（"不限定"表示全章节随机）
+//   kpBlock    - 考点清单（formatChapterKPBlock / formatChapterOutlineBlock 格式化后）
+//   difficulty - 难度描述（简单 / 中等 / 困难）
+//   count      - 数量
+func commonPromptHead(subject, chapter, kpBlock, difficulty, count string) string {
+	// 章节命中时强调"必须从该章节出题"；不限定时强调"从考点清单中任选"
+	chapterRule := "请从下方「考点清单」中任选 1~3 个考点作为本题核心考查点。"
+	if chapter != "" && chapter != "不限定" {
+		chapterRule = "你必须从「" + chapter + "」这一章的考点中出题，不允许跨章节串题。"
+	}
+	return `【角色】你是软考《` + subject + `》命题专家，深度熟悉该科目官方考试大纲与全部考点。
 【考试结构】上午题=综合知识（75 道选择/判断题，1 分/题）；下午题 I=案例分析（5 道大题，15 分/题）；下午题 II=论文（4~5 选 1，75 分）。
 【本次范围】
-- 章节：` + chapterName + `
+- 科目：` + subject + `
+- 章节：` + chapter + `
 - 难度：` + difficulty + `（easy=识记级/概念直接复现；medium=对比与应用/原理推导；hard=综合场景/多步推理/简单计算）
 - 数量：` + count + ` 道
 
-【考点约束】你必须从下方「本章考点清单」中选取 1~3 个考点作为本题核心考查点，不允许自创不在清单中的考点。
+【科目硬约束】你出的每一道题都必须落在《` + subject + `》官方考纲范围内。**严禁**出其他科目（如系统分析师、软件设计师、网络工程师等）的题。如果你发现按当前范围无题可出，直接返回空数组 []，不要硬出无关题。
+
+【章节与考点】` + chapterRule + `不允许自创不在清单中的考点。
 ` + kpBlock + `
 
 【分析与辨析要求】每道题目的 analysis 字段必须包含三段：

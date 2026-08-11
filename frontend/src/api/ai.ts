@@ -9,6 +9,7 @@ import type {
   EssayScoreCheckResp,
   AsyncGenerateTask,
   AsyncSubmitResp,
+  AiBatchHistoryResp,
 } from '@/types/ai'
 import type { StartExamResp } from '@/types/exam'
 
@@ -31,6 +32,16 @@ export function getGenerateTask(id: string) {
 
 export function listGenerateTasks() {
   return get<{ list: AsyncGenerateTask[] }>('/ai/tasks')
+}
+
+// AI 生成题历史记录列表（按批次）
+export function listGenerateHistory() {
+  return get<AiBatchHistoryResp>('/ai/history')
+}
+
+// 获取某个历史批次生成的全部题目（用于重新答题）
+export function getGenerateBatch(batchId: string) {
+  return get<GenerateQuestionsResp>(`/ai/history/${batchId}`)
 }
 
 export function startAiExam(data: StartAiExamReq) {

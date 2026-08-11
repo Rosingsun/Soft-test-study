@@ -1,9 +1,13 @@
 import { get, post, del } from './request'
 import type { WrongQuestionResp, WrongPracticeSubmitReq, PracticeRecordResp } from '@/types/question'
 
-export function listWrongQuestions(subjectId?: number) {
-  const query = subjectId ? `?subject_id=${subjectId}` : ''
-  return get<WrongQuestionResp[]>(`/wrong-questions${query}`)
+export function listWrongQuestions(subjectId?: number, source?: string, sort?: string) {
+  const params = new URLSearchParams()
+  if (subjectId) params.set('subject_id', String(subjectId))
+  if (source && source !== 'all') params.set('source', source)
+  if (sort) params.set('sort', sort)
+  const query = params.toString()
+  return get<WrongQuestionResp[]>(`/wrong-questions${query ? `?${query}` : ''}`)
 }
 
 export function countWrongQuestions() {

@@ -144,6 +144,43 @@ func (h *AiHandler) ListGenerateTasks(c *gin.Context) {
 	response.Success(c, gin.H{"list": tasks})
 }
 
+// ListHistory 列出当前用户的 AI 生成题历史批次
+func (h *AiHandler) ListHistory(c *gin.Context) {
+	userIDVal, _ := c.Get("user_id")
+	userID, ok := userIDVal.(uint)
+	if !ok || userID == 0 {
+		response.Error(c, config.CodeUnauthorized, "未登录")
+		return
+	}
+
+	resp, err := h.svc.ListGenerateHistory(userID, 50)
+	if err != nil {
+		response.Error(c, config.CodeBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// GetBatchQuestions 获取某用户某批次生成的全部题目（历史记录重新答题）
+func (h *AiHandler) GetBatchQuestions(c *gin.Context) {
+	userIDVal, _ := c.Get("user_id")
+	userID, ok := userIDVal.(uint)
+	if !ok || userID == 0 {
+		response.Error(c, config.CodeUnauthorized, "未登录")
+		return
+	}
+
+	batchID := c.Param("batch_id")
+	resp, err := h.svc.GetGenerateBatch(userID, batchID)
+	if err != nil {
+		response.Error(c, config.CodeBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}
+
 func (h *AiHandler) Analyze(c *gin.Context) {
 	var req dto.AnalyzeReq
 	if err := c.ShouldBindJSON(&req); err != nil {

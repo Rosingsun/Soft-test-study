@@ -10,6 +10,7 @@ type WrongQuestionResp struct {
 	Content      string `json:"content"`
 	Type         string `json:"type"`
 	SubjectID    uint   `json:"subject_id"`
+	Source       string `json:"source"`
 }
 
 type WrongPracticeSubmitReq struct {

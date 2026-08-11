@@ -107,6 +107,11 @@ func toQuestionResp(q model.Question) dto.QuestionResp {
 	}
 }
 
+// IsSubjectiveType 是否为主观题（论文 / 案例分析）：不自动判分，不收录错题本
+func IsSubjectiveType(questionType string) bool {
+	return questionType == model.TypeEssay || questionType == model.TypeCaseStudy
+}
+
 // IsAnswerCorrect 客观题通用判分：多空题按 JSON 数组逐空比对，全部正确才算整题正确；其他题型字符串相等
 // 供 service 包内所有判分场景复用（练习 / 考试 / 打卡 / 错题重做 / 复习）
 func IsAnswerCorrect(questionType, correctAnswer, userAnswer string) bool {

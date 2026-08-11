@@ -29,7 +29,7 @@ func (s *PracticeService) Submit(userID uint, req dto.PracticeSubmitReq) (*dto.P
 	}
 
 	isCorrect := 0
-	if question.Type != model.TypeEssay && IsAnswerCorrect(question.Type, question.Answer, req.Answer) {
+	if !IsSubjectiveType(question.Type) && IsAnswerCorrect(question.Type, question.Answer, req.Answer) {
 		isCorrect = 1
 	}
 
@@ -45,8 +45,8 @@ func (s *PracticeService) Submit(userID uint, req dto.PracticeSubmitReq) (*dto.P
 		return nil, err
 	}
 
-	// 答错自动收录错题本并进入遗忘曲线复习（论文题不判分，不收录）
-	if isCorrect == 0 && question.Type != model.TypeEssay {
+	// 答错自动收录错题本并进入遗忘曲线复习（论文/案例分析等主观题不判分，不收录）
+	if isCorrect == 0 && !IsSubjectiveType(question.Type) {
 		if err := s.reviewSvc.OnWrong(userID, req.QuestionID); err != nil {
 			log.Printf("错题本/复习卡片收录失败 user_id=%d question_id=%d: %v", userID, req.QuestionID, err)
 		}

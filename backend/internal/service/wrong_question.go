@@ -26,14 +26,8 @@ func NewWrongQuestionService(
 //
 // 原实现：N 条错题 → 循环 N 次 questionRepo.FindByID（典型 N+1，远程 DB 下尤其致命）
 // 改造：先一次 FindByIDs 批量拿全部题目，再 map 拼装，固定 2 次 DB 往返
-func (s *WrongQuestionService) List(userID uint, subjectID *uint) ([]dto.WrongQuestionResp, error) {
-	var list []model.WrongQuestion
-	var err error
-	if subjectID != nil {
-		list, err = s.repo.FindByUserAndSubject(userID, *subjectID)
-	} else {
-		list, err = s.repo.FindByUser(userID)
-	}
+func (s *WrongQuestionService) List(userID uint, subjectID *uint, source, sort string) ([]dto.WrongQuestionResp, error) {
+	list, err := s.repo.Query(userID, subjectID, source, sort)
 	if err != nil {
 		return nil, err
 	}
@@ -76,6 +70,7 @@ func (s *WrongQuestionService) List(userID uint, subjectID *uint) ([]dto.WrongQu
 			Content:      q.Content,
 			Type:         q.Type,
 			SubjectID:    q.SubjectID,
+			Source:       q.Source,
 		})
 	}
 	return resp, nil

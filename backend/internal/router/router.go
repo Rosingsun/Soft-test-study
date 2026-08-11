@@ -166,6 +166,8 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 		auth.POST("/ai/generate/async", aiRateLimiter, aiH.SubmitGenerateAsync)
 		auth.GET("/ai/tasks", aiH.ListGenerateTasks)
 		auth.GET("/ai/tasks/:id", aiH.GetGenerateTask)
+		auth.GET("/ai/history", aiH.ListHistory)
+		auth.GET("/ai/history/:batch_id", aiH.GetBatchQuestions)
 		auth.POST("/ai/analyze", aiRateLimiter, aiH.Analyze)
 		auth.POST("/ai/exam/start", aiRateLimiter, aiH.StartExam)
 		auth.POST("/ai/essay-score", aiRateLimiter, aiH.EssayScore)

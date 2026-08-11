@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSubjectStore } from '@/stores/subject'
+import { getSubjectsByLevel } from '@/api/subject'
+import type { Subject } from '@/types/subject'
 import NotificationBell from '@/components/layout/NotificationBell.vue'
 
 const auth = useAuthStore()
@@ -11,12 +13,15 @@ const route = useRoute()
 const router = useRouter()
 
 const mobileOpen = ref(false)
-const levelOpen = ref(false)
-const subjectOpen = ref(false)
 const userOpen = ref(false)
-const levelMenuRef = ref<HTMLElement | null>(null)
-const subjectMenuRef = ref<HTMLElement | null>(null)
 const userMenuRef = ref<HTMLElement | null>(null)
+
+// 科目导航下拉：把原来的「等级 + 科目」两个独立下拉合并为一个层级下拉
+const subjectNavOpen = ref(false)
+const subjectNavMenuRef = ref<HTMLElement | null>(null)
+// 按等级缓存科目列表，避免重复请求
+const subjectsByLevel = ref<Record<number, Subject[]>>({})
+const loadingLevels = ref<Set<number>>(new Set())
 
 const navGroups = computed(() => {
   const groups = [
@@ -83,10 +88,6 @@ const currentSubjectName = computed(() => {
   return subjectStore.subjects.find(s => s.id === auth.selectedSubjectId)?.name || auth.user.subject_name || ''
 })
 
-const filteredSubjects = computed(() => {
-  return subjectStore.subjects.filter(s => s.level_id === auth.selectedLevelId)
-})
-
 function isActive(to: string) {
   if (to === '/') return route.path === '/'
   return route.path === to || route.path.startsWith(to + '/')
@@ -94,34 +95,56 @@ function isActive(to: string) {
 
 function handleClickOutside(e: MouseEvent) {
   const target = e.target as Node
-  if (levelOpen.value && levelMenuRef.value && !levelMenuRef.value.contains(target)) levelOpen.value = false
-  if (subjectOpen.value && subjectMenuRef.value && !subjectMenuRef.value.contains(target)) subjectOpen.value = false
   if (userOpen.value && userMenuRef.value && !userMenuRef.value.contains(target)) userOpen.value = false
+  if (subjectNavOpen.value && subjectNavMenuRef.value && !subjectNavMenuRef.value.contains(target)) subjectNavOpen.value = false
 }
 
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
   if (subjectStore.levels.length === 0) await subjectStore.fetchLevels()
+  // 预加载当前等级的科目到 store，供其他页面使用
   if (auth.selectedLevelId) await subjectStore.ensureSubjects(auth.selectedLevelId)
+  // 同时把当前等级的科目缓存到本地，供下拉使用
+  if (auth.selectedLevelId && !subjectsByLevel.value[auth.selectedLevelId]) {
+    await loadLevelSubjects(auth.selectedLevelId)
+  }
 })
 
-watch(() => auth.selectedLevelId, async (val) => {
-  if (val) await subjectStore.ensureSubjects(val)
-})
-
-async function selectLevel(levelId: number) {
-  levelOpen.value = false
-  await subjectStore.ensureSubjects(levelId)
-  const keepSubject = subjectStore.subjects.some(s => s.id === auth.selectedSubjectId && s.level_id === levelId)
-  const subjectId = keepSubject ? auth.selectedSubjectId : 0
-  await auth.updateSubjectLevel(levelId, subjectId)
-  if (subjectId) router.push(`/subjects/${subjectId}`)
-  else router.push({ path: '/subjects', query: { level_id: levelId } })
+// 预加载指定等级的科目（带缓存）
+async function loadLevelSubjects(levelId: number) {
+  if (subjectsByLevel.value[levelId] || loadingLevels.value.has(levelId)) return
+  loadingLevels.value.add(levelId)
+  try {
+    subjectsByLevel.value[levelId] = await getSubjectsByLevel(levelId)
+  } catch {
+    subjectsByLevel.value[levelId] = []
+  } finally {
+  loadingLevels.value.delete(levelId)
+  }
 }
 
-async function selectSubject(subjectId: number) {
-  subjectOpen.value = false
-  await auth.updateSubjectLevel(auth.selectedLevelId, subjectId)
+// 打开科目导航下拉时按需预加载所有等级科目
+async function openSubjectNav() {
+  subjectNavOpen.value = !subjectNavOpen.value
+  if (subjectNavOpen.value && subjectStore.levels.length) {
+    await Promise.allSettled(
+      subjectStore.levels.map(l => loadLevelSubjects(l.id)),
+    )
+  }
+}
+
+function closeSubjectNav() {
+  subjectNavOpen.value = false
+}
+
+// 在下拉中选择某个科目
+async function pickSubject(levelId: number, subjectId: number) {
+  closeSubjectNav()
+  if (levelId !== auth.selectedLevelId) {
+    // 跨等级切换：先把 store 切到目标等级的科目列表
+    await subjectStore.fetchSubjectsByLevel(levelId)
+  }
+  await auth.updateSubjectLevel(levelId, subjectId)
   router.push(`/subjects/${subjectId}`)
 }
 
@@ -304,47 +327,104 @@ function navigate(to: string) {
             </svg>
           </button>
 
-          <div ref="levelMenuRef" class="relative">
+          <div ref="subjectNavMenuRef" class="relative">
             <button
-              class="flex cursor-pointer items-center gap-1 rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300"
-              @click.stop="levelOpen = !levelOpen"
+              class="group flex cursor-pointer items-center gap-2 rounded-xl border bg-white py-1.5 pl-2.5 pr-2 text-sm transition-all duration-200"
+              :class="subjectNavOpen
+                ? 'border-indigo-300 shadow-sm ring-2 ring-indigo-500/15'
+                : 'border-gray-200 hover:border-indigo-200 hover:shadow-sm'"
+              @click.stop="openSubjectNav"
             >
-              {{ currentLevelName || '选择等级' }}
-              <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div v-if="levelOpen" class="absolute left-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
-              <button
-                v-for="level in subjectStore.levels"
-                :key="level.id"
-                class="block w-full cursor-pointer px-3 py-2 text-left text-sm transition-colors"
-                :class="level.id === auth.selectedLevelId ? 'bg-indigo-50 font-medium text-indigo-600' : 'text-gray-600 hover:bg-gray-50'"
-                @click="selectLevel(level.id)"
+              <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-sm">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" />
+                </svg>
+              </span>
+              <span v-if="currentLevelName" class="font-medium text-gray-600">{{ currentLevelName }}</span>
+              <span v-if="currentLevelName" class="text-gray-300">/</span>
+              <span v-if="currentSubjectName" class="max-w-[10rem] truncate font-semibold text-gray-900">{{ currentSubjectName }}</span>
+              <span v-else class="text-sm text-gray-400">选择科目</span>
+              <svg
+                class="h-3.5 w-3.5 text-gray-400 transition-transform duration-200"
+                :class="subjectNavOpen ? 'rotate-180 text-indigo-500' : ''"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
               >
-                {{ level.name }}
-              </button>
-            </div>
-          </div>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
 
-          <div ref="subjectMenuRef" class="relative">
-            <button
-              class="flex cursor-pointer items-center gap-1 rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300"
-              @click.stop="subjectOpen = !subjectOpen"
-            >
-              {{ currentSubjectName || '选择科目' }}
-              <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div v-if="subjectOpen" class="absolute left-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
-              <button
-                v-for="sub in filteredSubjects"
-                :key="sub.id"
-                class="block w-full cursor-pointer px-3 py-2 text-left text-sm transition-colors"
-                :class="sub.id === auth.selectedSubjectId ? 'bg-indigo-50 font-medium text-indigo-600' : 'text-gray-600 hover:bg-gray-50'"
-                @click="selectSubject(sub.id)"
+            <Transition name="nav-drop">
+              <div
+                v-if="subjectNavOpen"
+                class="absolute left-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl ring-1 ring-black/5"
               >
-                {{ sub.short_name || sub.name }}
-              </button>
-              <p v-if="filteredSubjects.length === 0" class="px-3 py-2 text-sm text-gray-400">请先选择等级</p>
-            </div>
+                <!-- 头部 -->
+                <div class="flex items-center justify-between border-b border-gray-100 bg-gradient-to-r from-indigo-50/70 via-white to-violet-50/50 px-4 py-3">
+                  <div>
+                    <p class="text-xs font-semibold text-indigo-600">科目导航</p>
+                    <p class="mt-0.5 text-[11px] text-gray-500">选择其他等级 / 科目后自动跳转</p>
+                  </div>
+                  <span class="rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 ring-1 ring-gray-200">
+                    共 {{ subjectStore.levels.length }} 个等级
+                  </span>
+                </div>
+
+                <!-- 等级 + 科目列表 -->
+                <div class="max-h-[28rem] overflow-y-auto py-2">
+                  <div v-if="!subjectStore.levels.length" class="px-4 py-8 text-center text-sm text-gray-400">
+                    暂无可选等级
+                  </div>
+                  <div v-for="level in subjectStore.levels" :key="level.id" class="px-2 pb-1">
+                    <div class="sticky top-0 z-10 mb-0.5 flex items-center gap-2 bg-white/95 px-2 py-1.5 backdrop-blur">
+                      <span class="rounded-md bg-indigo-50 px-1.5 py-0.5 text-[11px] font-semibold tracking-wide text-indigo-600 ring-1 ring-inset ring-indigo-200">
+                        {{ level.name }}
+                      </span>
+                      <span v-if="subjectsByLevel[level.id]" class="text-[10px] text-gray-400">
+                        {{ subjectsByLevel[level.id].length }} 个科目
+                      </span>
+                    </div>
+                    <div v-if="loadingLevels.has(level.id)" class="space-y-1 px-2 py-1">
+                      <div class="h-7 rounded-md bg-gray-50"></div>
+                      <div class="h-7 w-4/5 rounded-md bg-gray-50"></div>
+                    </div>
+                    <div
+                      v-else-if="!subjectsByLevel[level.id] || subjectsByLevel[level.id].length === 0"
+                      class="px-2 py-2 text-[11px] text-gray-400"
+                    >
+                      暂无科目
+                    </div>
+                    <div v-else class="space-y-0.5">
+                      <button
+                        v-for="sub in subjectsByLevel[level.id]"
+                        :key="sub.id"
+                        class="group flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors"
+                        :class="sub.id === auth.selectedSubjectId
+                          ? 'bg-gradient-to-r from-indigo-50 to-violet-50/60 font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200'
+                          : 'text-gray-700 hover:bg-indigo-50/60 hover:text-indigo-700'"
+                        @click="pickSubject(level.id, sub.id)"
+                      >
+                        <span class="flex min-w-0 items-center gap-2">
+                          <span
+                            class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-bold"
+                            :class="sub.id === auth.selectedSubjectId ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-white group-hover:text-indigo-500'"
+                          >
+                            {{ (sub.short_name || sub.name).slice(0, 1) }}
+                          </span>
+                          <span class="truncate">{{ sub.short_name || sub.name }}</span>
+                        </span>
+                        <svg
+                          v-if="sub.id === auth.selectedSubjectId"
+                          class="h-4 w-4 shrink-0 text-indigo-600"
+                          fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Transition>
           </div>
         </div>
 
@@ -417,5 +497,14 @@ function navigate(to: string) {
 .drawer-slide-enter-from,
 .drawer-slide-leave-to {
   transform: translateX(-100%);
+}
+.nav-drop-enter-active,
+.nav-drop-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.nav-drop-enter-from,
+.nav-drop-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>

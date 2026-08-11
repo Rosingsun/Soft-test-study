@@ -6,6 +6,7 @@ type AiGeneratedQuestion struct {
 	ID             uint      `gorm:"primarykey"`
 	UserID         uint      `gorm:"column:user_id;not null;index"`
 	QuestionID     uint      `gorm:"column:question_id;default:0;index"`
+	BatchID        string    `gorm:"column:batch_id;size:64;default:'';index"`
 	SubjectID      uint      `gorm:"column:subject_id;not null;index"`
 	ChapterID      uint      `gorm:"column:chapter_id;default:0;index"`
 	Type           string    `gorm:"column:type;type:varchar(20);not null"`

@@ -66,7 +66,7 @@ func (s *AiService) GenerateQuestions(userID uint, req dto.GenerateQuestionsReq)
 		return nil, err
 	}
 
-	return s.saveGenerated(userID, req.SubjectID, req.ChapterID, items)
+	return s.saveGenerated(userID, req.SubjectID, req.ChapterID, generateTaskID(), items)
 }
 
 func (s *AiService) callAIAndParse(config dto.AiApiConfig, subjectID, chapterID uint, types []string, difficulty string, count int) ([]aiGeneratedItem, error) {
@@ -93,7 +93,10 @@ func (s *AiService) callAIAndParse(config dto.AiApiConfig, subjectID, chapterID 
 		difficultyName = difficultyLabelCN(difficulty)
 	}
 
-	// 分批生成，避免一次性输出过多题目导致 token 截断、JSON 解析失败
+	// 分批生成，避免一次性输出过多题目导致 token 截断、JSON 解析失败。
+	// 关键修复（成功率提升）：单批解析失败不再整批丢弃，
+	// 而是降级处理——记录错误、跳过本批、继续下一批，
+	// 直到凑够 count 道；若实在凑不够，把已生成的返回并附带 partial=true。
 	promptCtx := generatePromptContext{
 		Subject:        subjectName,
 		Chapter:        chapterName,
@@ -103,6 +106,7 @@ func (s *AiService) callAIAndParse(config dto.AiApiConfig, subjectID, chapterID 
 	}
 
 	var generated []aiGeneratedItem
+	var lastBatchErr error
 	for remaining := count; remaining > 0; {
 		batch := promptCtx.BatchSize()
 		if remaining < batch {
@@ -110,13 +114,29 @@ func (s *AiService) callAIAndParse(config dto.AiApiConfig, subjectID, chapterID 
 		}
 		items, err := s.generateWithRetry(config, promptCtx, batch)
 		if err != nil {
-			return nil, err
+			// 单批失败不致命：记下错误，跳过本批，继续后续批次
+			lastBatchErr = err
+			// 至少推进 1 题的步进，避免因 BatchSize 算大而无限循环
+			if batch < 1 {
+				batch = 1
+			}
+			remaining -= batch
+			continue
 		}
 		if len(items) == 0 {
-			return nil, fmt.Errorf("AI 未生成任何题目")
+			remaining -= batch
+			continue
 		}
 		generated = append(generated, items...)
 		remaining = count - len(generated)
+	}
+
+	if len(generated) == 0 {
+		// 一道题都没拿到，必须报错
+		if lastBatchErr != nil {
+			return nil, fmt.Errorf("AI 出题失败（多次重试仍无法解析）: %w", lastBatchErr)
+		}
+		return nil, fmt.Errorf("AI 未生成任何题目")
 	}
 
 	if len(generated) > count {
@@ -164,9 +184,10 @@ func (c generatePromptContext) BatchSize() int {
 	}
 }
 
-// generateWithRetry 单次生成一批题目，解析失败时自动重试一次（追加纠错提示）
+// generateWithRetry 单次生成一批题目，解析失败时自动重试（最多 maxAttempts 次）。
+// 每次重试会在 prompt 末尾追加不同的纠错指令，避免 LLM 重复同样错误。
 func (s *AiService) generateWithRetry(config dto.AiApiConfig, ctx generatePromptContext, count int) ([]aiGeneratedItem, error) {
-	const maxAttempts = 2
+	const maxAttempts = 3
 	var lastErr error
 	lastContent := ""
 
@@ -176,7 +197,12 @@ func (s *AiService) generateWithRetry(config dto.AiApiConfig, ctx generatePrompt
 	for attempt := 0; attempt < maxAttempts; attempt++ {
 		prompt := buildGeneratePrompt(ctx.Subject, ctx.Chapter, ctx.TypeCode, ctx.Difficulty, count)
 		if attempt > 0 {
-			prompt += "\n\n注意：你上一条回复没有被正确解析。请重新只输出一个完整、合法、可直接被 JSON 解析的数组，元素数量严格为上方要求的数量，不要输出任何其他文字或代码块。"
+			prompt += "\n\n【重要】你上一条回复无法被 JSON 解析，请严格遵守：\n" +
+				"1. 只输出一个完整、合法、可直接被 JSON 解析的数组；\n" +
+				"2. 禁止使用 markdown 代码块（不要以 ``` 开头或结尾）；\n" +
+				"3. 禁止任何说明文字、问候语、注释；\n" +
+				"4. 元素数量严格为上方要求的 " + fmt.Sprintf("%d", count) + " 道；\n" +
+				"5. 字符串内的换行必须用 \\n 转义、双引号必须用 \\\" 转义。"
 		}
 
 		resp, err := llm.Chat(context.Background(), config.Provider, config.BaseURL, config.ApiKey, llm.ChatRequest{
@@ -194,6 +220,7 @@ func (s *AiService) generateWithRetry(config dto.AiApiConfig, ctx generatePrompt
 		content := cleanJSONResponse(resp.Choices[0].Message.Content)
 		lastContent = content
 
+		// 优先尝试直接解析
 		var items []aiGeneratedItem
 		if e := json.Unmarshal([]byte(content), &items); e == nil && len(items) > 0 {
 			return items, nil
@@ -201,7 +228,7 @@ func (s *AiService) generateWithRetry(config dto.AiApiConfig, ctx generatePrompt
 			lastErr = e
 		}
 
-		// 内容混杂说明文字或被截断时，尝试提取最完整的 JSON 数组
+		// 解析失败：尝试从混杂内容中提取 JSON 数组
 		if retry := extractJSONArray(content); retry != content {
 			var items2 []aiGeneratedItem
 			if e2 := json.Unmarshal([]byte(retry), &items2); e2 == nil && len(items2) > 0 {
@@ -239,7 +266,7 @@ func llmTimeoutFor(typeCode, difficulty string) time.Duration {
 	}
 }
 
-func (s *AiService) saveGenerated(userID, subjectID, chapterID uint, items []aiGeneratedItem) (*dto.GenerateQuestionsResp, error) {
+func (s *AiService) saveGenerated(userID, subjectID, chapterID uint, batchID string, items []aiGeneratedItem) (*dto.GenerateQuestionsResp, error) {
 	now := time.Now()
 	aiRecords := make([]model.AiGeneratedQuestion, len(items))
 	questions := make([]model.Question, len(items))
@@ -266,6 +293,7 @@ func (s *AiService) saveGenerated(userID, subjectID, chapterID uint, items []aiG
 			UserID:         userID,
 			SubjectID:      subjectID,
 			ChapterID:      chapterID,
+			BatchID:        batchID,
 			Type:           item.Type,
 			Difficulty:     item.Difficulty,
 			Content:        item.Content,
@@ -336,7 +364,16 @@ func (s *AiService) SubmitGenerateAsync(userID uint, req dto.GenerateQuestionsRe
 }
 
 // runGenerateTask 后台执行：调 LLM → 解析 → 入库 → 写通知
+// 使用 defer recover 兜底，避免 panic 导致任务卡在 running 且未发通知。
 func (s *AiService) runGenerateTask(userID uint, taskID, subjectName string, req dto.GenerateQuestionsReq) {
+	defer func() {
+		if r := recover(); r != nil {
+			errMsg := fmt.Sprintf("AI 出题后台任务异常: %v", r)
+			SetAITaskFailed(taskID, errMsg)
+			s.pushGenerateFailedNotification(userID, taskID, errMsg)
+		}
+	}()
+
 	SetAITaskRunning(taskID)
 
 	items, err := s.callAIAndParse(req.ApiConfig, req.SubjectID, req.ChapterID, req.Types, req.Difficulty, req.Count)
@@ -346,7 +383,7 @@ func (s *AiService) runGenerateTask(userID uint, taskID, subjectName string, req
 		return
 	}
 
-	resp, err := s.saveGenerated(userID, req.SubjectID, req.ChapterID, items)
+	resp, err := s.saveGenerated(userID, req.SubjectID, req.ChapterID, taskID, items)
 	if err != nil {
 		SetAITaskFailed(taskID, err.Error())
 		s.pushGenerateFailedNotification(userID, taskID, "题目入库失败: "+err.Error())
@@ -397,6 +434,149 @@ func (s *AiService) GetGenerateTask(taskID string) (*dto.AsyncGenerateTask, erro
 // 当前内存 store 没有按 userID 索引，这里返回全部最新 20 条（鉴权由路由处理）
 func (s *AiService) ListGenerateTasks() []*dto.AsyncGenerateTask {
 	return ListAITasksByUser(0, 20)
+}
+
+// ListGenerateHistory 列出某用户的 AI 生成题历史批次（按时间倒序）
+func (s *AiService) ListGenerateHistory(userID uint, limit int) (*dto.AiBatchHistoryResp, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	summaries, err := s.aiRepo.ListBatchSummaries(userID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询 AI 生成历史失败: %w", err)
+	}
+
+	// 收集所有批次的题目 ID，一次性查询最近一次答题对错
+	allIDs := make([]uint, 0, 64)
+	idsByBatch := make([][]uint, len(summaries))
+	for i, sm := range summaries {
+		ids := parseQuestionIDs(sm.QuestionIDs)
+		idsByBatch[i] = ids
+		allIDs = append(allIDs, ids...)
+	}
+	answerMap, err := s.aiRepo.BatchAnswerMap(userID, allIDs)
+	if err != nil {
+		return nil, fmt.Errorf("查询批次答题情况失败: %w", err)
+	}
+
+	list := make([]dto.AiBatchHistoryItem, len(summaries))
+	for i, sm := range summaries {
+		answered, correct := countBatchAnswers(idsByBatch[i], answerMap)
+		item := dto.AiBatchHistoryItem{
+			BatchID:        sm.BatchID,
+			SubjectID:      sm.SubjectID,
+			ChapterID:      sm.ChapterID,
+			Type:           sm.Type,
+			TypeLabel:      typeLabelCN(sm.Type),
+			Difficulty:     sm.Difficulty,
+			Count:          sm.Count,
+			CreatedAt:      sm.CreatedAt.Format("2006-01-02 15:04"),
+			AnsweredCount:  answered,
+			CorrectCount:   correct,
+			KnowledgePoints: splitKnowledgePoints(sm.KnowledgePoints),
+		}
+		if sub, err := s.subjectRepo.FindByID(sm.SubjectID); err == nil {
+			item.SubjectName = sub.Name
+		}
+		if sm.ChapterID > 0 {
+			if ch, err := s.chapterRepo.FindByID(sm.ChapterID); err == nil {
+				item.ChapterName = ch.Name
+			} else {
+				item.ChapterName = "不限定"
+			}
+		} else {
+			item.ChapterName = "不限定"
+		}
+		list[i] = item
+	}
+
+	return &dto.AiBatchHistoryResp{List: list, Total: int64(len(list))}, nil
+}
+
+// parseQuestionIDs 解析 GROUP_CONCAT(question_id) 产生的逗号分隔 ID 串
+func parseQuestionIDs(s string) []uint {
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	ids := make([]uint, 0, len(parts))
+	for _, p := range parts {
+		var id uint64
+		fmt.Sscanf(strings.TrimSpace(p), "%d", &id)
+		if id > 0 {
+			ids = append(ids, uint(id))
+		}
+	}
+	return ids
+}
+
+// countBatchAnswers 统计一批题目的已答数与答对数
+func countBatchAnswers(ids []uint, answerMap map[uint]bool) (answered, correct int64) {
+	for _, id := range ids {
+		if ok, has := answerMap[id]; has {
+			answered++
+			if ok {
+				correct++
+			}
+		}
+	}
+	return answered, correct
+}
+
+// splitKnowledgePoints 解析 | 分隔的知识点，去重（保留顺序），最多返回前 3 个
+func splitKnowledgePoints(s string) []string {
+	if s == "" {
+		return nil
+	}
+	seen := make(map[string]struct{})
+	var out []string
+	for _, p := range strings.Split(s, "|") {
+		k := strings.TrimSpace(p)
+		if k == "" {
+			continue
+		}
+		if _, ok := seen[k]; ok {
+			continue
+		}
+		seen[k] = struct{}{}
+		out = append(out, k)
+		if len(out) >= 3 {
+			break
+		}
+	}
+	return out
+}
+
+// GetGenerateBatch 获取某用户某批次生成的全部题目，用于历史记录重新答题
+func (s *AiService) GetGenerateBatch(userID uint, batchID string) (*dto.GenerateQuestionsResp, error) {
+	if batchID == "" {
+		return nil, fmt.Errorf("batch_id 不能为空")
+	}
+	records, err := s.aiRepo.FindByBatch(userID, batchID)
+	if err != nil {
+		return nil, fmt.Errorf("查询生成批次失败: %w", err)
+	}
+	if len(records) == 0 {
+		return nil, fmt.Errorf("未找到该批生成题目")
+	}
+
+	questions := make([]dto.AiGeneratedQuestionResp, len(records))
+	for i, r := range records {
+		questions[i] = dto.AiGeneratedQuestionResp{
+			ID:             r.QuestionID,
+			Type:           r.Type,
+			Difficulty:     r.Difficulty,
+			Content:        r.Content,
+			CaseMaterial:   r.CaseMaterial,
+			Options:        r.Options,
+			BlankOptions:   "[]",
+			Answer:         r.Answer,
+			Analysis:       r.Analysis,
+			KnowledgePoint: r.KnowledgePoint,
+		}
+	}
+
+	return &dto.GenerateQuestionsResp{Questions: questions}, nil
 }
 
 func (s *AiService) StartAiExam(userID uint, req dto.StartAiExamReq) (*dto.StartExamResp, error) {
@@ -546,8 +726,9 @@ type aiGeneratedItem struct {
 }
 
 // buildGeneratePrompt 按题型（typeCode）选择对应的 5 套模板之一。
-// 章节命中大纲时注入细分考点清单；未命中（如选了"不限定章节"或非系统分析师科目）
-// 则用通用提示词，避免硬塞无关考点。
+// 命中具体章节时注入细分考点清单；未命中（如选了"不限定章节"）则用
+// 该科目的章→节两层大纲；该科目未维护大纲时，调用 fallbackSubjectGuard
+// 注入"按所选科目考纲"硬约束，避免 LLM 串科目。
 //
 // 参数：
 //   subject   - 科目名（如"系统分析师"）
@@ -558,31 +739,27 @@ type aiGeneratedItem struct {
 func buildGeneratePrompt(subject, chapter, typeCode, difficulty string, count int) string {
 	countStr := fmt.Sprintf("%d", count)
 
-	// 1. 准备考点清单（仅在系统分析师 + 已维护大纲章节时注入）
-	var kpBlock string
+	// 1. 准备考点清单 + 科目录入硬约束
+	var kpBlock, subjectGuard string
+	subjectChapters := getChaptersForSubject(subject)
+
 	if hasChapterSyllabus(subject) {
-		if ch := getChapterByName(chapter); ch != nil {
+		// 大纲命中的科目：按章节命中与否注入不同粒度
+		if ch := getChapterByNameForSubject(subject, chapter); ch != nil {
 			kpBlock = formatChapterKPBlock(ch)
+		} else if len(subjectChapters) > 0 {
+			// 选了"不限定章节"：只给章→节两层，避免 prompt 体积过大（4-5K tokens）
+			kpBlock = formatChapterOutlineBlock(subjectChapters)
 		} else {
-			// 章节名不在大纲中（如选了"不限定章节"）：只给章→节两层，
-			// 不展开全部考点，避免 prompt 体积过大（4-5K tokens）导致 LLM 响应超时。
-			// 让 LLM 自行从这些节中任选知识点命制，knowledge_point 字段用细分名即可。
-			var b []byte
-			b = append(b, "未限定具体章节，请从「系统分析师」以下章→节中任选知识点命制（knowledge_point 填写细分考点名）：\n"...)
-			for _, ch := range systemAnalystChapters {
-				b = append(b, "- "...)
-				b = append(b, ch.Name...)
-				b = append(b, '\n')
-				for _, sec := range ch.Sections {
-					b = append(b, "    · "...)
-					b = append(b, sec.Name...)
-					b = append(b, '\n')
-				}
-			}
-			kpBlock = string(b)
+			kpBlock = "（该科目暂无章节数据，请按官方考纲常见考点命制。）"
 		}
 	} else {
-		kpBlock = "（科目「" + subject + "」暂未维护考点大纲，请按该科目官方考试大纲常见考点命制。）"
+		// 未维护大纲的科目：科目录入硬约束 + 通用提示
+		guard := fallbackSubjectGuard(subject)
+		if guard != "" {
+			subjectGuard = guard + "\n\n"
+		}
+		kpBlock = "（科目「" + subject + "」未细化考点清单，请严格遵守上方【科目录入·硬约束】。）"
 	}
 
 	// 2. 选择 Few-shot 示例 + 输出格式
@@ -605,38 +782,66 @@ func buildGeneratePrompt(subject, chapter, typeCode, difficulty string, count in
 		outputFormat = outputFormatSingle
 	}
 
-	// 3. 拼装：通用头部 + Few-shot + 输出格式约束
-	head := commonPromptHead(chapter, kpBlock, difficulty, countStr)
-	return head + "\n" + fewShot + "\n" + outputFormat
+	// 3. 拼装：科目录入硬约束（若有） + 通用头部 + Few-shot + 输出格式约束
+	head := commonPromptHead(subject, chapter, kpBlock, difficulty, countStr)
+	return subjectGuard + head + "\n" + fewShot + "\n" + outputFormat
 }
 
+// cleanJSONResponse 清洗 LLM 返回中常见的 markdown 包裹和首尾空白。
+// 支持 ```json / ```JSON / ``` 等大小写变体，以及 LLM 偶尔输出的"以下是 JSON"等前缀。
 func cleanJSONResponse(content string) string {
 	content = strings.TrimSpace(content)
-	content = strings.TrimPrefix(content, "```json")
-	content = strings.TrimPrefix(content, "```")
-	content = strings.TrimSuffix(content, "```")
+	lower := strings.ToLower(content)
+	// 处理 ```json / ```JSON / ``` 开头
+	switch {
+	case strings.HasPrefix(lower, "```json"):
+		content = strings.TrimSpace(content[7:])
+	case strings.HasPrefix(lower, "```"):
+		content = strings.TrimSpace(content[3:])
+	}
+	// 处理 ``` 结尾
+	lower = strings.ToLower(content)
+	if strings.HasSuffix(lower, "```") {
+		content = strings.TrimSpace(content[:len(content)-3])
+	}
 	content = strings.TrimSpace(content)
 	return content
 }
 
 // extractJSONArray 从混有说明文字/被截断的返回内容中，尽力提取出一段完整的 JSON 数组。
-// 找不到合法数组时返回原始内容。
+// 优先找最外层 [...]；找不到合法数组时返回原始内容。
 func extractJSONArray(content string) string {
 	trimmed := strings.TrimSpace(content)
 	if trimmed == "" {
 		return content
 	}
+	// 1) 优先匹配最外层 [ ... ]
 	start := strings.Index(trimmed, "[")
 	end := strings.LastIndex(trimmed, "]")
-	if start < 0 || end < 0 || end <= start {
-		return content
+	if start >= 0 && end > start {
+		candidate := []byte(trimmed[start : end+1])
+		var probe []json.RawMessage
+		if err := json.Unmarshal(candidate, &probe); err == nil {
+			return trimmed[start : end+1]
+		}
+		// 最外层 [ ... ] 不是合法数组（可能因为 [...] 在说明文字里嵌套），
+		// 退化到从 start 开始用括号配对找第一个能解析的 [...] 段
+		for i := start; i < len(trimmed); i++ {
+			if trimmed[i] != '[' {
+				continue
+			}
+			for j := len(trimmed) - 1; j > i; j-- {
+				if trimmed[j] != ']' {
+					continue
+				}
+				cand := []byte(trimmed[i : j+1])
+				if json.Unmarshal(cand, &probe) == nil {
+					return trimmed[i : j+1]
+				}
+			}
+		}
 	}
-	candidate := []byte(trimmed[start : end+1])
-	var probe []json.RawMessage
-	if err := json.Unmarshal(candidate, &probe); err != nil {
-		return content
-	}
-	return trimmed[start : end+1]
+	return content
 }
 
 func typeLabelCN(t string) string {

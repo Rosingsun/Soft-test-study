@@ -12,12 +12,18 @@ import BaseCard from '@/components/common/BaseCard.vue'
 import BaseBadge from '@/components/common/BaseBadge.vue'
 import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
+import BaseTabs from '@/components/common/BaseTabs.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
 const list = ref<WrongQuestionResp[]>([])
 const loading = ref(true)
 const error = ref('')
+
+// 来源筛选：全部 / 真题 / AI
+const sourceFilter = ref<'all' | 'real' | 'ai'>('all')
+// 排序：按答错次数（默认）/ 最近错误时间
+const sortBy = ref<'wrong_count' | 'last_wrong_at'>('wrong_count')
 
 const subtitle = computed(() => (list.value.length ? `共 ${list.value.length} 道错题` : ''))
 
@@ -26,7 +32,7 @@ async function loadWrongQuestions() {
   error.value = ''
   try {
     const subjectId = auth.selectedSubjectId || undefined
-    list.value = await listWrongQuestions(subjectId)
+    list.value = await listWrongQuestions(subjectId, sourceFilter.value, sortBy.value)
   } catch (e) {
     error.value = (e as Error).message
   } finally {
@@ -36,6 +42,7 @@ async function loadWrongQuestions() {
 
 onMounted(loadWrongQuestions)
 watch(() => auth.selectedSubjectId, loadWrongQuestions)
+watch([sourceFilter, sortBy], loadWrongQuestions)
 
 async function handleRemove(questionId: number) {
   try {
@@ -68,6 +75,36 @@ const typeBadges: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'de
       </template>
     </BasePageHeader>
 
+    <!-- 筛选：来源 + 排序 -->
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <BaseTabs
+        v-model="sourceFilter"
+        variant="pill"
+        size="sm"
+        :tabs="[
+          { label: '全部', value: 'all' },
+          { label: '真题', value: 'real' },
+          { label: 'AI', value: 'ai' },
+        ]"
+      />
+      <div class="inline-flex items-center gap-1 rounded-full bg-gray-100/70 p-1 ring-1 ring-inset ring-gray-200/60">
+        <button
+          v-for="opt in [
+            { label: '按答错次数', value: 'wrong_count' },
+            { label: '按最近错误', value: 'last_wrong_at' },
+          ]"
+          :key="opt.value"
+          class="cursor-pointer rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200"
+          :class="sortBy === opt.value
+            ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-gray-200/60'
+            : 'text-gray-500 hover:bg-white/70 hover:text-gray-800'"
+          @click="sortBy = opt.value as 'wrong_count' | 'last_wrong_at'"
+        >
+          {{ opt.label }}
+        </button>
+      </div>
+    </div>
+
     <BaseSkeleton v-if="loading" variant="list" :count="4" />
 
     <div v-else-if="error" class="rounded-xl border border-gray-100 bg-white shadow-sm">
@@ -99,6 +136,9 @@ const typeBadges: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'de
         <div class="flex flex-wrap items-center gap-2">
           <BaseBadge :type="typeBadges[w.type]">
             {{ typeLabel(w.type) }}
+          </BaseBadge>
+          <BaseBadge :type="w.source === 'ai' ? 'info' : 'success'">
+            {{ w.source === 'ai' ? 'AI' : '真题' }}
           </BaseBadge>
           <span class="text-xs text-gray-400">
             错 {{ w.wrong_count }} · 对 {{ w.correct_count }}

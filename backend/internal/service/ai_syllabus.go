@@ -1,5 +1,7 @@
 package service
 
+import "strings"
+
 // systemAnalystSyllabus 系统分析师《系统分析师教程（第 2 版）》综合知识 9 章
 // 章→节→考点 三级结构。该数据用于在 AI 出题 prompt 中精准注入考点清单，
 // 让 LLM 知道"当前是哪一章、该章有哪些必考细分知识点"，
@@ -16,14 +18,14 @@ type SAPoint struct {
 
 // SASection 章节下的一个节
 type SASection struct {
-	Name   string     // 节名
-	Points []SAPoint  // 节内的考点
+	Name   string    // 节名
+	Points []SAPoint // 节内的考点
 }
 
 // SAChapter 章
 type SAChapter struct {
-	Name     string       // 章名（与数据库 chapter.name 一致）
-	Sections []SASection  // 章下的节
+	Name     string      // 章名（与数据库 chapter.name 一致）
+	Sections []SASection // 章下的节
 }
 
 // systemAnalystChapters 9 章完整大纲（章→节→考点）。
@@ -419,11 +421,206 @@ var systemAnalystChapters = []SAChapter{
 	},
 }
 
+// 软件设计师精简大纲（章→节 2 层，每节放 1~2 个核心考点关键词）。
+// 命中后 prompt 会注入「章→节→核心考点」，比纯文字约束更精准。
+var softwareDesignerChapters = []SAChapter{
+	{Name: "计算机组成与体系结构", Sections: []SASection{
+		{Name: "数据的表示与运算", Points: []SAPoint{{Section: "数据表示", Name: "进制转换与原码/反码/补码"}}},
+		{Name: "存储系统", Points: []SAPoint{{Section: "存储", Name: "Cache 映射与主存编址"}}},
+		{Name: "指令系统与流水线", Points: []SAPoint{{Section: "流水线", Name: "指令流水线与吞吐率"}}},
+	}},
+	{Name: "操作系统", Sections: []SASection{
+		{Name: "进程管理", Points: []SAPoint{{Section: "进程", Name: "进程同步与死锁"}}},
+		{Name: "存储管理", Points: []SAPoint{{Section: "存储", Name: "分页存储与页面置换"}}},
+		{Name: "文件系统", Points: []SAPoint{{Section: "文件", Name: "文件组织与目录结构"}}},
+	}},
+	{Name: "程序设计语言基础", Sections: []SASection{
+		{Name: "文法与语言", Points: []SAPoint{{Section: "文法", Name: "正规式与上下文无关文法"}}},
+		{Name: "编译过程", Points: []SAPoint{{Section: "编译", Name: "词法分析与语法分析"}}},
+	}},
+	{Name: "数据结构与算法", Sections: []SASection{
+		{Name: "线性结构", Points: []SAPoint{{Section: "线性表", Name: "链表与栈队列"}}},
+		{Name: "树与二叉树", Points: []SAPoint{{Section: "树", Name: "二叉树遍历与 Huffman"}}},
+		{Name: "图", Points: []SAPoint{{Section: "图", Name: "最小生成树与最短路径"}}},
+		{Name: "排序与查找", Points: []SAPoint{{Section: "排序", Name: "排序算法复杂度对比"}}},
+	}},
+	{Name: "软件工程", Sections: []SASection{
+		{Name: "软件过程与开发模型", Points: []SAPoint{{Section: "过程", Name: "瀑布/增量/敏捷"}}},
+		{Name: "需求与设计", Points: []SAPoint{{Section: "设计", Name: "结构化与面向对象设计"}}},
+		{Name: "测试", Points: []SAPoint{{Section: "测试", Name: "白盒/黑盒测试用例设计"}}},
+		{Name: "维护与重构", Points: []SAPoint{{Section: "维护", Name: "维护类型与 McCabe 复杂度"}}},
+	}},
+	{Name: "面向对象技术", Sections: []SASection{
+		{Name: "面向对象基础", Points: []SAPoint{{Section: "OO", Name: "封装/继承/多态"}}},
+		{Name: "UML 与设计模式", Points: []SAPoint{{Section: "UML", Name: "UML 图与 GoF 模式"}}},
+	}},
+	{Name: "数据库系统", Sections: []SASection{
+		{Name: "关系模型与 SQL", Points: []SAPoint{{Section: "SQL", Name: "SQL DDL/DML/DQL"}}},
+		{Name: "范式与设计", Points: []SAPoint{{Section: "范式", Name: "1NF/2NF/3NF/BCNF"}}},
+		{Name: "事务与并发", Points: []SAPoint{{Section: "事务", Name: "ACID 与封锁协议"}}},
+	}},
+	{Name: "计算机网络", Sections: []SASection{
+		{Name: "网络体系结构", Points: []SAPoint{{Section: "网络", Name: "OSI/TCP-IP 模型"}}},
+		{Name: "协议与 IP", Points: []SAPoint{{Section: "IP", Name: "IP 地址与子网划分"}}},
+		{Name: "应用层", Points: []SAPoint{{Section: "应用", Name: "HTTP/DNS/FTP/SMTP"}}},
+	}},
+	{Name: "信息安全", Sections: []SASection{
+		{Name: "加密与签名", Points: []SAPoint{{Section: "加密", Name: "对称/非对称加密与摘要"}}},
+		{Name: "网络安全", Points: []SAPoint{{Section: "安全", Name: "防火墙/IDS/IPS 与 Web 攻击"}}},
+	}},
+}
+
+// 信息系统项目管理师精简大纲（10 大知识领域 + 5 大过程组）
+var projectManagerChapters = []SAChapter{
+	{Name: "项目立项与整合", Sections: []SASection{
+		{Name: "立项管理", Points: []SAPoint{{Section: "立项", Name: "可行性研究与招投标"}}},
+		{Name: "整体管理", Points: []SAPoint{{Section: "整合", Name: "章程、初步范围说明书、变更控制"}}},
+	}},
+	{Name: "项目范围与进度", Sections: []SASection{
+		{Name: "范围管理", Points: []SAPoint{{Section: "范围", Name: "WBS 分解与范围基准"}}},
+		{Name: "进度管理", Points: []SAPoint{{Section: "进度", Name: "关键路径与 PERT 三点估算"}}},
+	}},
+	{Name: "项目成本与质量", Sections: []SASection{
+		{Name: "成本管理", Points: []SAPoint{{Section: "成本", Name: "挣值分析 PV/EV/AC/CPI/SPI"}}},
+		{Name: "质量管理", Points: []SAPoint{{Section: "质量", Name: "七种工具与质量保证"}}},
+	}},
+	{Name: "项目资源与沟通", Sections: []SASection{
+		{Name: "资源管理", Points: []SAPoint{{Section: "资源", Name: "团队建设与冲突管理"}}},
+		{Name: "沟通管理", Points: []SAPoint{{Section: "沟通", Name: "沟通模型与干系人管理"}}},
+	}},
+	{Name: "项目风险与采购", Sections: []SASection{
+		{Name: "风险管理", Points: []SAPoint{{Section: "风险", Name: "风险识别、定性/定量分析、应对"}}},
+		{Name: "采购管理", Points: []SAPoint{{Section: "采购", Name: "合同类型与招投标流程"}}},
+	}},
+	{Name: "项目绩效与收尾", Sections: []SASection{
+		{Name: "绩效域", Points: []SAPoint{{Section: "绩效", Name: "PMBOK 8 大绩效域"}}},
+		{Name: "收尾管理", Points: []SAPoint{{Section: "收尾", Name: "合同收尾与经验教训"}}},
+	}},
+	{Name: "信息系统基础", Sections: []SASection{
+		{Name: "信息化与系统", Points: []SAPoint{{Section: "信息化", Name: "信息系统生命周期与 ERP/CRM/SCM"}}},
+		{Name: "安全与运维", Points: []SAPoint{{Section: "运维", Name: "ITIL、配置管理与变更控制"}}},
+	}},
+	{Name: "管理科学基础", Sections: []SASection{
+		{Name: "运筹学", Points: []SAPoint{{Section: "运筹", Name: "线性规划与最短路径"}}},
+		{Name: "决策分析", Points: []SAPoint{{Section: "决策", Name: "决策树与盈亏平衡分析"}}},
+	}},
+}
+
+// 系统架构设计师精简大纲
+var architectDesignerChapters = []SAChapter{
+	{Name: "操作系统与硬件基础", Sections: []SASection{
+		{Name: "操作系统", Points: []SAPoint{{Section: "OS", Name: "进程/存储/文件系统"}}},
+		{Name: "计算机体系结构", Points: []SAPoint{{Section: "体系", Name: "CISC/RISC、流水线、Cache"}}},
+	}},
+	{Name: "软件架构基础", Sections: []SASection{
+		{Name: "架构概念", Points: []SAPoint{{Section: "架构", Name: "架构 4+1 视图与生命周期"}}},
+		{Name: "架构风格", Points: []SAPoint{{Section: "风格", Name: "分层/管道-过滤器/MVC/微服务"}}},
+		{Name: "设计模式", Points: []SAPoint{{Section: "模式", Name: "GoF 模式与架构模式"}}},
+	}},
+	{Name: "架构设计方法", Sections: []SASection{
+		{Name: "需求与领域", Points: []SAPoint{{Section: "领域", Name: "领域驱动设计 DDD"}}},
+		{Name: "架构评估", Points: []SAPoint{{Section: "评估", Name: "ATAM/SAAM/CBAM"}}},
+	}},
+	{Name: "分布式系统架构", Sections: []SASection{
+		{Name: "分布式理论", Points: []SAPoint{{Section: "分布", Name: "CAP/BASE/最终一致"}}},
+		{Name: "微服务", Points: []SAPoint{{Section: "微服务", Name: "服务治理、限流熔断、Saga"}}},
+		{Name: "中间件", Points: []SAPoint{{Section: "中间件", Name: "消息队列/缓存/分布式事务"}}},
+	}},
+	{Name: "系统可靠性与安全", Sections: []SASection{
+		{Name: "可靠性", Points: []SAPoint{{Section: "可靠性", Name: "冗余/容错/故障转移"}}},
+		{Name: "信息安全架构", Points: []SAPoint{{Section: "安全", Name: "PKI/访问控制/审计"}}},
+	}},
+	{Name: "数据库与持久化", Sections: []SASection{
+		{Name: "数据库架构", Points: []SAPoint{{Section: "DB", Name: "分库分表/读写分离/连接池"}}},
+		{Name: "大数据架构", Points: []SAPoint{{Section: "大数据", Name: "Hadoop/Kafka/数据湖"}}},
+	}},
+	{Name: "系统性能与运维", Sections: []SASection{
+		{Name: "性能优化", Points: []SAPoint{{Section: "性能", Name: "负载均衡/CDN/缓存策略"}}},
+		{Name: "运维架构", Points: []SAPoint{{Section: "运维", Name: "DevOps/监控/日志"}}},
+	}},
+	{Name: "未来架构趋势", Sections: []SASection{
+		{Name: "云原生", Points: []SAPoint{{Section: "云", Name: "容器/Service Mesh/Serverless"}}},
+		{Name: "AI 架构", Points: []SAPoint{{Section: "AI", Name: "MLOps 与智能应用架构"}}},
+	}},
+}
+
+// 网络工程师精简大纲
+var networkEngineerChapters = []SAChapter{
+	{Name: "计算机网络基础", Sections: []SASection{
+		{Name: "体系结构", Points: []SAPoint{{Section: "体系", Name: "OSI/TCP-IP 模型"}}},
+		{Name: "编码与传输", Points: []SAPoint{{Section: "传输", Name: "曼彻斯特编码与多路复用"}}},
+	}},
+	{Name: "数据链路层", Sections: []SASection{
+		{Name: "差错控制", Points: []SAPoint{{Section: "差错", Name: "CRC 校验与海明码"}}},
+		{Name: "介质访问", Points: []SAPoint{{Section: "MAC", Name: "CSMA/CD 与以太网帧结构"}}},
+		{Name: "交换技术", Points: []SAPoint{{Section: "交换", Name: "VLAN/STP/Trunk"}}},
+	}},
+	{Name: "网络层", Sections: []SASection{
+		{Name: "IP 地址", Points: []SAPoint{{Section: "IP", Name: "子网划分与 CIDR"}}},
+		{Name: "路由协议", Points: []SAPoint{{Section: "路由", Name: "RIP/OSPF/BGP"}}},
+		{Name: "ICMP 与 ARP", Points: []SAPoint{{Section: "协议", Name: "ICMP/ARP/DHCP"}}},
+	}},
+	{Name: "传输层与应用层", Sections: []SASection{
+		{Name: "TCP/UDP", Points: []SAPoint{{Section: "传输", Name: "三次握手/四次挥手/拥塞控制"}}},
+		{Name: "应用协议", Points: []SAPoint{{Section: "应用", Name: "HTTP/DNS/FTP/SMTP/SNMP"}}},
+	}},
+	{Name: "网络安全", Sections: []SASection{
+		{Name: "加密与签名", Points: []SAPoint{{Section: "加密", Name: "对称/非对称/数字签名"}}},
+		{Name: "防火墙与 VPN", Points: []SAPoint{{Section: "安全", Name: "防火墙/IPSec/SSL VPN"}}},
+		{Name: "入侵检测", Points: []SAPoint{{Section: "IDS", Name: "IDS/IPS 与蜜罐"}}},
+	}},
+	{Name: "网络管理与运维", Sections: []SASection{
+		{Name: "网络管理", Points: []SAPoint{{Section: "管理", Name: "SNMP/RMON"}}},
+		{Name: "故障排查", Points: []SAPoint{{Section: "故障", Name: "ping/traceroute/抓包分析"}}},
+	}},
+	{Name: "广域网与接入", Sections: []SASection{
+		{Name: "WAN 技术", Points: []SAPoint{{Section: "WAN", Name: "PPP/HDLC/帧中继/MPLS"}}},
+		{Name: "接入技术", Points: []SAPoint{{Section: "接入", Name: "xDSL/PON/无线接入"}}},
+	}},
+	{Name: "网络规划与设计", Sections: []SASection{
+		{Name: "网络规划", Points: []SAPoint{{Section: "规划", Name: "需求分析与分级设计"}}},
+		{Name: "结构化布线", Points: []SAPoint{{Section: "布线", Name: "综合布线与机房"}}},
+	}},
+	{Name: "服务器与操作系统", Sections: []SASection{
+		{Name: "Windows Server", Points: []SAPoint{{Section: "Win", Name: "AD/DNS/DHCP 配置"}}},
+		{Name: "Linux", Points: []SAPoint{{Section: "Linux", Name: "常用命令与网络配置"}}},
+	}},
+	{Name: "新技术与趋势", Sections: []SASection{
+		{Name: "IPv6", Points: []SAPoint{{Section: "IPv6", Name: "IPv6 地址与过渡技术"}}},
+		{Name: "SDN/SD-WAN", Points: []SAPoint{{Section: "SDN", Name: "OpenFlow 与软件定义网络"}}},
+	}},
+}
+
+// subjectSyllabusMap 科目→大纲 映射。
+// 命中此 map 的科目，prompt 会注入章→节→考点 三级详细清单。
+// 未命中的科目走 fallbackSubjectGuard（按所选科目的典型考域硬约束 LLM）。
+var subjectSyllabusMap = map[string][]SAChapter{
+	"系统分析师":     systemAnalystChapters,
+	"软件设计师":     softwareDesignerChapters,
+	"信息系统项目管理师": projectManagerChapters,
+	"系统架构设计师":   architectDesignerChapters,
+	"网络工程师":     networkEngineerChapters,
+}
+
 // getChapterByName 按章节名查找大纲数据，未找到返回 nil。
+// 名称做 TrimSpace 处理，避免 seed 数据带前后空白时匹配失败。
 func getChapterByName(name string) *SAChapter {
+	name = strings.TrimSpace(name)
 	for i := range systemAnalystChapters {
-		if systemAnalystChapters[i].Name == name {
+		if strings.TrimSpace(systemAnalystChapters[i].Name) == name {
 			return &systemAnalystChapters[i]
+		}
+	}
+	return nil
+}
+
+// getChapterByNameForSubject 在指定科目的大纲里按章节名查找
+func getChapterByNameForSubject(subject, chapter string) *SAChapter {
+	chs := getChaptersForSubject(subject)
+	chapter = strings.TrimSpace(chapter)
+	for i := range chs {
+		if strings.TrimSpace(chs[i].Name) == chapter {
+			return &chs[i]
 		}
 	}
 	return nil
@@ -463,12 +660,86 @@ func formatChapterKPBlock(chapter *SAChapter) string {
 	return string(b)
 }
 
-// hasChapterSyllabus 判断某科目下是否已经维护了完整的大纲。
-// 未来若扩展到「软件设计师」「系统架构设计师」等其他科目，
-// 可在本文件继续追加 map，让 buildGeneratePrompt 自动命中。
-func hasChapterSyllabus(subjectName string) bool {
-	if subjectName != "系统分析师" {
-		return false
+// formatChapterOutlineBlock 格式化"章→节"两层结构（不展开考点）
+// 用于"不限定章节"模式：避免 prompt 体积过大，又给 LLM 足够的范围参考。
+func formatChapterOutlineBlock(chapters []SAChapter) string {
+	var b []byte
+	b = append(b, "未限定具体章节，请从以下章→节中任选知识点命制（knowledge_point 填写细分考点名）：\n"...)
+	for _, ch := range chapters {
+		b = append(b, "- "...)
+		b = append(b, ch.Name...)
+		b = append(b, '\n')
+		for _, sec := range ch.Sections {
+			b = append(b, "    · "...)
+			b = append(b, sec.Name...)
+			b = append(b, '\n')
+		}
 	}
-	return true
+	return string(b)
+}
+
+// hasChapterSyllabus 判断某科目是否已维护完整的大纲。
+// 命中后 prompt 会注入章→节→考点 三级详细清单。
+// 未命中时使用 fallbackSubjectGuard 给出"按所选科目考纲"硬约束。
+func hasChapterSyllabus(subjectName string) bool {
+	_, ok := subjectSyllabusMap[strings.TrimSpace(subjectName)]
+	return ok
+}
+
+// getChaptersForSubject 返回某科目下的章列表。
+// 大纲命中的科目返回完整数据；未命中的返回空切片。
+func getChaptersForSubject(subjectName string) []SAChapter {
+	ch, ok := subjectSyllabusMap[strings.TrimSpace(subjectName)]
+	if !ok {
+		return nil
+	}
+	return ch
+}
+
+// fallbackSubjectGuard 对未维护详细大纲的科目，给出"严格按所选科目"硬约束。
+// 即使用户选了"软件设计师"，prompt 也会明确禁止 LLM 出系统分析师/网工等其他科目的题。
+func fallbackSubjectGuard(subjectName string) string {
+	s := strings.TrimSpace(subjectName)
+	if s == "" {
+		return `【科目录入】未选择科目。请立即返回一个空数组 []，不要生成任何题目。`
+	}
+	// 命中大纲的科目不走保底
+	if hasChapterSyllabus(s) {
+		return ""
+	}
+	return `【科目录入·硬约束·必读】
+1. 本次出题科目为《` + s + `》。你必须按《` + s + `》官方考试大纲范围命制题目，**严禁**串到其他科目（如系统分析师、软件设计师、网络工程师等）的考点。
+2. 典型考域（请据此判断题目是否在范围内）：
+   - ` + s + ` 通常考察：` + typicalScopeFor(s) + `
+3. 如果你无法确定某题属于《` + s + `》考纲，请改命其他题目；不要硬出与本科目无关的题。
+4. knowledge_point 字段必须填写《` + s + `》考纲内能查到的细分考点名（如该科目无明确细分考点可填"综合应用"）。`
+}
+
+// typicalScopeFor 返回某科目（未维护详细大纲）的典型考域描述。
+// 用于 fallbackSubjectGuard 作为 LLM 范围参考。
+func typicalScopeFor(subjectName string) string {
+	switch strings.TrimSpace(subjectName) {
+	case "软件设计师":
+		return "数据结构与算法、操作系统、计算机网络、数据库系统、软件工程（需求、设计、测试、面向对象）、面向对象程序设计（C++/Java）、信息安全基础、标准化与知识产权"
+	case "网络工程师":
+		return "计算机网络体系结构（OSI/TCP-IP）、局域网与广域网、TCP/IP 协议簇、路由与交换、网络安全、网络管理（SNMP）、网络规划与设计、Windows/Linux 系统管理"
+	case "信息系统项目管理师":
+		return "项目整体/范围/进度/成本/质量/资源/沟通/风险/采购/干系人 十大管理、PMBOK 过程组、挣值分析、配置管理、变更管理、信息系统生命周期、立项管理"
+	case "系统架构设计师":
+		return "架构风格（分层/微服务/事件驱动/C/S/SOA）、架构评估（ATAM/SAAM）、设计模式、信息安全架构、分布式系统架构、可靠性/可用性/可维护性、数据库架构、缓存与消息中间件"
+	case "网络规划设计师":
+		return "网络规划与设计流程、网络需求分析、逻辑与物理设计、网络优化、网络安全方案、IP 地址规划与子网划分、路由协议、园区网/广域网/数据中心网络"
+	case "数据库系统工程师":
+		return "关系数据库理论、SQL 语法、数据库设计（ER/范式）、事务与并发控制、备份与恢复、NoSQL、分布式数据库、数据仓库与数据挖掘、数据库性能优化"
+	case "信息系统管理工程师":
+		return "信息系统建设、运维管理（ITIL）、系统故障与备份、信息安全策略、人员与管理、监理与评估、数据库与网络管理基础"
+	case "程序员":
+		return "程序设计语言基础（C/Java）、数据结构、算法、软件工程基础、面向对象、操作系统基础、计算机网络基础、数据库基础"
+	case "网络管理员":
+		return "网络基础、网络设备配置（交换机/路由器）、操作系统管理（Windows/Linux）、网络安全基础、网络故障排除、局域网组建"
+	case "信息处理技术员":
+		return "信息技术基础、办公软件（Word/Excel/PPT）、信息处理实务、数据采集与分析、信息安全意识"
+	default:
+		return subjectName + " 官方考纲范围内的常见考点"
+	}
 }
