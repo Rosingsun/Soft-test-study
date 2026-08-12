@@ -32,6 +32,7 @@ const navGroups = computed(() => {
         { label: '科目导航', icon: 'book', to: '/subjects' },
         { label: '每日打卡', icon: 'checkin', to: '/check-in' },
         { label: '学习资料', icon: 'materials', to: '/materials' },
+        { label: '知识点', icon: 'knowledge', to: '/knowledge' },
       ],
     },
     {
@@ -244,6 +245,9 @@ function navigate(to: string) {
                 </template>
                 <template v-else-if="item.icon === 'plan'">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </template>
+                <template v-else-if="item.icon === 'knowledge'">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
                 </template>
               </svg>
               <span>{{ item.label }}</span>

@@ -217,24 +217,6 @@ async function handleRegister() {
           <span class="text-sm text-indigo-600">{{ selectedLevelName }} · {{ selectedSubjectName }}</span>
         </div>
 
-        <div v-if="!isAdminBypass">
-          <label class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-gray-500">
-            邀请码
-            <span class="ml-1 normal-case text-gray-400 font-normal">由管理员发放，必填</span>
-          </label>
-          <input
-            v-model="inviteCode"
-            type="text"
-            maxlength="32"
-            required
-            placeholder="请输入 12 位邀请码"
-            autocomplete="off"
-            class="block w-full rounded-xl border bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:bg-white focus:outline-none focus:ring-2 uppercase tracking-wider"
-            :class="inviteCodeError ? 'border-red-200 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 focus:border-indigo-400 focus:ring-indigo-100'"
-          />
-          <p v-if="inviteCodeError" class="mt-1.5 text-xs text-red-500">{{ inviteCodeError }}</p>
-        </div>
-
         <div>
           <label class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-gray-500">用户名</label>
           <input
@@ -331,6 +313,24 @@ async function handleRegister() {
             </button>
           </div>
           <p v-if="confirmPassword && passwordMatch" class="mt-1.5 text-xs text-red-500">{{ passwordMatch }}</p>
+        </div>
+
+        <div v-if="!isAdminBypass">
+          <label class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-gray-500">
+            邀请码
+            <span class="ml-1 normal-case text-gray-400 font-normal">由管理员发放，必填</span>
+          </label>
+          <input
+            v-model="inviteCode"
+            type="text"
+            maxlength="32"
+            required
+            placeholder="请输入 12 位邀请码"
+            autocomplete="off"
+            class="block w-full rounded-xl border bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:bg-white focus:outline-none focus:ring-2 uppercase tracking-wider"
+            :class="inviteCodeError ? 'border-red-200 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 focus:border-indigo-400 focus:ring-indigo-100'"
+          />
+          <p v-if="inviteCodeError" class="mt-1.5 text-xs text-red-500">{{ inviteCodeError }}</p>
         </div>
 
         <div class="border-t border-gray-100 pt-4">

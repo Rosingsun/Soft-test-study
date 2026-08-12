@@ -41,6 +41,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	invitationCodeRepo := repository.NewInvitationCodeRepo(db)
 
 	notifySvc := service.NewNotificationService(db)
+	knowledgePointRepo := repository.NewKnowledgePointRepo(db)
 
 	userSvc := service.NewUserService(
 		db,
@@ -91,6 +92,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	checkInSvc := service.NewCheckInService(checkInRepo, questionRepo, practiceRecordRepo, reviewSvc)
 	studyPlanSvc := service.NewStudyPlanService(studyPlanRepo, practiceRecordRepo)
 	rankingSvc := service.NewRankingService(rankingRepo, userRepo)
+	knowledgePointSvc := service.NewKnowledgePointService(knowledgePointRepo, questionRepo, subjectRepo)
 
 	// 邮件发送器：未配置 SMTP 时降级为日志发送器
 	var emailSender service.EmailSender
@@ -122,6 +124,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	studyPlanH := handler.NewStudyPlanHandler(studyPlanSvc)
 	rankingH := handler.NewRankingHandler(rankingSvc)
 	notifyH := handler.NewNotificationHandler(notifySvc)
+	knowledgePointH := handler.NewKnowledgePointHandler(knowledgePointSvc)
 
 	rateLimiter := middleware.RateLimit(5, time.Minute)
 
@@ -218,6 +221,15 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 		auth.POST("/ai/exam/start", aiRateLimiter, aiH.StartExam)
 		auth.POST("/ai/essay-score", aiRateLimiter, aiH.EssayScore)
 		auth.GET("/ai/essay-score/check", aiH.CheckEssayScore)
+		auth.POST("/ai/knowledge-points/extract", aiRateLimiter, knowledgePointH.Extract)
+
+		auth.GET("/knowledge-points", knowledgePointH.List)
+		auth.POST("/knowledge-points", knowledgePointH.Add)
+		auth.POST("/knowledge-points/batch", knowledgePointH.BatchAdd)
+		auth.GET("/knowledge-points/stats", knowledgePointH.Stats)
+		auth.PATCH("/knowledge-points/:id", knowledgePointH.Update)
+		auth.DELETE("/knowledge-points/:id", knowledgePointH.Remove)
+		auth.POST("/knowledge-points/:id/resolve-duplicate", knowledgePointH.ResolveDuplicate)
 
 		// 通知中心
 		auth.GET("/notifications", notifyH.List)

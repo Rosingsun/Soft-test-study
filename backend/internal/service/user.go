@@ -167,12 +167,12 @@ func (s *UserService) Register(req *dto.RegisterReq) (*dto.LoginResp, error) {
 
 	existing, _ := s.repo.FindByUsername(req.Username)
 	if existing != nil && existing.ID > 0 {
-		return nil, errors.New("用户名已被注册")
+		return nil, errors.New("该用户名或邮箱已被注册，请修改后重试")
 	}
 
 	existing, _ = s.repo.FindByEmail(req.Email)
 	if existing != nil && existing.ID > 0 {
-		return nil, errors.New("邮箱已被注册")
+		return nil, errors.New("该用户名或邮箱已被注册，请修改后重试")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)

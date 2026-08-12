@@ -10,6 +10,7 @@ import { sanitizeHtml } from '@/utils/sanitize'
 import { typeLabel, parseOptions, parseBlankOptions, isCorrectAnswer, aiScoreSpec, aiDimensionScore, isAiSource, sourceLabel } from '@/utils/question'
 import type { Question, PracticeRecordResp } from '@/types/question'
 import type { EssayScoreResp } from '@/types/ai'
+import ExtractKnowledgeModal from '@/components/knowledge/ExtractKnowledgeModal.vue'
 
 const router = useRouter()
 const aiStore = useAiStore()
@@ -29,6 +30,15 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{ (e: 'back'): void; (e: 'finish'): void }>()
+
+// 单选题答完后是否自动跳转到下一题。默认开启，localStorage 持久化。
+// 仅作用于「选中后 1s 跳下一题」逻辑；自动提交与解析展示不受影响。
+const AUTO_NEXT_KEY = 'practice_auto_next'
+const autoNext = ref(localStorage.getItem(AUTO_NEXT_KEY) !== '0')
+function toggleAutoNext() {
+  autoNext.value = !autoNext.value
+  localStorage.setItem(AUTO_NEXT_KEY, autoNext.value ? '1' : '0')
+}
 
 const currentIndex = ref(props.startIndex ?? 0)
 const answers = ref<Record<number, string>>({ ...(props.initialAnswers || {}) })
@@ -153,7 +163,7 @@ function selectAnswer(questionId: number, value: string) {
   if (q.type === 'single' || q.type === 'judge') {
     handleSubmit()
     // 单选题：显示答案后自动跳转下一题（多选、输入框不自动跳转）
-    if (q.type === 'single') {
+    if (q.type === 'single' && autoNext.value) {
       const fromIndex = currentIndex.value
       setTimeout(() => {
         // 用户已手动切换题目则不再自动跳转
@@ -463,6 +473,16 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
   medium: { label: '中等', cls: 'bg-amber-50 text-amber-600 ring-amber-600/20' },
   hard: { label: '困难', cls: 'bg-red-50 text-red-600 ring-red-600/20' },
 }
+
+const showExtractModal = ref(false)
+
+function stripHtml(html: string) {
+  return (html || '').replace(/<[^>]*>/g, '')
+}
+
+function openExtractModal() {
+  showExtractModal.value = true
+}
 </script>
 
 <template>
@@ -567,6 +587,28 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
           </svg>
           {{ current && favorited[current.id] ? '已收藏' : '收藏' }}
+        </button>
+        <button
+          type="button"
+          role="switch"
+          :aria-checked="autoNext"
+          :title="autoNext ? '关闭自动跳转' : '开启自动跳转'"
+          class="flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-200"
+          :class="autoNext
+            ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+            : 'border-gray-200 bg-white text-gray-500 shadow-sm hover:border-gray-300 hover:bg-gray-50'"
+          @click="toggleAutoNext"
+        >
+          <span
+            class="relative inline-flex h-4 w-7 items-center rounded-full transition-colors duration-200"
+            :class="autoNext ? 'bg-indigo-500' : 'bg-gray-300'"
+          >
+            <span
+              class="absolute h-3 w-3 rounded-full bg-white shadow transition-transform duration-200"
+              :class="autoNext ? 'translate-x-3.5' : 'translate-x-0.5'"
+            />
+          </span>
+          自动跳转
         </button>
         <button
           v-if="current && !submitted[current.id] && current.type !== 'single' && current.type !== 'judge'"
@@ -792,6 +834,16 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
           >
             {{ isSubjective(current) ? '已提交，不判分' : isCorrect(current) ? '回答正确' : '回答错误' }}
           </span>
+          <button
+            class="ml-auto inline-flex cursor-pointer items-center gap-1 rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-xs font-medium text-indigo-700 shadow-sm transition-all duration-200 hover:border-indigo-300 hover:bg-indigo-50 active:scale-[0.97]"
+            title="AI 提取核心知识点"
+            @click="openExtractModal"
+          >
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+            </svg>
+            获取知识点
+          </button>
         </div>
 
         <div class="space-y-2 text-sm">
@@ -932,5 +984,16 @@ const difficultyMap: Record<string, { label: string; cls: string }> = {  easy: {
         </div>
       </div>
     </div>
+
+    <ExtractKnowledgeModal
+      v-if="current"
+      v-model="showExtractModal"
+      :question-id="current.id"
+      :question-content="stripHtml(current.content)"
+      :question-type="current.type"
+      :question-answer="current.answer"
+      :question-analysis="current.analysis"
+      :subject-id="current.subject_id"
+    />
   </div>
 </template>

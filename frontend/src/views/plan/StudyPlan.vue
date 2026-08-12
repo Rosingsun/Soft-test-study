@@ -11,6 +11,7 @@ import BaseCard from '@/components/common/BaseCard.vue'
 import BaseBadge from '@/components/common/BaseBadge.vue'
 import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
+import BaseProgressBar from '@/components/common/BaseProgressBar.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
@@ -147,6 +148,63 @@ function pctClass(p: StudyPlanResp) {
   if (p.completion_pct >= 60) return 'bg-indigo-500'
   return 'bg-amber-500'
 }
+
+// 时间维度：已过天数、总天数、时间进度、日均、预计完成日、节奏
+const MS_PER_DAY = 86400000
+function dayDiff(aStr: string, bStr: string) {
+  return Math.floor((new Date(aStr + 'T00:00:00').getTime() - new Date(bStr + 'T00:00:00').getTime()) / MS_PER_DAY)
+}
+
+interface ProgressDetail {
+  totalDays: number
+  elapsedDays: number
+  timePct: number
+  dailyAvg: number
+  expectedLabel: string
+  paceLabel: string
+  paceType: 'success' | 'warning' | 'danger' | 'default'
+  diff: number
+}
+
+function progressDetail(p: StudyPlanResp): ProgressDetail {
+  const totalDays = Math.max(1, dayDiff(p.end_date, p.start_date) + 1)
+  const rawElapsed = dayDiff(todayStr(), p.start_date) + 1
+  const elapsedDays = Math.max(0, Math.min(totalDays, rawElapsed))
+  const timePct = (elapsedDays / totalDays) * 100
+  const dailyAvg = elapsedDays > 0 ? p.overall_done / elapsedDays : 0
+
+  const remaining = Math.max(0, p.overall_goal - p.overall_done)
+  let expectedLabel = '—'
+  if (remaining === 0) {
+    expectedLabel = '已达成'
+  } else if (dailyAvg > 0) {
+    const daysToFinish = Math.ceil(remaining / dailyAvg)
+    const d = new Date(new Date(todayStr() + 'T00:00:00').getTime() + daysToFinish * MS_PER_DAY)
+    expectedLabel = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+  }
+
+  const diff = p.completion_pct - timePct
+  let paceLabel: string
+  let paceType: ProgressDetail['paceType']
+  if (remaining === 0) {
+    paceLabel = '已完成'
+    paceType = 'success'
+  } else if (elapsedDays === 0) {
+    paceLabel = '待开始'
+    paceType = 'default'
+  } else if (diff >= 5) {
+    paceLabel = `领先 ${diff.toFixed(0)}%`
+    paceType = 'success'
+  } else if (diff <= -5) {
+    paceLabel = `落后 ${Math.abs(diff).toFixed(0)}%`
+    paceType = 'danger'
+  } else {
+    paceLabel = '节奏正常'
+    paceType = 'success'
+  }
+
+  return { totalDays, elapsedDays, timePct, dailyAvg, expectedLabel, paceLabel, paceType, diff }
+}
 </script>
 
 <template>
@@ -181,7 +239,8 @@ function pctClass(p: StudyPlanResp) {
     </div>
 
     <div v-else class="grid gap-4 lg:grid-cols-2">
-      <BaseCard v-for="p in list" :key="p.id" hover class="flex flex-col gap-4 p-6">
+      <BaseCard v-for="p in list" :key="p.id" hover class="flex flex-col gap-5 p-6">
+        <!-- 头部 -->
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
@@ -198,34 +257,53 @@ function pctClass(p: StudyPlanResp) {
           </div>
         </div>
 
-        <!-- 今日进度 -->
-        <div>
-          <div class="mb-1.5 flex items-center justify-between text-xs">
-            <span class="text-gray-500">今日进度</span>
-            <span class="font-medium text-gray-700">{{ Math.min(p.today_done, p.today_goal) }}/{{ p.today_goal }} 题</span>
+        <!-- 任务维度：今日 + 总体 -->
+        <div class="space-y-4">
+          <div>
+            <div class="mb-1.5 flex items-center justify-between text-xs">
+              <span class="text-gray-500">今日进度</span>
+              <span class="font-medium text-gray-700">{{ Math.min(p.today_done, p.today_goal) }}/{{ p.today_goal }} 题</span>
+            </div>
+            <BaseProgressBar :value="(p.today_done / p.today_goal) * 100" color="indigo" />
           </div>
-          <div class="h-2 overflow-hidden rounded-full bg-gray-100">
-            <div
-              class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500"
-              :style="{ width: Math.min(100, (p.today_done / p.today_goal) * 100) + '%' }"
-            />
-          </div>
-        </div>
-
-        <!-- 总体进度 -->
-        <div class="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
-          <div class="min-w-0 flex-1">
-            <div class="mb-1 flex items-center justify-between text-xs">
+          <div>
+            <div class="mb-1.5 flex items-center justify-between text-xs">
               <span class="text-gray-500">总体进度</span>
               <span class="font-medium text-gray-700">{{ p.overall_done }}/{{ p.overall_goal }} 题 · {{ pctText(p) }}</span>
             </div>
-            <div class="h-1.5 overflow-hidden rounded-full bg-gray-200">
+            <div class="h-1.5 overflow-hidden rounded-full bg-gray-100">
               <div class="h-full rounded-full transition-all duration-500" :class="pctClass(p)" :style="{ width: Math.min(100, p.completion_pct) + '%' }" />
             </div>
           </div>
-          <BaseButton type="secondary" size="sm" class="ml-4" @click="router.push('/practice/random')">
-            去练习
-          </BaseButton>
+        </div>
+
+        <!-- 时间维度：天数比例 + 日均 + 预计完成 + 节奏 -->
+        <div class="rounded-xl bg-gray-50 p-4">
+          <div class="mb-2 flex items-center justify-between text-xs">
+            <span class="text-gray-500">时间进度 · 第 {{ progressDetail(p).elapsedDays }} / {{ progressDetail(p).totalDays }} 天</span>
+            <BaseBadge :type="progressDetail(p).paceType">{{ progressDetail(p).paceLabel }}</BaseBadge>
+          </div>
+          <BaseProgressBar :value="progressDetail(p).timePct" color="gray" size="sm" />
+
+          <div class="mt-3 grid grid-cols-2 gap-3 text-xs">
+            <div class="rounded-lg bg-white px-3 py-2 ring-1 ring-inset ring-gray-100">
+              <p class="text-[11px] text-gray-400">日均完成</p>
+              <p class="mt-0.5 text-sm font-semibold tracking-tight text-gray-800">
+                {{ progressDetail(p).dailyAvg.toFixed(1) }} <span class="text-xs font-normal text-gray-400">题/天</span>
+              </p>
+            </div>
+            <div class="rounded-lg bg-white px-3 py-2 ring-1 ring-inset ring-gray-100">
+              <p class="text-[11px] text-gray-400">预计完成日</p>
+              <p class="mt-0.5 text-sm font-semibold tracking-tight text-gray-800">
+                {{ progressDetail(p).expectedLabel }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作 -->
+        <div class="flex items-center justify-end">
+          <BaseButton type="secondary" size="sm" @click="router.push('/practice/random')">去练习</BaseButton>
         </div>
       </BaseCard>
     </div>

@@ -57,6 +57,13 @@ export function put<T>(url: string, body?: unknown) {
   })
 }
 
+export function patch<T>(url: string, body?: unknown) {
+  return request<T>(url, {
+    method: 'PATCH',
+    body: body ? JSON.stringify(body) : undefined,
+  })
+}
+
 export function del<T>(url: string) {
   return request<T>(url, { method: 'DELETE' })
 }

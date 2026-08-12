@@ -9,4 +9,5 @@ const (
 	CodeUnauthorized = 10003 // 未登录 / Token 无效
 	CodeForbidden    = 10004 // 无权限
 	CodeNotFound     = 10005 // 资源不存在
+	CodeDuplicate    = 10009 // 资源冲突（如知识点已存在）
 )

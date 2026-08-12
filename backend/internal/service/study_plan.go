@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/soft-test-study/backend/internal/dto"
@@ -167,12 +168,20 @@ func (s *StudyPlanService) toResp(p *model.StudyPlan) dto.StudyPlanResp {
 	today := time.Now()
 	todayStr := today.Format("2006-01-02")
 
-	todayDone, _ := s.practiceRepo.CountOnDate(p.UserID, todayStr, p.SubjectID)
+	todayDone, err := s.practiceRepo.CountOnDate(p.UserID, todayStr, p.SubjectID)
+	if err != nil {
+		// 不阻断主流程（页面仍要展示），但必须打日志，避免再次出现"进度一直是 0 但无任何线索"
+		log.Printf("[study_plan] CountOnDate 失败 user_id=%d subject_id=%d date=%s: %v",
+			p.UserID, p.SubjectID, todayStr, err)
+	}
 
-	overallDone, _ := s.practiceRepo.CountInRange(
+	overallDone, err := s.practiceRepo.CountInRange(
 		p.UserID, p.StartDate.Format("2006-01-02"), p.EndDate.Format("2006-01-02"), p.SubjectID,
 	)
-
+	if err != nil {
+		log.Printf("[study_plan] CountInRange 失败 user_id=%d subject_id=%d start=%s end=%s: %v",
+			p.UserID, p.SubjectID, p.StartDate.Format("2006-01-02"), p.EndDate.Format("2006-01-02"), err)
+	}
 	totalDays := int(p.EndDate.Sub(p.StartDate).Hours()/24) + 1
 	overallGoal := p.DailyGoal * totalDays
 	if overallGoal <= 0 {

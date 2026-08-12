@@ -45,11 +45,16 @@ func (r *PracticeRecordRepo) FindByUserAndChapter(userID, chapterID uint) ([]mod
 	return list, err
 }
 
-// CountInRange 统计区间内答题数（可过滤科目）
+// CountInRange 统计区间内答题数（可过滤科目）。
+//
+// 修复：subjectID > 0 时会 JOIN questions 表，若 WHERE 子句仍使用裸列名
+// （user_id / created_at），MySQL 会报 "Column 'xxx' in where clause is ambiguous"
+// 并被 service 层的 `_, _ :=` 静默吞掉，导致学习计划进度永远是 0。
+// 这里显式限定为 practice_records.<col>，消除歧义。
 func (r *PracticeRecordRepo) CountInRange(userID uint, startDate, endDate string, subjectID uint) (int64, error) {
 	var n int64
 	q := r.db.Model(&model.PracticeRecord{}).
-		Where("user_id = ? AND created_at >= ? AND created_at < DATE_ADD(?, INTERVAL 1 DAY)",
+		Where("practice_records.user_id = ? AND practice_records.created_at >= ? AND practice_records.created_at < DATE_ADD(?, INTERVAL 1 DAY)",
 			userID, startDate+" 00:00:00", endDate)
 	if subjectID > 0 {
 		q = q.Joins("JOIN questions q ON q.id = practice_records.question_id AND q.subject_id = ?", subjectID)
