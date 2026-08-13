@@ -23,10 +23,14 @@ const props = withDefaults(defineProps<{
   initialAnswers?: Record<number, string>
   initialSubmitted?: Record<number, boolean>
   submitHandler?: (questionId: number, answer: string, duration: number) => Promise<PracticeRecordResp>
+  // AI 出题场景:已附带 knowledge_point 时,隐藏"获取知识点"按钮(避免重复提取)。
+  // 非 AI 模式默认 false,保持原有"总是显示"的行为不变。
+  hideExtractWhenHasKnowledge?: boolean
 }>(), {
   mode: 'chapter',
   title: '',
   startIndex: 0,
+  hideExtractWhenHasKnowledge: false,
 })
 
 const emit = defineEmits<{ (e: 'back'): void; (e: 'finish'): void }>()
@@ -835,6 +839,7 @@ function openExtractModal() {
             {{ isSubjective(current) ? '已提交，不判分' : isCorrect(current) ? '回答正确' : '回答错误' }}
           </span>
           <button
+            v-if="(props.hideExtractWhenHasKnowledge ? !current.knowledge_point : true)"
             class="ml-auto inline-flex cursor-pointer items-center gap-1 rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-xs font-medium text-indigo-700 shadow-sm transition-all duration-200 hover:border-indigo-300 hover:bg-indigo-50 active:scale-[0.97]"
             title="AI 提取核心知识点"
             @click="openExtractModal"

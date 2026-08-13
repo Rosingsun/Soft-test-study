@@ -60,13 +60,15 @@ func RegisterTimeoutNotifier(fn func(userID uint, taskID string, errMsg string))
 
 // NewAITask 创建并持久化一个 pending 任务，返回 task_id。
 // userID 必须 > 0；非法值直接 panic，由调用方保证（router 已鉴权）。
+// subjectID 用于历史列表补全 subject_name，0 表示未知（调用方应尽量传真实值）。
 // 持久化失败时打印 error 日志但仍返回内存对象（保持向后兼容，避免阻塞业务）。
-func NewAITask(userID uint, questionType string, chapterID uint, chapterName, difficulty string, count int) *dto.AsyncGenerateTask {
+func NewAITask(userID uint, subjectID uint, questionType string, chapterID uint, chapterName, difficulty string, count int) *dto.AsyncGenerateTask {
 	now := time.Now()
 	nowStr := now.Format(time.RFC3339)
 	task := &dto.AsyncGenerateTask{
 		ID:           generateTaskID(),
 		UserID:       userID,
+		SubjectID:    subjectID,
 		Status:       AITaskStatusPending,
 		QuestionType: questionType,
 		ChapterID:    chapterID,
@@ -81,6 +83,7 @@ func NewAITask(userID uint, questionType string, chapterID uint, chapterName, di
 		dbTask := &model.AiGeneratedTask{
 			TaskID:       task.ID,
 			UserID:       userID,
+			SubjectID:    subjectID,
 			Status:       AITaskStatusPending,
 			QuestionType: questionType,
 			ChapterID:    chapterID,
@@ -334,6 +337,7 @@ func taskRowToDTO(row *model.AiGeneratedTask) *dto.AsyncGenerateTask {
 	task := &dto.AsyncGenerateTask{
 		ID:           row.TaskID,
 		UserID:       row.UserID,
+		SubjectID:    row.SubjectID,
 		Status:       row.Status,
 		QuestionType: row.QuestionType,
 		ChapterID:    row.ChapterID,

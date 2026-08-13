@@ -11,6 +11,7 @@ type AiGeneratedTask struct {
 	ID              uint       `gorm:"primarykey"`
 	TaskID          string     `gorm:"column:task_id;size:64;not null;uniqueIndex:uk_task_id"`
 	UserID          uint       `gorm:"column:user_id;not null;index:idx_user_status_updated,priority:1"`
+	SubjectID       uint       `gorm:"column:subject_id;not null;default:0"`
 	Status          string     `gorm:"column:status;type:varchar(20);not null;default:'pending';index:idx_user_status_updated,priority:2;index:idx_status_updated,priority:1"`
 	QuestionType    string     `gorm:"column:question_type;type:varchar(20);not null"`
 	ChapterID       uint       `gorm:"column:chapter_id;default:0"`

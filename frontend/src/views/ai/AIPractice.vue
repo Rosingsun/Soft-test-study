@@ -4,9 +4,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAiStore } from '@/stores/ai'
 import { useSubjectStore } from '@/stores/subject'
-import { submitGenerateAsync, getGenerateTask, listGenerateHistory, getGenerateBatch } from '@/api/ai'
+import { submitGenerateAsync, getGenerateTask, listGenerateHistory, listInflightTasks, getGenerateBatch } from '@/api/ai'
 import { submitPractice } from '@/api/practice'
 import { getChapters, getSubSubjects } from '@/api/subject'
+import { showToast } from '@/utils/toast'
 import PracticeRunner from '@/components/practice/PracticeRunner.vue'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
@@ -14,6 +15,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import BaseBadge from '@/components/common/BaseBadge.vue'
 import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
+import ExtractKnowledgeModal from '@/components/knowledge/ExtractKnowledgeModal.vue'
 import type { AiGeneratedQuestion, AsyncGenerateTask, AiBatchHistoryItem } from '@/types/ai'
 import type { Question } from '@/types/question'
 
@@ -42,6 +44,11 @@ const aiQuestions = ref<AiGeneratedQuestion[]>([])
 const answers = ref<Record<number, string>>({})
 const answersCS = ref<Record<number, Record<number, string>>>({})
 const submittedIds = ref<Set<number>>(new Set())
+
+// 知识点提取弹窗:对应当前正在提取的 AI 生成题。
+// 弹窗复用 components/knowledge/ExtractKnowledgeModal.vue,仅在 knowledge_point 为空时打开。
+const showExtractModal = ref(false)
+const extractTarget = ref<AiGeneratedQuestion | null>(null)
 
 const currentTask = ref<AsyncGenerateTask | null>(null)
 let pollTimer: ReturnType<typeof setInterval> | null = null
@@ -109,6 +116,7 @@ const practiceQuestions = computed<Question[]>(() => {
     analysis: q.analysis,
     year: 0,
     source: q.source || 'ai',
+    knowledge_point: q.knowledge_point,
   }))
 })
 
@@ -215,8 +223,35 @@ async function loadHistory() {
   historyLoading.value = true
   historyError.value = ''
   try {
-    const resp = await listGenerateHistory()
-    historyList.value = resp.list || []
+    // 两个端点并行拉：/ai/history（已完成）+ /ai/tasks/inflight（生成中）。
+    // 独立端点保证其中一个失败时另一个仍能提供数据，避免「刷新一下就没了」。
+    const [historyResp, inflightResp] = await Promise.allSettled([
+      listGenerateHistory(),
+      listInflightTasks(),
+    ])
+
+    const completed: AiBatchHistoryItem[] =
+      historyResp.status === 'fulfilled' ? (historyResp.value.list || []) : []
+    const inflight: AiBatchHistoryItem[] =
+      inflightResp.status === 'fulfilled' ? (inflightResp.value.list || []) : []
+
+    if (historyResp.status === 'rejected' && inflightResp.status === 'rejected') {
+      throw historyResp.reason || inflightResp.reason
+    }
+
+    // 合并：去重 by batch_id（inflight 优先，因为状态最新）；
+    // 同时把 completed 里已变成 success 的 inflight 任务过滤掉（理论上不会重叠）。
+    const inflightByID = new Map<string, AiBatchHistoryItem>()
+    for (const it of inflight) {
+      if (it.status === 'pending' || it.status === 'running') {
+        inflightByID.set(it.batch_id, it)
+      }
+    }
+    const completedFiltered = completed.filter(c => !inflightByID.has(c.batch_id))
+    const merged = [...inflight, ...completedFiltered]
+    // 按 created_at 倒序（infllight 通常是最新，排在前；字符串比较即可，格式统一）
+    merged.sort((a, b) => (b.created_at > a.created_at ? 1 : b.created_at < a.created_at ? -1 : 0))
+    historyList.value = merged
   } catch (e) {
     historyError.value = (e as Error).message || '加载历史记录失败'
   } finally {
@@ -226,6 +261,10 @@ async function loadHistory() {
 
 async function openHistory(batch: AiBatchHistoryItem) {
   if (historyLoading.value) return
+  if (batch.status === 'pending' || batch.status === 'running') {
+    showToast('题目未完全生成，请稍后再试', 'info')
+    return
+  }
   try {
     const resp = await getGenerateBatch(batch.batch_id)
     if (!resp || !resp.questions || !resp.questions.length) {
@@ -274,6 +313,38 @@ function selectType(t: string) {
   }
 }
 
+// 当前选中的章节名（用于在历史列表中渲染占位项）
+function currentChapterName(): string {
+  const ch = chapters.value.find(c => c.id === chapterId.value)
+  return ch?.name || '不限定'
+}
+
+// patchHistoryItem 按 batch_id 在 historyList 中查找并就地更新；找到则改 status/failed
+// 找不到则根据传入字段在列表前部插入占位（用于刚提交任务，loadHistory 还没回来时）。
+function patchHistoryItem(item: Partial<AiBatchHistoryItem> & { batch_id: string }) {
+  const idx = historyList.value.findIndex(h => h.batch_id === item.batch_id)
+  if (idx >= 0) {
+    historyList.value[idx] = { ...historyList.value[idx], ...item }
+  } else {
+    const placeholder: AiBatchHistoryItem = {
+      subject_id: subjectId.value || 0,
+      subject_name: currentSubjectName.value,
+      chapter_id: chapterId.value,
+      chapter_name: currentChapterName(),
+      type: questionType.value,
+      type_label: typeLabel(questionType.value),
+      difficulty: difficulty.value,
+      count: 0,
+      created_at: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      answered_count: 0,
+      correct_count: 0,
+      knowledge_points: [],
+      ...item,
+    }
+    historyList.value = [placeholder, ...historyList.value]
+  }
+}
+
 async function startGenerate() {
   if (!aiStore.hasConfig) {
     router.push('/ai/config')
@@ -300,6 +371,8 @@ async function startGenerate() {
       difficulty: difficulty.value,
       count: count.value,
     })
+    // 立即在历史列表前部插入「排队中」占位，避免等待第一次 loadHistory 才出现
+    patchHistoryItem({ batch_id: submitResp.task_id, status: 'pending' })
     step.value = 'pending'
     startPolling(submitResp.task_id)
   } catch (e) {
@@ -333,11 +406,18 @@ async function fetchTaskOnce(taskId: string) {
   try {
     const t = await getGenerateTask(taskId)
     currentTask.value = t
+    // 实时同步状态到历史列表（不依赖 loadHistory 全量刷新）
+    if (t.status === 'pending' || t.status === 'running') {
+      patchHistoryItem({ batch_id: t.id, status: t.status })
+    }
     if (t.status === 'success') {
       stopPolling()
       applyTaskResult(t)
     } else if (t.status === 'failed') {
       stopPolling()
+      // 失败任务按计划不留在历史中（后端 ListGenerateHistory 不返回 failed），
+      // 本地立刻移除占位；服务端会通过消息中心通知。
+      historyList.value = historyList.value.filter(h => h.batch_id !== t.id)
       error.value = formatTaskError(t.error || '未知错误')
       step.value = 'config'
     }
@@ -366,9 +446,13 @@ async function loadTaskById(taskId: string) {
   try {
     const t = await getGenerateTask(taskId)
     currentTask.value = t
+    if (t.status === 'pending' || t.status === 'running') {
+      patchHistoryItem({ batch_id: t.id, status: t.status })
+    }
     if (t.status === 'success') {
       applyTaskResult(t)
     } else if (t.status === 'failed') {
+      historyList.value = historyList.value.filter(h => h.batch_id !== t.id)
       error.value = formatTaskError(t.error || '未知错误')
     } else {
       step.value = 'pending'
@@ -390,6 +474,10 @@ function applyTaskResult(t: AsyncGenerateTask) {
   answers.value = {}
   answersCS.value = {}
   submittedIds.value = new Set()
+  // 任务成功：先把历史列表中的占位标为 success（保证徽章立即消失），
+  // 然后再异步拉一次完整列表补全 subject_name / count 等真实字段
+  patchHistoryItem({ batch_id: t.id, status: 'success' })
+  loadHistory()
   if (usePracticeRunner.value || useCaseStudyRunner.value) {
     step.value = 'practice'
   } else {
@@ -452,6 +540,48 @@ function isCorrect(q: AiGeneratedQuestion): boolean {
 
 function formatText(text: string): string {
   return (text || '').replace(/\n/g, '<br>')
+}
+
+// 去掉 HTML 标签,供 ExtractKnowledgeModal question_content 使用
+function stripHtml(html: string): string {
+  return (html || '').replace(/<[^>]*>/g, '')
+}
+
+// 打开 AI 提取知识点弹窗。弹窗内容来源于 aiQuestions(q 是 AiGeneratedQuestion),
+// 复用 components/knowledge/ExtractKnowledgeModal.vue 已有的提取+加入知识点库能力。
+// AI 未配置时给出 toast 提示并跳转配置页,避免在弹窗内再次失败。
+function openExtractModal(q: AiGeneratedQuestion) {
+  if (!aiStore.hasConfig) {
+    showToast('尚未配置 AI API，请先在「AI 配置」中设置', 'error')
+    router.push('/ai/config')
+    return
+  }
+  extractTarget.value = q
+  showExtractModal.value = true
+}
+
+// 监听 ExtractKnowledgeModal 的 added 事件:
+// 用户把 AI 提取的知识点加入自己的知识点库成功后,把考点名称回填到当前题目的 knowledge_point 字段。
+// 这样原卡片上的"AI获取考点知识"按钮会立即消失、徽章会显示,避免重复提取。
+function onKnowledgeAdded(items: { name: string; status: string }[]) {
+  if (!extractTarget.value || !items.length) return
+  const targetId = extractTarget.value.id
+  const addedNames = items.map(it => it.name).filter(Boolean)
+  if (!addedNames.length) return
+
+  const idx = aiQuestions.value.findIndex(q => q.id === targetId)
+  if (idx < 0) return
+
+  const existing = aiQuestions.value[idx].knowledge_point
+  const merged = existing
+    ? [existing, ...addedNames].join('、')
+    : addedNames.join('、')
+  aiQuestions.value[idx] = {
+    ...aiQuestions.value[idx],
+    knowledge_point: merged,
+  }
+  // 同步更新 extractTarget,保持弹窗关联题目的引用与列表一致
+  extractTarget.value = aiQuestions.value[idx]
 }
 
 function parseCaseStudySubs(content: string): { index: number; text: string }[] {
@@ -558,40 +688,68 @@ function difficultyBadgeType(d: string): 'success' | 'warning' | 'danger' | 'def
             </button>
           </div>
 
-          <div v-if="historyLoading">
-            <BaseSkeleton variant="list" :count="3" />
-          </div>
-          <BaseEmpty
-            v-else-if="!historyList.length"
-            title="暂无生成记录"
-            description="使用「AI 生成题目」后，这里会保留每次生成的批次"
-          />
-          <div v-else-if="historyError" class="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{{ historyError }}</div>
-          <div v-else class="space-y-2">
-            <button
-              v-for="item in historyList"
-              :key="item.batch_id"
-              class="group w-full cursor-pointer rounded-xl border border-gray-100 bg-white p-3 text-left transition-all duration-200 hover:border-indigo-200 hover:bg-indigo-50/40 hover:shadow-sm"
-              @click="openHistory(item)"
-            >
-              <div class="mb-1.5 flex items-center justify-between gap-2">
-                <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-600 ring-1 ring-inset ring-indigo-200">
-                  {{ item.type_label }}
-                </span>
-                <span class="text-[11px] font-medium text-gray-500">{{ item.count }} 题</span>
-              </div>
-              <p class="truncate text-xs font-medium text-gray-800 group-hover:text-indigo-700">{{ item.subject_name || '未知科目' }}</p>
-              <p class="mt-0.5 truncate text-[11px] text-gray-500">
-                {{ item.chapter_name || '全部章节' }}
-              </p>
-              <div class="mt-1.5 flex items-center gap-1.5 text-[11px]">
-                <BaseBadge :type="difficultyBadgeType(item.difficulty)">{{ difficultyLabel(item.difficulty) }}</BaseBadge>
-                <span class="font-medium" :class="item.answered_count >= item.count ? 'text-emerald-600' : 'text-indigo-600'">
-                  {{ item.answered_count }}/{{ item.count }}
-                </span>
-              </div>
-              <p class="mt-1 text-[11px] text-gray-400">{{ item.created_at }}</p>
-            </button>
+          <div class="max-h-[calc(100vh-200px)] overflow-y-auto pr-1">
+            <div v-if="historyLoading">
+              <BaseSkeleton variant="list" :count="3" />
+            </div>
+            <BaseEmpty
+              v-else-if="!historyList.length"
+              title="暂无生成记录"
+              description="使用「AI 生成题目」后，这里会保留每次生成的批次"
+            />
+            <div v-else-if="historyError" class="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{{ historyError }}</div>
+            <div v-else class="space-y-2">
+              <button
+                v-for="item in historyList"
+                :key="item.batch_id"
+                class="group w-full cursor-pointer rounded-xl border border-gray-100 bg-white p-3 text-left transition-all duration-200 hover:border-indigo-200 hover:bg-indigo-50/40 hover:shadow-sm"
+                :class="(item.status === 'pending' || item.status === 'running') ? 'cursor-not-allowed border-indigo-100 bg-indigo-50/30' : ''"
+                :title="(item.status === 'pending' || item.status === 'running') ? '题目未完全生成，请稍后再试' : ''"
+                @click="openHistory(item)"
+              >
+                <div class="mb-1.5 flex items-center justify-between gap-2">
+                  <span class="flex items-center gap-1.5">
+                    <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-600 ring-1 ring-inset ring-indigo-200">
+                      {{ item.type_label }}
+                    </span>
+                    <span
+                      v-if="item.status === 'pending'"
+                      class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600 ring-1 ring-inset ring-gray-200"
+                    >
+                      <span class="h-1.5 w-1.5 rounded-full bg-gray-400"></span>
+                      排队中
+                    </span>
+                    <span
+                      v-else-if="item.status === 'running'"
+                      class="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-600 ring-1 ring-inset ring-indigo-200"
+                    >
+                      <svg class="h-2.5 w-2.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      生成中
+                    </span>
+                  </span>
+                  <span class="text-[11px] font-medium text-gray-500">{{ item.count || '—' }} 题</span>
+                </div>
+                <p class="truncate text-xs font-medium text-gray-800 group-hover:text-indigo-700">{{ item.subject_name || '未知科目' }}</p>
+                <p class="mt-0.5 truncate text-[11px] text-gray-500">
+                  {{ item.chapter_name || '全部章节' }}
+                </p>
+                <div v-if="(item.status === 'pending' || item.status === 'running')" class="mt-1.5 flex items-center gap-1.5 text-[11px]">
+                  <BaseBadge :type="difficultyBadgeType(item.difficulty)">{{ difficultyLabel(item.difficulty) }}</BaseBadge>
+                  <span class="text-gray-400">生成完成后可查看</span>
+                </div>
+                <template v-else>
+                  <div class="mt-1.5 flex items-center gap-1.5 text-[11px]">
+                    <BaseBadge :type="difficultyBadgeType(item.difficulty)">{{ difficultyLabel(item.difficulty) }}</BaseBadge>
+                    <span class="font-medium" :class="item.answered_count >= item.count ? 'text-emerald-600' : 'text-indigo-600'">
+                      {{ item.answered_count }}/{{ item.count }}
+                    </span>
+                  </div>
+                  <p class="mt-1 text-[11px] text-gray-400">{{ item.created_at }}</p>
+                </template>
+              </button>
+            </div>
           </div>
         </BaseCard>
       </aside>
@@ -832,6 +990,7 @@ function difficultyBadgeType(d: string): 'success' | 'warning' | 'danger' | 'def
           <PracticeRunner
             :questions="practiceQuestions"
             mode="ai"
+            :hide-extract-when-has-knowledge="true"
             :submit-handler="async (qid, ans, duration) => {
               answers[qid] = ans
               submittedIds.add(qid)
@@ -862,6 +1021,18 @@ function difficultyBadgeType(d: string): 'success' | 'warning' | 'danger' | 'def
                 <span class="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-600 ring-1 ring-inset ring-indigo-200">第 {{ idx + 1 }} 题</span>
                 <span class="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-200">案例分析</span>
                 <span v-if="q.knowledge_point" class="rounded bg-gray-50 px-2 py-0.5 text-xs text-gray-500">{{ q.knowledge_point }}</span>
+                <button
+                  v-else
+                  type="button"
+                  class="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50/60 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-200 transition-all duration-200 hover:border-indigo-300 hover:bg-indigo-50 active:scale-[0.97]"
+                  title="AI 提取核心考点"
+                  @click="openExtractModal(q)"
+                >
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                  </svg>
+                  AI获取考点知识
+                </button>
               </div>
 
               <div v-if="q.case_material" class="mb-5 rounded-lg border border-indigo-100 bg-indigo-50/40 p-4">
@@ -945,7 +1116,7 @@ function difficultyBadgeType(d: string): 'success' | 'warning' | 'danger' | 'def
 
                     <p class="text-sm text-gray-800" v-html="q.content" />
 
-                    <div class="mt-2 flex flex-wrap gap-1.5">
+                    <div class="mt-2 flex flex-wrap items-center gap-1.5">
                       <span class="rounded bg-white px-1.5 py-0.5 text-xs text-gray-500 ring-1 ring-gray-200">{{ typeLabel(q.type) }}</span>
                       <span v-if="q.knowledge_point" class="rounded bg-white px-1.5 py-0.5 text-xs text-gray-500 ring-1 ring-gray-200">{{ q.knowledge_point }}</span>
                     </div>
@@ -990,7 +1161,21 @@ function difficultyBadgeType(d: string): 'success' | 'warning' | 'danger' | 'def
                       <p class="mt-2 text-xs text-gray-500">论文题无标准答案，不判分；已记录你的作答，可前往「AI 评分」获取专家点评</p>
                     </template>
 
-                    <p v-if="q.analysis" class="mt-2 whitespace-pre-line text-xs leading-relaxed text-gray-600">{{ q.analysis }}</p>
+                    <div v-if="q.analysis" class="mt-2 flex items-start gap-3">
+                      <p class="flex-1 whitespace-pre-line text-xs leading-relaxed text-gray-600">{{ q.analysis }}</p>
+                      <button
+                        v-if="!q.knowledge_point"
+                        type="button"
+                        class="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50/60 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-200 transition-all duration-200 hover:border-indigo-300 hover:bg-indigo-50 active:scale-[0.97]"
+                        title="AI 提取核心考点"
+                        @click="openExtractModal(q)"
+                      >
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                        </svg>
+                        AI获取考点知识
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1003,5 +1188,18 @@ function difficultyBadgeType(d: string): 'success' | 'warning' | 'danger' | 'def
         </div>
       </div>
     </div>
+
+    <!-- AI 提取知识点弹窗:案例分析区/结果页"AI获取考点知识"按钮触发,复用 components/knowledge/ExtractKnowledgeModal.vue -->
+    <ExtractKnowledgeModal
+      v-if="extractTarget"
+      v-model="showExtractModal"
+      :question-id="extractTarget.id"
+      :question-content="stripHtml(extractTarget.content)"
+      :question-type="extractTarget.type"
+      :question-answer="extractTarget.answer"
+      :question-analysis="extractTarget.analysis"
+      :subject-id="subjectId"
+      @added="onKnowledgeAdded"
+    />
   </div>
 </template>

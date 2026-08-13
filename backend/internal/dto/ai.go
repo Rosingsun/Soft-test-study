@@ -100,6 +100,7 @@ type EssayScoreCheckResp struct {
 type AsyncGenerateTask struct {
 	ID           string                 `json:"id"`
 	UserID       uint                   `json:"-"`
+	SubjectID    uint                   `json:"subject_id"`
 	Status       string                 `json:"status"`
 	QuestionType string                 `json:"question_type"`
 	ChapterID    uint                   `json:"chapter_id"`
@@ -120,20 +121,24 @@ type AsyncSubmitResp struct {
 }
 
 // AiBatchHistoryItem AI 生成题历史记录（一次生成 = 一个批次）
+// Status: success（已完成）/ pending（排队中）/ running（生成中）
+// pending/running 由后端在 ListGenerateHistory 中把 ai_generated_tasks 进行中任务 union 进来；
+// 缺失/空值按 success 处理以保持向后兼容。
 type AiBatchHistoryItem struct {
-	BatchID        string   `json:"batch_id"`
-	SubjectID      uint     `json:"subject_id"`
-	SubjectName    string   `json:"subject_name"`
-	ChapterID      uint     `json:"chapter_id"`
-	ChapterName    string   `json:"chapter_name"`
-	Type           string   `json:"type"`
-	TypeLabel      string   `json:"type_label"`
-	Difficulty     string   `json:"difficulty"`
-	Count          int64    `json:"count"`
-	CreatedAt      string   `json:"created_at"`
-	AnsweredCount  int64    `json:"answered_count"`
-	CorrectCount   int64    `json:"correct_count"`
+	BatchID         string   `json:"batch_id"`
+	SubjectID       uint     `json:"subject_id"`
+	SubjectName     string   `json:"subject_name"`
+	ChapterID       uint     `json:"chapter_id"`
+	ChapterName     string   `json:"chapter_name"`
+	Type            string   `json:"type"`
+	TypeLabel       string   `json:"type_label"`
+	Difficulty      string   `json:"difficulty"`
+	Count           int64    `json:"count"`
+	CreatedAt       string   `json:"created_at"`
+	AnsweredCount   int64    `json:"answered_count"`
+	CorrectCount    int64    `json:"correct_count"`
 	KnowledgePoints []string `json:"knowledge_points"`
+	Status          string   `json:"status,omitempty"`
 }
 
 // AiBatchHistoryResp AI 生成题历史列表响应

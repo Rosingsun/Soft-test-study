@@ -46,6 +46,21 @@ export interface StartAiExamReq {
   duration: number
 }
 
+// AI 解析题目:对单题做整体解析(知识点/正确答案分析/巩固建议)
+// 当 ExtractKnowledgeModal 提取不到有效知识点时,用户可点击"AI 分析"走此接口。
+export interface AnalyzeQuestionReq {
+  api_config: AiApiConfig
+  question_content: string
+  question_type: string
+  question_answer: string
+  // 兜底占位:用户尚未作答时,后端 prompt 仍可正常返回(忽略对比部分)
+  user_answer: string
+}
+
+export interface AnalyzeQuestionResp {
+  analysis: string
+}
+
 // 论文 AI 评分
 export interface EssayScoreReq {
   api_config: AiApiConfig
@@ -97,6 +112,10 @@ export interface AsyncSubmitResp {
 }
 
 // AI 生成题历史记录（一次生成 = 一个批次）
+// status 字段由后端在 ListGenerateHistory 中并入进行中任务：
+//   - success（默认，缺失视为成功）
+//   - pending（已提交，排队中）
+//   - running（生成中）
 export interface AiBatchHistoryItem {
   batch_id: string
   subject_id: number
@@ -111,6 +130,7 @@ export interface AiBatchHistoryItem {
   answered_count: number
   correct_count: number
   knowledge_points?: string[]
+  status?: 'pending' | 'running' | 'success' | 'failed' | string
 }
 
 export interface AiBatchHistoryResp {

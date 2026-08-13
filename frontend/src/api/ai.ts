@@ -4,6 +4,8 @@ import type {
   GenerateQuestionsReq,
   GenerateQuestionsResp,
   StartAiExamReq,
+  AnalyzeQuestionReq,
+  AnalyzeQuestionResp,
   EssayScoreReq,
   EssayScoreResp,
   EssayScoreCheckResp,
@@ -34,6 +36,13 @@ export function listGenerateTasks() {
   return get<{ list: AsyncGenerateTask[] }>('/ai/tasks')
 }
 
+// 列出当前用户所有进行中的 AI 出题任务（pending/running）。
+// 与 /ai/history 独立：用于在历史列表中显示「生成中」条目；专用端点保证
+// 在用户刷新页面后仍能从后端持久化存储里恢复出来。
+export function listInflightTasks() {
+  return get<AiBatchHistoryResp>('/ai/tasks/inflight')
+}
+
 // AI 生成题历史记录列表（按批次）
 export function listGenerateHistory() {
   return get<AiBatchHistoryResp>('/ai/history')
@@ -46,6 +55,11 @@ export function getGenerateBatch(batchId: string) {
 
 export function startAiExam(data: StartAiExamReq) {
   return post<StartExamResp>('/ai/exam/start', data)
+}
+
+// AI 解析题目:对题目做整体解析,用于知识库提取失败时的兜底入口
+export function analyzeQuestion(data: AnalyzeQuestionReq) {
+  return post<AnalyzeQuestionResp>('/ai/analyze', data)
 }
 
 export function essayScore(data: EssayScoreReq) {

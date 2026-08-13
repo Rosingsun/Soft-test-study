@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -372,7 +373,7 @@ func (s *AiService) SubmitGenerateAsync(userID uint, req dto.GenerateQuestionsRe
 		}
 	}
 
-	task := NewAITask(userID, questionType, req.ChapterID, chapterName, req.Difficulty, req.Count)
+	task := NewAITask(userID, req.SubjectID, questionType, req.ChapterID, chapterName, req.Difficulty, req.Count)
 
 	// 启动后台 goroutine 执行
 	go s.runGenerateTask(userID, task.ID, subjectName, req)
@@ -466,16 +467,21 @@ func (s *AiService) ListGenerateTasks(userID uint) []*dto.AsyncGenerateTask {
 }
 
 // ListGenerateHistory 列出某用户的 AI 生成题历史批次（按时间倒序）
+// 仅返回已完成的批次（ai_generated_questions 中有题目的 batch）。
+// 进行中任务由独立的 /ai/tasks/inflight 端点返回，避免单接口查询失败时静默丢数据。
 func (s *AiService) ListGenerateHistory(userID uint, limit int) (*dto.AiBatchHistoryResp, error) {
 	if limit <= 0 {
 		limit = 20
 	}
+	if userID == 0 {
+		return &dto.AiBatchHistoryResp{List: []dto.AiBatchHistoryItem{}, Total: 0}, nil
+	}
+
 	summaries, err := s.aiRepo.ListBatchSummaries(userID, limit)
 	if err != nil {
 		return nil, fmt.Errorf("查询 AI 生成历史失败: %w", err)
 	}
 
-	// 收集所有批次的题目 ID，一次性查询最近一次答题对错
 	allIDs := make([]uint, 0, 64)
 	idsByBatch := make([][]uint, len(summaries))
 	for i, sm := range summaries {
@@ -492,32 +498,110 @@ func (s *AiService) ListGenerateHistory(userID uint, limit int) (*dto.AiBatchHis
 	for i, sm := range summaries {
 		answered, correct := countBatchAnswers(idsByBatch[i], answerMap)
 		item := dto.AiBatchHistoryItem{
-			BatchID:        sm.BatchID,
-			SubjectID:      sm.SubjectID,
-			ChapterID:      sm.ChapterID,
-			Type:           sm.Type,
-			TypeLabel:      typeLabelCN(sm.Type),
-			Difficulty:     sm.Difficulty,
-			Count:          sm.Count,
-			CreatedAt:      sm.CreatedAt.Format("2006-01-02 15:04"),
-			AnsweredCount:  answered,
-			CorrectCount:   correct,
+			BatchID:         sm.BatchID,
+			SubjectID:       sm.SubjectID,
+			ChapterID:       sm.ChapterID,
+			Type:            sm.Type,
+			TypeLabel:       typeLabelCN(sm.Type),
+			Difficulty:      sm.Difficulty,
+			Count:           sm.Count,
+			CreatedAt:       sm.CreatedAt.Format("2006-01-02 15:04"),
+			AnsweredCount:   answered,
+			CorrectCount:    correct,
 			KnowledgePoints: splitKnowledgePoints(sm.KnowledgePoints),
+			SubjectName:     sm.SubjectName,
+			ChapterName:     sm.ChapterName,
+			Status:          "success",
 		}
-		if sub, err := s.subjectRepo.FindByID(sm.SubjectID); err == nil {
-			item.SubjectName = sub.Name
-		}
-		if sm.ChapterID > 0 {
-			if ch, err := s.chapterRepo.FindByID(sm.ChapterID); err == nil {
-				item.ChapterName = ch.Name
-			} else {
-				item.ChapterName = "不限定"
-			}
-		} else {
+		if sm.ChapterID == 0 || sm.ChapterName == "" {
 			item.ChapterName = "不限定"
 		}
 		list[i] = item
 	}
+
+	return &dto.AiBatchHistoryResp{List: list, Total: int64(len(list))}, nil
+}
+
+// ListInflightTasks 列出某用户所有 status IN ('pending','running') 的任务，
+// 转换为 AiBatchHistoryItem 形式返回，让前端能直接并入历史列表渲染。
+// 错误必须向上抛（不静默吞），否则前端会看到「空列表 = 任务消失」。
+func (s *AiService) ListInflightTasks(userID uint, limit int) (*dto.AiBatchHistoryResp, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	if userID == 0 {
+		return &dto.AiBatchHistoryResp{List: []dto.AiBatchHistoryItem{}, Total: 0}, nil
+	}
+	if s.aiTaskRepo == nil {
+		return &dto.AiBatchHistoryResp{List: []dto.AiBatchHistoryItem{}, Total: 0}, nil
+	}
+
+	rows, err := s.aiTaskRepo.ListInflightByUser(userID, limit)
+	if err != nil {
+		log.Printf("[ai history] list inflight failed user_id=%d: %v", userID, err)
+		return nil, fmt.Errorf("查询进行中任务失败: %w", err)
+	}
+	if len(rows) == 0 {
+		return &dto.AiBatchHistoryResp{List: []dto.AiBatchHistoryItem{}, Total: 0}, nil
+	}
+
+	// 一次性查 subject_name
+	subjectIDs := make(map[uint]struct{}, len(rows))
+	for i := range rows {
+		if rows[i].SubjectID > 0 {
+			subjectIDs[rows[i].SubjectID] = struct{}{}
+		}
+	}
+	ids := make([]uint, 0, len(subjectIDs))
+	for id := range subjectIDs {
+		ids = append(ids, id)
+	}
+	subjectNameMap, err := s.aiRepo.FindSubjectsByIDs(ids)
+	if err != nil {
+		log.Printf("[ai history] find subjects failed user_id=%d: %v", userID, err)
+		// 名称查不到不能让整个接口失败，降级为「科目#id」即可
+		subjectNameMap = map[uint]string{}
+	}
+
+	list := make([]dto.AiBatchHistoryItem, 0, len(rows))
+	for i := range rows {
+		t := &rows[i]
+		subjectName := subjectNameMap[t.SubjectID]
+		item := dto.AiBatchHistoryItem{
+			BatchID:         t.TaskID,
+			SubjectID:       t.SubjectID,
+			ChapterID:       t.ChapterID,
+			ChapterName:     t.ChapterName,
+			Type:            t.QuestionType,
+			TypeLabel:       typeLabelCN(t.QuestionType),
+			Difficulty:      t.Difficulty,
+			Count:           0,
+			CreatedAt:       t.CreatedAt.Format("2006-01-02 15:04"),
+			AnsweredCount:   0,
+			CorrectCount:    0,
+			KnowledgePoints: []string{},
+			SubjectName:     subjectName,
+			Status:          t.Status,
+		}
+		if item.ChapterID == 0 || item.ChapterName == "" {
+			item.ChapterName = "不限定"
+		}
+		if item.SubjectName == "" {
+			if t.SubjectID > 0 {
+				item.SubjectName = fmt.Sprintf("科目#%d", t.SubjectID)
+			} else if t.ChapterName != "" {
+				item.SubjectName = t.ChapterName
+			} else {
+				item.SubjectName = "未知科目"
+			}
+		}
+		list = append(list, item)
+	}
+
+	// 按 created_at 倒序
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].CreatedAt > list[j].CreatedAt
+	})
 
 	return &dto.AiBatchHistoryResp{List: list, Total: int64(len(list))}, nil
 }

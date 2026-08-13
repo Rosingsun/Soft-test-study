@@ -214,6 +214,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 		// 异步 AI 出题：立即返回 task_id，后台生成完成后通过通知告知
 		auth.POST("/ai/generate/async", aiRateLimiter, aiH.SubmitGenerateAsync)
 		auth.GET("/ai/tasks", aiH.ListGenerateTasks)
+		auth.GET("/ai/tasks/inflight", aiH.ListInflightTasks)
 		auth.GET("/ai/tasks/:id", aiH.GetGenerateTask)
 		auth.GET("/ai/history", aiH.ListHistory)
 		auth.GET("/ai/history/:batch_id", aiH.GetBatchQuestions)

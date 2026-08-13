@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { sanitizeHtml } from '@/utils/sanitize'
 import { renderMarkdown } from '@/utils/markdown'
 import { extractKnowledgePoints, addKnowledgePoint } from '@/api/knowledge'
+import { analyzeQuestion } from '@/api/ai'
 import { useAiStore } from '@/stores/ai'
 import { showToast } from '@/utils/toast'
 import { useRouter } from 'vue-router'
@@ -35,6 +36,9 @@ const adding = ref<Set<number>>(new Set())
 const added = ref<Set<number>>(new Set())
 const expanded = ref<Set<number>>(new Set())
 const duplicateInfo = ref<{ index: number; existing_name: string } | null>(null)
+// AI 兜底分析:当知识库提取失败时使用,提供对题目本身的整体解析
+const analyzing = ref(false)
+const analysis = ref('')
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -61,6 +65,8 @@ async function loadPoints() {
   points.value = []
   added.value = new Set()
   expanded.value = new Set()
+  // 重新提取时清空上一次的兜底分析,避免误用旧结果
+  analysis.value = ''
   try {
     const res = await extractKnowledgePoints({
       api_config: aiStore.getConfig(),
@@ -76,6 +82,43 @@ async function loadPoints() {
   } finally {
     loading.value = false
   }
+}
+
+// 兜底入口:当 AI 未提取到有效知识点时,直接对题目做整体解析(知识点/正确答案分析/巩固建议)。
+// 后端 /ai/analyze 要求 user_answer,这里用占位文字传过去,prompt 中"用户答案哪里错了"会被自然跳过。
+async function handleAnalyze() {
+  if (!aiStore.hasConfig) {
+    if (confirm('尚未配置 AI API Key，是否前往配置？')) {
+      router.push('/ai/config')
+    }
+    return
+  }
+  if (!props.questionContent) {
+    showToast('题目内容为空', 'error')
+    return
+  }
+  analyzing.value = true
+  analysis.value = ''
+  try {
+    const res = await analyzeQuestion({
+      api_config: aiStore.getConfig(),
+      question_content: props.questionContent,
+      question_type: props.questionType || '',
+      question_answer: props.questionAnswer || '',
+      user_answer: '（用户尚未作答，请直接对题目本身做整体解析）',
+    })
+    analysis.value = res.analysis
+  } catch (e) {
+    showToast((e as Error).message || 'AI 分析失败', 'error')
+  } finally {
+    analyzing.value = false
+  }
+}
+
+// 在分析结果页点"重新提取",清空分析并走一次 extract
+function retryExtract() {
+  analysis.value = ''
+  loadPoints()
 }
 
 function toggleExpand(i: number) {
@@ -149,7 +192,50 @@ function onModalOpen(v: boolean) {
       </div>
     </div>
 
-    <BaseEmpty v-else-if="!points.length" title="AI 未提取到有效知识点" description="可尝试重新回答本题" />
+    <!-- AI 兜底分析进行中 -->
+    <div v-else-if="analyzing" class="space-y-3">
+      <div class="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+        <div class="skeleton mb-2 h-4 w-40" />
+        <div class="skeleton h-3 w-full" />
+        <div class="skeleton mt-1.5 h-3 w-11/12" />
+        <div class="skeleton mt-1.5 h-3 w-3/4" />
+      </div>
+      <p class="text-center text-xs text-indigo-600">
+        <span class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent align-middle" />
+        AI 正在解析题目…
+      </p>
+    </div>
+
+    <!-- AI 兜底分析结果:知识库提取失败时的备选视图 -->
+    <div v-else-if="analysis" class="space-y-3">
+      <div class="flex items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50/40 px-3 py-2 text-xs text-indigo-700">
+        <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+        </svg>
+        <span>AI 对题目的整体解析（未能拆出可加入知识库的条目时使用）</span>
+      </div>
+      <div
+        class="prose-sm max-h-[60vh] overflow-y-auto whitespace-pre-line rounded-xl border border-gray-100 bg-white p-4 text-sm leading-relaxed text-gray-700"
+        v-html="renderHtml(analysis)"
+      />
+    </div>
+
+    <!-- 空状态:知识库提取失败 + 提供 AI 兜底分析入口 -->
+    <BaseEmpty
+      v-else-if="!points.length"
+      title="AI 未提取到有效知识点"
+      description="可点击下方按钮，让 AI 直接对题目做整体解析"
+    >
+      <template #action>
+        <BaseButton type="primary" size="sm" @click="handleAnalyze">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+          </svg>
+          AI分析
+        </BaseButton>
+      </template>
+    </BaseEmpty>
+
     <div v-else class="space-y-3">
       <div
         v-for="(p, i) in points"
@@ -197,7 +283,8 @@ function onModalOpen(v: boolean) {
       </div>
     </div>
 
-    <template v-if="!loading && points.length">
+    <!-- 知识库提取结果底部操作 -->
+    <template v-if="!loading && !analyzing && !analysis && points.length">
       <div class="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
         <span class="text-xs text-gray-400">已加入 {{ added.size }} / {{ points.length }} 条</span>
         <div class="flex items-center gap-2">
@@ -211,6 +298,14 @@ function onModalOpen(v: boolean) {
             全部加入
           </BaseButton>
         </div>
+      </div>
+    </template>
+
+    <!-- AI 兜底分析结果底部操作:可重新走知识库提取 -->
+    <template v-else-if="!loading && !analyzing && analysis">
+      <div class="mt-5 flex items-center justify-end gap-2 border-t border-gray-100 pt-4">
+        <BaseButton type="secondary" size="sm" @click="close">关闭</BaseButton>
+        <BaseButton type="primary" size="sm" @click="retryExtract">重新提取</BaseButton>
       </div>
     </template>
 

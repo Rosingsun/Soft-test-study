@@ -41,6 +41,27 @@ func (r *AiRepo) FindRandomByUserAndSubject(userID, subjectID uint, count int) (
 	return list, err
 }
 
+// FindSubjectsByIDs 一次查多个科目名（用于补全 in-flight 任务的 subject_name）
+// 内部走 subjects 表；未命中的 id 在返回 map 中不存在，由调用方按需处理。
+func (r *AiRepo) FindSubjectsByIDs(ids []uint) (map[uint]string, error) {
+	out := make(map[uint]string, len(ids))
+	if len(ids) == 0 {
+		return out, nil
+	}
+	type row struct {
+		ID   uint
+		Name string
+	}
+	var rows []row
+	if err := r.db.Table("subjects").Select("id, name").Where("id IN ?", ids).Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+	for _, x := range rows {
+		out[x.ID] = x.Name
+	}
+	return out, nil
+}
+
 // CountByUserAndSubject 统计用户在某科目下已关联题库的 AI 题目数量
 func (r *AiRepo) CountByUserAndSubject(userID, subjectID uint) (int64, error) {
 	var count int64
@@ -69,17 +90,26 @@ type AiBatchSummary struct {
 	QuestionIDs string
 	// KnowledgePoints 该批次去重知识点（| 分隔，取自 GROUP_CONCAT DISTINCT）
 	KnowledgePoints string
+	// SubjectName / ChapterName 由 LEFT JOIN 一次带回，避免 service 层 N+1 查询
+	SubjectName string
+	ChapterName string
 }
 
 // ListBatchSummaries 按 batch_id 分组列出某用户最近 limit 次生成批次
+// 一次 LEFT JOIN 带回科目与章节名称，替代在 service 层循环 FindByID
 func (r *AiRepo) ListBatchSummaries(userID uint, limit int) ([]AiBatchSummary, error) {
 	var summaries []AiBatchSummary
-	err := r.db.Model(&model.AiGeneratedQuestion{}).
-		Select("batch_id, subject_id, chapter_id, type, difficulty, COUNT(*) AS count, MAX(created_at) AS created_at, " +
-			"GROUP_CONCAT(question_id) AS question_ids, " +
-			"GROUP_CONCAT(DISTINCT knowledge_point SEPARATOR '|') AS knowledge_points").
-		Where("user_id = ? AND batch_id != ''", userID).
-		Group("batch_id, subject_id, chapter_id, type, difficulty").
+	err := r.db.Table("ai_generated_questions AS q").
+		Select("q.batch_id AS batch_id, q.subject_id AS subject_id, q.chapter_id AS chapter_id, " +
+			"q.type AS type, q.difficulty AS difficulty, COUNT(*) AS count, MAX(q.created_at) AS created_at, " +
+			"GROUP_CONCAT(q.question_id) AS question_ids, " +
+			"GROUP_CONCAT(DISTINCT q.knowledge_point SEPARATOR '|') AS knowledge_points, " +
+			"MAX(s.name) AS subject_name, " +
+			"MAX(c.name) AS chapter_name").
+		Joins("LEFT JOIN subjects s ON s.id = q.subject_id").
+		Joins("LEFT JOIN chapters c ON c.id = q.chapter_id").
+		Where("q.user_id = ? AND q.batch_id != ''", userID).
+		Group("q.batch_id, q.subject_id, q.chapter_id, q.type, q.difficulty").
 		Order("created_at DESC").
 		Limit(limit).
 		Scan(&summaries).Error
@@ -169,6 +199,18 @@ func (r *AiGeneratedTaskRepo) ListByUser(userID uint, limit int) ([]model.AiGene
 	var rows []model.AiGeneratedTask
 	err := r.db.Where("user_id = ?", userID).
 		Order("updated_at DESC").Limit(limit).Find(&rows).Error
+	return rows, err
+}
+
+// ListInflightByUser 列某用户所有 status IN ('pending','running') 的任务
+// 按 created_at DESC；用于 ListGenerateHistory 把进行中任务 union 进历史列表。
+func (r *AiGeneratedTaskRepo) ListInflightByUser(userID uint, limit int) ([]model.AiGeneratedTask, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	var rows []model.AiGeneratedTask
+	err := r.db.Where("user_id = ? AND status IN ?", userID, []string{"pending", "running"}).
+		Order("created_at DESC").Limit(limit).Find(&rows).Error
 	return rows, err
 }
 

@@ -158,7 +158,7 @@ func (h *AiHandler) ListGenerateTasks(c *gin.Context) {
 	response.Success(c, gin.H{"list": tasks})
 }
 
-// ListHistory 列出当前用户的 AI 生成题历史批次
+// ListHistory 列出当前用户的 AI 生成题历史批次（已完成）
 func (h *AiHandler) ListHistory(c *gin.Context) {
 	userIDVal, _ := c.Get("user_id")
 	userID, ok := userIDVal.(uint)
@@ -168,6 +168,26 @@ func (h *AiHandler) ListHistory(c *gin.Context) {
 	}
 
 	resp, err := h.svc.ListGenerateHistory(userID, 50)
+	if err != nil {
+		response.Error(c, config.CodeBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// ListInflightTasks 列出当前用户所有进行中的 AI 出题任务（pending/running）。
+// 与 /ai/history 分开：进行中任务不进 ai_generated_questions，独立查 ai_generated_tasks。
+// 失败时返回 500，不静默吞错——否则用户刷新页面会看到「记录凭空消失」。
+func (h *AiHandler) ListInflightTasks(c *gin.Context) {
+	userIDVal, _ := c.Get("user_id")
+	userID, ok := userIDVal.(uint)
+	if !ok || userID == 0 {
+		response.Error(c, config.CodeUnauthorized, "未登录")
+		return
+	}
+
+	resp, err := h.svc.ListInflightTasks(userID, 50)
 	if err != nil {
 		response.Error(c, config.CodeBadRequest, err.Error())
 		return
