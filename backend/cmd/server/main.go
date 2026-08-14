@@ -19,7 +19,7 @@ func main() {
 
 	r := gin.Default()
 
-	// 跨域中间件：生产环境前端与后端同主机不同端口（前端静态 :80/5173, 后端 :9000），
+	// 跨域中间件：生产环境前端与后端同主机不同端口（前端静态 :80/5173, 后端 :3000），
 	// 浏览器视为跨源，必须放行 CORS 头与 OPTIONS 预检。
 	r.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")

@@ -14,11 +14,11 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://1.12.248.91:9000',
+        target: 'http://www.fazhiyinqing.cn:3000',
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://1.12.248.91:9000',
+        target: 'http://www.fazhiyinqing.cn:3000',
         changeOrigin: true,
       },
     },
