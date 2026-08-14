@@ -2,7 +2,7 @@ import { get } from './request'
 import { showToast } from '@/utils/toast'
 import type { StudyMaterialResp } from '@/types/material'
 
-const BASE_URL = '/api/v1'
+const BASE_URL = 'http://1.12.248.91:9000/api/v1'
 
 export function listMaterials(subjectId?: number) {
   return get<StudyMaterialResp[]>('/materials', subjectId ? { subject_id: subjectId } : undefined)

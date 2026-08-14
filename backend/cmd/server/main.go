@@ -19,6 +19,21 @@ func main() {
 
 	r := gin.Default()
 
+	// 跨域中间件：生产环境前端与后端同主机不同端口（前端静态 :80/5173, 后端 :9000），
+	// 浏览器视为跨源，必须放行 CORS 头与 OPTIONS 预检。
+	r.Use(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept")
+		c.Header("Access-Control-Expose-Headers", "Content-Length, Content-Disposition")
+		c.Header("Access-Control-Max-Age", "600")
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+		c.Next()
+	})
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
