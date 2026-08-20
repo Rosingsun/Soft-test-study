@@ -3,11 +3,13 @@
 // 业务说明：
 //   - 启动时只调一次 MigrateUp，按顺序执行未应用版本的迁移
 //   - 不再依赖 GORM AutoMigrate，避免启动期 100+ 条 information_schema 元数据查询
-//   - 迁移文件位于 ./migrations 子目录，命名规则 NNN_name.up.sql / .down.sql
+//   - 迁移文件通过 embed.FS 编译进二进制，不再依赖外部 ./migrations 目录
+//   - 文件命名规则 NNN_name.up.sql / .down.sql，位于 internal/migrations/sql/
 package migrations
 
 import (
 	"database/sql"
+	"embed"
 	"errors"
 	"fmt"
 	"net/url"
@@ -15,11 +17,24 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	migratemysql "github.com/golang-migrate/migrate/v4/database/mysql"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
-// dir 相对当前工作目录；执行目录为 backend/，故 ./migrations 即指向 backend/migrations
-const dir = "file://migrations"
+//go:embed sql/*.sql
+var migrationsFS embed.FS
+
+// embeddedDir 是 iofs 在 embed FS 内的根路径。
+const embeddedDir = "sql"
+
+// newSource 基于编译期嵌入的迁移文件构造一个 source.Driver。
+func newSource() (source.Driver, error) {
+	src, err := iofs.New(migrationsFS, embeddedDir)
+	if err != nil {
+		return nil, fmt.Errorf("migrations: 加载嵌入迁移失败: %w", err)
+	}
+	return src, nil
+}
 
 // MigrateUp 应用所有未执行的迁移
 //
@@ -35,7 +50,14 @@ func MigrateUp(appDSN string) error {
 	}
 	defer db.Close()
 	defer driver.Close()
-	m, err := migrate.NewWithDatabaseInstance(dir, "mysql", driver)
+
+	src, err := newSource()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	m, err := migrate.NewWithInstance("iofs", src, "mysql", driver)
 	if err != nil {
 		return fmt.Errorf("migrations: 创建 migrate 实例失败: %w", err)
 	}
@@ -58,7 +80,14 @@ func MigrateDown(appDSN string, steps int) error {
 	}
 	defer db.Close()
 	defer driver.Close()
-	m, err := migrate.NewWithDatabaseInstance(dir, "mysql", driver)
+
+	src, err := newSource()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	m, err := migrate.NewWithInstance("iofs", src, "mysql", driver)
 	if err != nil {
 		return fmt.Errorf("migrations: 创建 migrate 实例失败: %w", err)
 	}
@@ -78,7 +107,14 @@ func Force(appDSN string, version int) error {
 	}
 	defer db.Close()
 	defer driver.Close()
-	m, err := migrate.NewWithDatabaseInstance(dir, "mysql", driver)
+
+	src, err := newSource()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	m, err := migrate.NewWithInstance("iofs", src, "mysql", driver)
 	if err != nil {
 		return fmt.Errorf("migrations: 创建 migrate 实例失败: %w", err)
 	}
@@ -134,14 +170,4 @@ func withMultiStatements(dsn string) (string, error) {
 	}
 	values.Set("multiStatements", "true")
 	return base + "?" + values.Encode(), nil
-}
-
-// 用于调试：确保 dir 字符串是合法的 file:// URL
-func init() {
-	if _, err := url.Parse(dir); err != nil {
-		panic("migrations: 迁移目录 URL 不合法: " + dir + ", err: " + err.Error())
-	}
-	if !strings.HasPrefix(dir, "file://") {
-		panic("migrations: 迁移目录必须以 file:// 开头, got: " + dir)
-	}
 }

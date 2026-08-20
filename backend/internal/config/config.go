@@ -38,7 +38,7 @@ func Load() *Config {
 		DBName:               getEnv("DB_NAME", "softteststudyt"),
 		JWTSecret:            getEnv("JWT_SECRET", "dev-secret-change-me"),
 		JWTExpiresIn:         getEnvInt("JWT_EXPIRES_IN", 168),
-		ServerPort:           getEnv("SERVER_PORT", "8080"),
+		ServerPort:           getEnv("SERVER_PORT", "3000"),
 		SMTPHost:             getEnv("SMTP_HOST", ""),
 		SMTPPort:             getEnvInt("SMTP_PORT", 465),
 		SMTPUser:             getEnv("SMTP_USER", ""),

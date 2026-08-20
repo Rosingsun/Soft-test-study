@@ -1,7 +1,7 @@
 import type { ApiResponse } from '@/types/common'
 import { showToast } from '@/utils/toast'
 
-const BASE_URL = 'http://www.fazhiyinqing.cn:3000/api/v1'
+const BASE_URL = import.meta.env.DEV ? '/api/v1' : 'http://www.fazhiyinqing.cn:3000/api/v1'
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const token = localStorage.getItem('access_token')
