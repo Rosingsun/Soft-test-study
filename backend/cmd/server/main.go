@@ -13,6 +13,15 @@ import (
 func main() {
 	cfg := config.Load()
 
+	// OPT-02: 生产环境强制校验 JWT 密钥强度
+	if cfg.AppEnv == "production" {
+		if cfg.JWTSecret == "" ||
+			cfg.JWTSecret == "dev-secret-change-me" ||
+			len(cfg.JWTSecret) < 32 {
+			log.Fatal("JWT_SECRET 未配置或强度不足，禁止生产环境启动")
+		}
+	}
+
 	db, err := database.Init(cfg)
 	if err != nil {
 		log.Fatalf("数据库初始化失败: %v", err)
