@@ -1,19 +1,19 @@
 package service
 
 import (
-	"gorm.io/gorm"
-
 	"github.com/soft-test-study/backend/internal/dto"
 	"github.com/soft-test-study/backend/internal/model"
+	"github.com/soft-test-study/backend/internal/repository"
 )
 
 // NotificationService 通知服务（CRUD + 主动推送）
+// OPT-18：持有 *repository.NotificationRepo，遵循 AGENTS.md 分层规则（repository 层做数据库查询）
 type NotificationService struct {
-	db *gorm.DB
+	repo *repository.NotificationRepo
 }
 
-func NewNotificationService(db *gorm.DB) *NotificationService {
-	return &NotificationService{db: db}
+func NewNotificationService(repo *repository.NotificationRepo) *NotificationService {
+	return &NotificationService{repo: repo}
 }
 
 // Push 主动推送一条通知
@@ -26,22 +26,17 @@ func (s *NotificationService) Push(userID uint, ntype, title, content, link stri
 		Link:    link,
 		Read:    false,
 	}
-	return s.db.Create(n).Error
+	return s.repo.Create(n)
 }
 
 // List 列出某用户的通知（最近 limit 条），按时间倒序
 func (s *NotificationService) List(userID uint, limit int) ([]model.Notification, int64, error) {
-	var list []model.Notification
-	var unread int64
-	if err := s.db.Where("user_id = ?", userID).
-		Order("created_at desc").
-		Limit(limit).
-		Find(&list).Error; err != nil {
+	list, err := s.repo.ListByUser(userID, limit)
+	if err != nil {
 		return nil, 0, err
 	}
-	if err := s.db.Model(&model.Notification{}).
-		Where("user_id = ? AND read = ?", userID, false).
-		Count(&unread).Error; err != nil {
+	unread, err := s.repo.CountUnread(userID)
+	if err != nil {
 		return list, 0, nil
 	}
 	return list, unread, nil
@@ -49,25 +44,21 @@ func (s *NotificationService) List(userID uint, limit int) ([]model.Notification
 
 // UnreadCount 未读数
 func (s *NotificationService) UnreadCount(userID uint) int64 {
-	var n int64
-	s.db.Model(&model.Notification{}).
-		Where("user_id = ? AND read = ?", userID, false).
-		Count(&n)
+	n, err := s.repo.CountUnread(userID)
+	if err != nil {
+		return 0
+	}
 	return n
 }
 
 // MarkRead 标记单条已读
 func (s *NotificationService) MarkRead(userID, id uint) error {
-	return s.db.Model(&model.Notification{}).
-		Where("user_id = ? AND id = ?", userID, id).
-		Update("read", true).Error
+	return s.repo.MarkRead(userID, id)
 }
 
 // MarkAllRead 全部标记已读
 func (s *NotificationService) MarkAllRead(userID uint) error {
-	return s.db.Model(&model.Notification{}).
-		Where("user_id = ? AND read = ?", userID, false).
-		Update("read", true).Error
+	return s.repo.MarkAllRead(userID)
 }
 
 // ToResp 模型转 DTO

@@ -40,7 +40,8 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	emailCodeRepo := repository.NewEmailVerificationCodeRepo(db)
 	invitationCodeRepo := repository.NewInvitationCodeRepo(db)
 
-	notifySvc := service.NewNotificationService(db)
+	notifyRepo := repository.NewNotificationRepo(db)
+	notifySvc := service.NewNotificationService(notifyRepo)
 	knowledgePointRepo := repository.NewKnowledgePointRepo(db)
 
 	userSvc := service.NewUserService(
