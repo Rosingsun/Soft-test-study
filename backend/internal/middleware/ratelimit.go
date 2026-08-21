@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/soft-test-study/backend/internal/config"
 )
 
 type visitorEntry struct {
@@ -32,7 +33,11 @@ func RateLimit(maxRequests int, window time.Duration) gin.HandlerFunc {
 
 		if v.count >= maxRequests {
 			mu.Unlock()
-			c.JSON(http.StatusTooManyRequests, gin.H{"code": 10004, "message": "请求过于频繁，请稍后重试"})
+			// OPT-23: 改用 CodeTooManyRequests (10006)，避免与 CodeForbidden (10004) 冲突
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"code":    config.CodeTooManyRequests,
+				"message": "操作过于频繁，请稍后再试",
+			})
 			c.Abort()
 			return
 		}

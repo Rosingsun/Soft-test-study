@@ -1,6 +1,7 @@
 import type { Router } from 'vue-router'
 import type { ApiResponse } from '@/types/common'
 import { showToast } from '@/utils/toast'
+import { getErrorMessage } from '@/utils/error'
 
 const BASE_URL = import.meta.env.DEV ? '/api/v1' : 'http://www.fazhiyinqing.cn:3000/api/v1'
 
@@ -55,8 +56,8 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
       // 401 跳转到登录后不再 toast（避免连续弹多条）
       throw new Error(json.message)
     }
-    showToast(json.message || '请求失败')
-    throw new Error(json.message)
+    showToast(getErrorMessage(json.code, json.message))
+    throw new Error(json.message || getErrorMessage(json.code))
   }
 
   return json.data as T
