@@ -30,6 +30,11 @@ func main() {
 	r := gin.New()
 	r.Use(gin.Recovery(), gin.Logger())
 
+	// OPT-06: 设置可信代理白名单
+	if err := r.SetTrustedProxies(cfg.TrustedProxies); err != nil {
+		log.Printf("[warn] SetTrustedProxies failed: %v", err)
+	}
+
 	// OPT-01: CORS 白名单（替换原通配符实现）
 	r.Use(middleware.CORSMiddleware(cfg.CORSAllowedOrigins, cfg.AppEnv))
 

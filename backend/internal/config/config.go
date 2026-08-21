@@ -29,6 +29,8 @@ type Config struct {
 	CORSAllowedOrigins []string
 	// OPT-01: 应用环境，development / production（同时为 OPT-02 准备）
 	AppEnv string
+	// OPT-06: 反向代理白名单
+	TrustedProxies []string
 }
 
 func Load() *Config {
@@ -55,6 +57,8 @@ func Load() *Config {
 		CORSAllowedOrigins: getEnvCSV("CORS_ALLOWED_ORIGINS", []string{"http://localhost:5173"}),
 		// OPT-01: 应用环境，development / production（同时为 OPT-02 准备）
 		AppEnv: getEnv("APP_ENV", "development"),
+		// OPT-06: 反向代理白名单（默认仅本机，公网部署需包含 Nginx 网段）
+		TrustedProxies: getEnvCSV("TRUSTED_PROXIES", []string{"127.0.0.1", "::1"}),
 	}
 
 	if cfg.DBPassword == "" {
