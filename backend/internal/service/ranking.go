@@ -2,6 +2,7 @@ package service
 
 import (
 	"math"
+	"slices"
 	"sort"
 	"time"
 
@@ -31,6 +32,22 @@ type rankValue struct {
 	Value   float64
 	SortVal float64 // 参与排名的排序值（可与展示值不同，如平滑正确率）
 	SubVal  float64 // 次要排序值（如打卡总天数）
+}
+
+// findMyRank 寻找 my 的竞赛名次。
+// items 必须按 (SortVal DESC, SubVal DESC) 排序。
+// 返回 (rank, myValue, found)；未找到 userID 时 found=false。
+// OPT-24：原实现先 O(n) 找 my、再 O(n) 算 rank，两次线性扫描；
+// 本实现用 slices.IndexFunc 一次定位 my 在已排序数组中的下标，下标 +1 即为名次。
+// （同一 SortVal/SubVal 组合按数组顺序区分名次，与旧行为一致。）
+func findMyRank(items []rankValue, userID uint) (rank int, myValue float64, found bool) {
+	idx := slices.IndexFunc(items, func(it rankValue) bool {
+		return it.UserID == userID
+	})
+	if idx < 0 {
+		return 0, 0, false
+	}
+	return idx + 1, items[idx].Value, true
 }
 
 // Get 获取排行：仅返回本人名次 + 匿名统计线
@@ -78,32 +95,16 @@ func (s *RankingService) Get(userID uint, category, metric string, subjectID uin
 		return resp, nil
 	}
 
-	// 我的名次（竞赛排名：并列同 rank）
-	var my *rankValue
-	for _, it := range items {
-		if it.UserID == userID {
-			my = &it
-			break
-		}
-	}
-	if my != nil {
-		rank := 1
-		for _, it := range items {
-			if it.SortVal > my.SortVal {
-				rank++
-			} else if it.SortVal == my.SortVal && it.SubVal > my.SubVal {
-				rank++
-			} else {
-				break
-			}
-		}
+	// 我的名次（OPT-24：slices.IndexFunc 一次定位，下标 +1 即名次）
+	rank, myValue, found := findMyRank(items, userID)
+	if found {
 		percentile := 0
 		if participants > 0 {
 			percentile = int(math.Round(float64(rank) / float64(participants) * 100))
 		}
 		resp.My = &dto.RankingMyResp{
 			Rank:              rank,
-			Value:             my.Value,
+			Value:             myValue,
 			TotalParticipants: participants,
 			Percentile:        percentile,
 		}
@@ -123,10 +124,6 @@ func (s *RankingService) Get(userID uint, category, metric string, subjectID uin
 	resp.Reference.Top10Threshold = items[topCount-1].Value
 
 	// 各阶段人员分布（可视化表格）
-	myValue := -1.0
-	if my != nil {
-		myValue = my.Value
-	}
 	resp.Distribution = buildDistribution(category, metric, items, myValue)
 
 	return resp, nil
