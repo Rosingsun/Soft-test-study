@@ -64,8 +64,9 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config, ctx context.Context) 
 	wrongSvc := service.NewWrongQuestionService(wrongRepo, questionRepo, practiceRecordRepo, reviewSvc)
 	examSvc := service.NewExamService(db, examTemplateRepo, examRecordRepo, questionRepo, reviewSvc)
 	// 注册并启动考试超时 janitor（每 30s 扫描 pending 记录并自动交卷）
+	// OPT-20: 接收根 ctx，便于服务关闭时退出
 	service.SetExamJanitor(examSvc)
-	service.StartExamJanitor()
+	service.StartExamJanitor(ctx)
 	statsRepo := repository.NewStatsRepo(db)
 	statsSvc := service.NewStatsService(statsRepo, subjectRepo)
 	// OPT-19: AI 任务管理改为通过 AiTaskManager 依赖注入（替代旧包级 var）

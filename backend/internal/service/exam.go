@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"log"
 	"math"
@@ -610,18 +611,29 @@ func SetExamJanitor(svc *ExamService) {
 
 // StartExamJanitor 启动后台 goroutine，每 30s 扫描一次过期 pending 考试并自动交卷。
 // 仅处理 template_id > 0 的常规考试（AI 考试依赖客户端定时器 / StartExam 入口防御）。
-// 首次启动延迟 5s 等待服务就绪。
-func StartExamJanitor() {
+// 首次启动延迟 5s 等待服务就绪。ctx 取消后 janitor 立刻退出（OPT-20）。
+func StartExamJanitor(ctx context.Context) {
 	if examJanitor == nil {
 		log.Println("[exam janitor] ExamService 未注册，janitor 启动跳过")
 		return
 	}
 	go func() {
-		time.Sleep(5 * time.Second)
+		select {
+		case <-ctx.Done():
+			log.Println("[exam janitor] 启动前已收到取消信号，janitor 不再启动")
+			return
+		case <-time.After(5 * time.Second):
+		}
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
-		for range ticker.C {
-			examJanitor.settleExpiredRecords()
+		for {
+			select {
+			case <-ctx.Done():
+				log.Println("[exam janitor] 收到取消信号，janitor 退出")
+				return
+			case <-ticker.C:
+				examJanitor.settleExpiredRecords()
+			}
 		}
 	}()
 }
