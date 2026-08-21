@@ -25,6 +25,10 @@ type Config struct {
 	SMTPPassword         string
 	SMTPFromName         string
 	AdminBypassUsernames []string
+	// OPT-01: CORS 白名单
+	CORSAllowedOrigins []string
+	// OPT-01: 应用环境，development / production（同时为 OPT-02 准备）
+	AppEnv string
 }
 
 func Load() *Config {
@@ -45,6 +49,8 @@ func Load() *Config {
 		SMTPPassword:         os.Getenv("SMTP_PASSWORD"),
 		SMTPFromName:         getEnv("SMTP_FROM_NAME", "软考学系"),
 		AdminBypassUsernames: getEnvCSV("ADMIN_BYPASS_USERNAMES", []string{"ross"}),
+		CORSAllowedOrigins:   getEnvCSV("CORS_ALLOWED_ORIGINS", []string{"http://localhost:5173"}),
+		AppEnv:               getEnv("APP_ENV", "development"),
 	}
 
 	if cfg.DBPassword == "" {
