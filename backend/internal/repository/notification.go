@@ -31,10 +31,11 @@ func (r *NotificationRepo) ListByUser(userID uint, limit int) ([]model.Notificat
 }
 
 // CountUnread 未读通知数
+// 注意：read 是 MySQL 保留字，必须用反引号转义，否则会报 1064 语法错误
 func (r *NotificationRepo) CountUnread(userID uint) (int64, error) {
 	var n int64
 	err := r.db.Model(&model.Notification{}).
-		Where("user_id = ? AND read = ?", userID, false).
+		Where("user_id = ? AND `read` = ?", userID, false).
 		Count(&n).Error
 	return n, err
 }
@@ -43,12 +44,12 @@ func (r *NotificationRepo) CountUnread(userID uint) (int64, error) {
 func (r *NotificationRepo) MarkRead(userID, id uint) error {
 	return r.db.Model(&model.Notification{}).
 		Where("user_id = ? AND id = ?", userID, id).
-		Update("read", true).Error
+		Update("`read`", true).Error
 }
 
 // MarkAllRead 全部标记已读
 func (r *NotificationRepo) MarkAllRead(userID uint) error {
 	return r.db.Model(&model.Notification{}).
-		Where("user_id = ? AND read = ?", userID, false).
-		Update("read", true).Error
+		Where("user_id = ? AND `read` = ?", userID, false).
+		Update("`read`", true).Error
 }
