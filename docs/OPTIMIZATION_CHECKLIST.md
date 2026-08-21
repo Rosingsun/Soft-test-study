@@ -832,6 +832,8 @@ OPT-18 ──> OPT-19（OPT-18 提供后端批量接口，OPT-19 调用之）
 - **类别**：规范
 - **风险等级**：低
 - **影响文件**：`backend/internal/middleware/ratelimit.go:35`、`backend/internal/config/errors.go`
+- **状态**：completed
+- **Commit**：`e68a99b`
 
 **现状**：
 - 限流错误码 `10004` 与 `config.CodeForbidden=10004` 冲突
@@ -859,6 +861,8 @@ OPT-18 ──> OPT-19（OPT-18 提供后端批量接口，OPT-19 调用之）
 - **类别**：性能
 - **风险等级**：低
 - **影响文件**：`backend/internal/service/ranking.go:53-58`
+- **状态**：completed
+- **Commit**：`133611c`
 
 **现状**：
 - `sort.Slice` 后用 O(n) 遍历找"我的排名"，n 较小时可接受，n=10000 时 O(n²) 不可接受
