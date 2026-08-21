@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
+func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config, ctx context.Context) {
 	api := r.Group("/api/v1")
 
 	userRepo := repository.NewUserRepo(db)
@@ -67,10 +68,11 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	service.StartExamJanitor()
 	statsRepo := repository.NewStatsRepo(db)
 	statsSvc := service.NewStatsService(statsRepo, subjectRepo)
-	// 修复 #20：传入 aiTaskRepo；NewAiService 内部会调用 SetAITaskRepo 注入包级变量
-	aiSvc := service.NewAiService(aiRepo, aiTaskRepo, questionRepo, subjectRepo, chapterRepo, examRecordRepo, essayScoreRepo, practiceRecordRepo, notifySvc)
+	// OPT-19: AI 任务管理改为通过 AiTaskManager 依赖注入（替代旧包级 var）
+	aiTaskMgr := service.NewAiTaskManager(aiTaskRepo)
+	aiSvc := service.NewAiService(aiRepo, aiTaskMgr, questionRepo, subjectRepo, chapterRepo, examRecordRepo, essayScoreRepo, practiceRecordRepo, notifySvc)
 	// 注册 AI 出题超时通知回调（janitor 标记失败后调用）
-	service.RegisterTimeoutNotifier(func(userID uint, taskID, msg string) {
+	aiTaskMgr.SetNotifier(func(userID uint, taskID, msg string) {
 		short := msg
 		if len(short) > 200 {
 			short = short[:200] + "..."
@@ -78,13 +80,13 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 		if err := notifySvc.Push(userID, "ai_generate_failed", "AI 出题失败",
 			"任务超时："+short+"。请稍后重试或调整参数。",
 			"/ai/practice?task_id="+taskID); err != nil {
-			// 修复 #20：通知失败不再静默吞错
 			log.Printf("[ai task] timeout notifier push failed user_id=%d task_id=%s: %v",
 				userID, taskID, err)
 		}
 	})
 	// 启动 AI 出题超时 janitor（每 1min 扫描 pending > 5min / running > 30min 的任务并标记 failed）
-	service.StartAITaskJanitor(aiTaskRepo)
+	// OPT-20: 接收根 ctx 便于服务关闭时退出
+	aiTaskMgr.StartJanitor(ctx)
 	// 启动时恢复 in-flight 任务（把 DB 中 status='running' 的行加回内存）
 	if err := aiSvc.RecoverInflightTasks(); err != nil {
 		log.Printf("[ai task] recover inflight failed: %v", err)

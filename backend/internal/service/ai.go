@@ -18,7 +18,7 @@ import (
 
 type AiService struct {
 	aiRepo         *repository.AiRepo
-	aiTaskRepo     *repository.AiGeneratedTaskRepo
+	aiTaskMgr      *AiTaskManager
 	questionRepo   *repository.QuestionRepo
 	subjectRepo    *repository.SubjectRepo
 	chapterRepo    *repository.ChapterRepo
@@ -30,7 +30,7 @@ type AiService struct {
 
 func NewAiService(
 	aiRepo *repository.AiRepo,
-	aiTaskRepo *repository.AiGeneratedTaskRepo,
+	aiTaskMgr *AiTaskManager,
 	questionRepo *repository.QuestionRepo,
 	subjectRepo *repository.SubjectRepo,
 	chapterRepo *repository.ChapterRepo,
@@ -39,11 +39,9 @@ func NewAiService(
 	practiceRepo *repository.PracticeRecordRepo,
 	notifySvc *NotificationService,
 ) *AiService {
-	// 把 repo 注入到 ai_task.go 的包级变量，让 SetAITask* 等函数也能双写 DB
-	SetAITaskRepo(aiTaskRepo)
 	return &AiService{
 		aiRepo:         aiRepo,
-		aiTaskRepo:     aiTaskRepo,
+		aiTaskMgr:      aiTaskMgr,
 		questionRepo:   questionRepo,
 		subjectRepo:    subjectRepo,
 		chapterRepo:    chapterRepo,
@@ -59,10 +57,10 @@ func NewAiService(
 // 修复 #20：服务重启后原 goroutine 丢失，DB 记录仍在，janitor 在下一轮扫描时会自动
 // 标记为 failed（30min running 超时）并推送通知，避免任务永久 hang。
 func (s *AiService) RecoverInflightTasks() error {
-	if s.aiTaskRepo == nil {
+	if s.aiTaskMgr == nil {
 		return nil
 	}
-	return RecoverInflightTasks()
+	return s.aiTaskMgr.RecoverInflight()
 }
 
 func (s *AiService) GetProviders() dto.AiProvidersResp {
@@ -373,7 +371,7 @@ func (s *AiService) SubmitGenerateAsync(userID uint, req dto.GenerateQuestionsRe
 		}
 	}
 
-	task := NewAITask(userID, req.SubjectID, questionType, req.ChapterID, chapterName, req.Difficulty, req.Count)
+	task := s.aiTaskMgr.NewTask(userID, req.SubjectID, questionType, req.ChapterID, chapterName, req.Difficulty, req.Count)
 
 	// 启动后台 goroutine 执行
 	go s.runGenerateTask(userID, task.ID, subjectName, req)
@@ -387,28 +385,28 @@ func (s *AiService) runGenerateTask(userID uint, taskID, subjectName string, req
 	defer func() {
 		if r := recover(); r != nil {
 			errMsg := fmt.Sprintf("AI 出题后台任务异常: %v", r)
-			SetAITaskFailed(taskID, errMsg)
+			s.aiTaskMgr.SetFailed(taskID, errMsg)
 			s.pushGenerateFailedNotification(userID, taskID, errMsg)
 		}
 	}()
 
-	SetAITaskRunning(taskID)
+	s.aiTaskMgr.SetRunning(taskID)
 
 	items, err := s.callAIAndParse(req.ApiConfig, req.SubjectID, req.ChapterID, req.Types, req.Difficulty, req.Count)
 	if err != nil {
-		SetAITaskFailed(taskID, err.Error())
+		s.aiTaskMgr.SetFailed(taskID, err.Error())
 		s.pushGenerateFailedNotification(userID, taskID, err.Error())
 		return
 	}
 
 	resp, err := s.saveGenerated(userID, req.SubjectID, req.ChapterID, taskID, items)
 	if err != nil {
-		SetAITaskFailed(taskID, err.Error())
+		s.aiTaskMgr.SetFailed(taskID, err.Error())
 		s.pushGenerateFailedNotification(userID, taskID, "题目入库失败: "+err.Error())
 		return
 	}
 
-	SetAITaskSuccess(taskID, resp)
+	s.aiTaskMgr.SetSuccess(taskID, resp)
 	s.pushGenerateSuccessNotification(userID, taskID, subjectName, len(items))
 }
 
@@ -453,7 +451,7 @@ func (s *AiService) GetGenerateTask(taskID string, userID uint) (*dto.AsyncGener
 	if userID == 0 {
 		return nil, fmt.Errorf("任务不存在或已过期")
 	}
-	task := GetAITask(taskID, userID)
+	task := s.aiTaskMgr.Get(taskID, userID)
 	if task == nil {
 		return nil, fmt.Errorf("任务不存在或已过期")
 	}
@@ -463,7 +461,7 @@ func (s *AiService) GetGenerateTask(taskID string, userID uint) (*dto.AsyncGener
 // ListGenerateTasks 列当前用户最近 20 条任务
 // 严格按调用方传入的 userID 过滤；handler 已从 JWT 上下文取 userID，无需再次校验。
 func (s *AiService) ListGenerateTasks(userID uint) []*dto.AsyncGenerateTask {
-	return ListAITasksByUser(userID, 20)
+	return s.aiTaskMgr.ListByUser(userID, 20)
 }
 
 // ListGenerateHistory 列出某用户的 AI 生成题历史批次（按时间倒序）
@@ -532,11 +530,11 @@ func (s *AiService) ListInflightTasks(userID uint, limit int) (*dto.AiBatchHisto
 	if userID == 0 {
 		return &dto.AiBatchHistoryResp{List: []dto.AiBatchHistoryItem{}, Total: 0}, nil
 	}
-	if s.aiTaskRepo == nil {
+	if s.aiTaskMgr == nil || s.aiTaskMgr.repo == nil {
 		return &dto.AiBatchHistoryResp{List: []dto.AiBatchHistoryItem{}, Total: 0}, nil
 	}
 
-	rows, err := s.aiTaskRepo.ListInflightByUser(userID, limit)
+	rows, err := s.aiTaskMgr.repo.ListInflightByUser(userID, limit)
 	if err != nil {
 		log.Printf("[ai history] list inflight failed user_id=%d: %v", userID, err)
 		return nil, fmt.Errorf("查询进行中任务失败: %w", err)

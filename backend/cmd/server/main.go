@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os/signal"
+	"syscall"
 
 	"github.com/gin-gonic/gin"
 	"github.com/soft-test-study/backend/internal/config"
@@ -27,6 +30,10 @@ func main() {
 		log.Fatalf("数据库初始化失败: %v", err)
 	}
 
+	// OPT-20: 根 context，由 SIGTERM/SIGINT 触发取消；janitor goroutine 监听后退出
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	r := gin.New()
 	r.Use(gin.Recovery(), gin.Logger())
 
@@ -42,7 +49,8 @@ func main() {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
 
-	router.Setup(db, r, cfg)
+	// OPT-19/20: 把根 ctx 传给 router，所有 janitor 收到取消信号后退出
+	router.Setup(db, r, cfg, ctx)
 
 	// OPT-03: 静态目录不再以 r.Static 直接暴露，由 handler 鉴权后流式返回
 	if err := r.Run(":" + cfg.ServerPort); err != nil {
