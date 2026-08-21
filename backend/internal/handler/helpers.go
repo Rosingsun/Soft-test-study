@@ -18,6 +18,9 @@ func nowMonth() string {
 // respondError 将 service 层错误映射为统一错误码响应
 func respondError(c *gin.Context, err error, defaultMsg string) {
 	switch {
+	case errors.Is(err, service.ErrInvalidFilePath):
+		// OPT-03: 路径穿越尝试，返回 403
+		response.Error(c, config.CodeForbidden, "非法文件路径")
 	case errors.Is(err, service.ErrForbidden):
 		response.Error(c, config.CodeForbidden, "无权操作")
 	case errors.Is(err, service.ErrNotFound):
