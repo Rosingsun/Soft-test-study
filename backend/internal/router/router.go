@@ -238,4 +238,11 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 		auth.POST("/notifications/:id/read", notifyH.MarkRead)
 		auth.POST("/notifications/read-all", notifyH.MarkAllRead)
 	}
+
+	// OPT-04: 管理员专用路由组（题目导入、教学大纲、题目审批等）
+	// 当前项目暂无 /admin/* 路由，留出分组以便未来扩展。
+	// 任何新增的 /api/v1/admin/* 路由必须挂载 RequireAdmin()。
+	_ = middleware.RequireAdmin // keep reference to avoid unused import when admin routes added
+	admin := api.Group("/admin", middleware.Auth(cfg.JWTSecret), middleware.RequireAdmin(userRepo))
+	_ = admin // admin 路由组保留，等待后续模块接入
 }

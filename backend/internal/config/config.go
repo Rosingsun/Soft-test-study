@@ -48,9 +48,13 @@ func Load() *Config {
 		SMTPUser:             getEnv("SMTP_USER", ""),
 		SMTPPassword:         os.Getenv("SMTP_PASSWORD"),
 		SMTPFromName:         getEnv("SMTP_FROM_NAME", "软考学系"),
-		AdminBypassUsernames: getEnvCSV("ADMIN_BYPASS_USERNAMES", []string{"ross"}),
-		CORSAllowedOrigins:   getEnvCSV("CORS_ALLOWED_ORIGINS", []string{"http://localhost:5173"}),
-		AppEnv:               getEnv("APP_ENV", "development"),
+		// OPT-04: 生产环境默认不绕过任何用户（必须显式设置 ADMIN_BYPASS_USERNAMES）；
+		// 开发环境保持默认 ["ross"] 兼容旧项目初始化逻辑。
+		AdminBypassUsernames: loadAdminBypassUsernames(getEnv("APP_ENV", "development")),
+		// OPT-01: CORS 白名单
+		CORSAllowedOrigins: getEnvCSV("CORS_ALLOWED_ORIGINS", []string{"http://localhost:5173"}),
+		// OPT-01: 应用环境，development / production（同时为 OPT-02 准备）
+		AppEnv: getEnv("APP_ENV", "development"),
 	}
 
 	if cfg.DBPassword == "" {
@@ -145,4 +149,17 @@ func getEnvCSV(key string, fallback []string) []string {
 		return fallback
 	}
 	return out
+}
+
+// loadAdminBypassUsernames 加载管理员绕过名单：
+//   - 显式设置了 ADMIN_BYPASS_USERNAMES：以环境变量为准
+//   - 未设置：development 默认 ["ross"] 保持本地兼容；production 默认空（不绕过任何用户）
+func loadAdminBypassUsernames(appEnv string) []string {
+	if _, ok := os.LookupEnv("ADMIN_BYPASS_USERNAMES"); ok {
+		return getEnvCSV("ADMIN_BYPASS_USERNAMES", nil)
+	}
+	if appEnv == "production" {
+		return []string{}
+	}
+	return []string{"ross"}
 }
