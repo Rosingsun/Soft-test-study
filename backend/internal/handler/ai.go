@@ -216,11 +216,21 @@ func (h *AiHandler) GetBatchQuestions(c *gin.Context) {
 }
 
 func (h *AiHandler) Analyze(c *gin.Context) {
+	userIDVal, _ := c.Get("user_id")
+	userID, ok := userIDVal.(uint)
+	if !ok || userID == 0 {
+		response.Error(c, config.CodeUnauthorized, "未登录")
+		return
+	}
+
 	var req dto.AnalyzeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, config.CodeParamError, "参数校验失败: "+err.Error())
 		return
 	}
+
+	// OPT-08: 服务端用 token 中的 userID 覆盖请求体里的 user_id，防止伪造
+	req.UserID = userID
 
 	if req.ApiConfig.ApiKey == "" {
 		response.Error(c, config.CodeParamError, "请先配置 AI API Key")
@@ -310,6 +320,13 @@ func (h *AiHandler) EssayScore(c *gin.Context) {
 
 // CheckEssayScore 检查论文是否已有评分
 func (h *AiHandler) CheckEssayScore(c *gin.Context) {
+	userIDVal, _ := c.Get("user_id")
+	userID, ok := userIDVal.(uint)
+	if !ok || userID == 0 {
+		response.Error(c, config.CodeUnauthorized, "未登录")
+		return
+	}
+
 	recordType := c.Query("record_type")
 	recordIDStr := c.Query("record_id")
 	examAnswerIDStr := c.Query("exam_answer_id")
@@ -331,9 +348,10 @@ func (h *AiHandler) CheckEssayScore(c *gin.Context) {
 		examAnswerID = uint(eaID)
 	}
 
-	resp, err := h.svc.CheckEssayScore(recordType, recordID, examAnswerID)
+	// OPT-08: service 层校验 record.user_id == currentUserID
+	resp, err := h.svc.CheckEssayScore(recordType, recordID, examAnswerID, userID)
 	if err != nil {
-		response.Error(c, config.CodeBadRequest, "查询评分失败: "+err.Error())
+		respondError(c, err, "查询评分失败")
 		return
 	}
 

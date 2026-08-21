@@ -17,6 +17,13 @@ func (r *PracticeRecordRepo) Create(record *model.PracticeRecord) error {
 	return r.db.Create(record).Error
 }
 
+// FindByID OPT-08: 论文评分接口需要按 record_id 校验归属
+func (r *PracticeRecordRepo) FindByID(id uint) (*model.PracticeRecord, error) {
+	var record model.PracticeRecord
+	err := r.db.First(&record, id).Error
+	return &record, err
+}
+
 // CreateBatch 批量写入练习记录（重打/AI 收题场景）
 func (r *PracticeRecordRepo) CreateBatch(records []model.PracticeRecord) error {
 	if len(records) == 0 {

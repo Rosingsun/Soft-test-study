@@ -40,6 +40,8 @@ type AnalyzeReq struct {
 	QuestionType    string      `json:"question_type" binding:"required"`
 	QuestionAnswer  string      `json:"question_answer" binding:"required"`
 	UserAnswer      string      `json:"user_answer" binding:"required"`
+	// OPT-08: 可选字段。服务端从 token 强制覆盖，前端可不传。
+	UserID uint `json:"user_id"`
 }
 
 type AnalyzeResp struct {

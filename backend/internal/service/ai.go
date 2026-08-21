@@ -995,6 +995,11 @@ func difficultyLabelCN(d string) string {
 
 // EssayScore 对论文/案例分析进行 AI 评分
 func (s *AiService) EssayScore(userID uint, req dto.EssayScoreReq) (*dto.EssayScoreResp, error) {
+	// OPT-08: 校验 record 归属（userID 来自 token，不可被请求体覆盖）
+	if err := s.assertRecordOwner(userID, req.RecordType, req.RecordID); err != nil {
+		return nil, err
+	}
+
 	// 获取题目内容
 	question, err := s.questionRepo.FindByID(req.QuestionID)
 	if err != nil {
@@ -1100,7 +1105,12 @@ func (s *AiService) EssayScore(userID uint, req dto.EssayScoreReq) (*dto.EssaySc
 }
 
 // CheckEssayScore 检查是否已有评分
-func (s *AiService) CheckEssayScore(recordType string, recordID, examAnswerID uint) (*dto.EssayScoreCheckResp, error) {
+func (s *AiService) CheckEssayScore(recordType string, recordID, examAnswerID uint, currentUserID uint) (*dto.EssayScoreCheckResp, error) {
+	// OPT-08: 校验记录归属
+	if err := s.assertRecordOwner(currentUserID, recordType, recordID); err != nil {
+		return nil, err
+	}
+
 	var score *model.EssayScore
 	var err error
 
@@ -1132,6 +1142,35 @@ func (s *AiService) CheckEssayScore(recordType string, recordID, examAnswerID ui
 			CreatedAt:      score.CreatedAt.Format("2006-01-02 15:04:05"),
 		},
 	}, nil
+}
+
+// assertRecordOwner OPT-08: 校验 record 是否属于 currentUserID。
+// 不属于或不存在均返回 ErrForbidden（403），避免 IDOR。
+func (s *AiService) assertRecordOwner(currentUserID uint, recordType string, recordID uint) error {
+	if recordID == 0 {
+		return ErrForbidden
+	}
+	switch recordType {
+	case "practice":
+		r, err := s.practiceRepo.FindByID(recordID)
+		if err != nil {
+			return ErrForbidden
+		}
+		if r.UserID != currentUserID {
+			return ErrForbidden
+		}
+	case "exam":
+		r, err := s.examRepo.FindByID(recordID)
+		if err != nil {
+			return ErrForbidden
+		}
+		if r.UserID != currentUserID {
+			return ErrForbidden
+		}
+	default:
+		return ErrForbidden
+	}
+	return nil
 }
 
 type essayScoreResult struct {
