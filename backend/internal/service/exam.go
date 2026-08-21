@@ -7,13 +7,18 @@ import (
 	"sort"
 	"time"
 
+	mysqldriver "github.com/go-sql-driver/mysql"
 	"github.com/soft-test-study/backend/internal/dto"
 	"github.com/soft-test-study/backend/internal/model"
 	"github.com/soft-test-study/backend/internal/repository"
 	"gorm.io/gorm"
 )
 
+// ErrExamInProgress 已有进行中的考试（OPT-07）
+var ErrExamInProgress = errors.New("已有进行中的考试")
+
 type ExamService struct {
+	db           *gorm.DB
 	templateRepo *repository.ExamTemplateRepo
 	recordRepo   *repository.ExamRecordRepo
 	questionRepo *repository.QuestionRepo
@@ -23,12 +28,13 @@ type ExamService struct {
 const examPaperSize = 75
 
 func NewExamService(
+	db *gorm.DB,
 	templateRepo *repository.ExamTemplateRepo,
 	recordRepo *repository.ExamRecordRepo,
 	questionRepo *repository.QuestionRepo,
 	reviewSvc *ReviewService,
 ) *ExamService {
-	return &ExamService{templateRepo: templateRepo, recordRepo: recordRepo, questionRepo: questionRepo, reviewSvc: reviewSvc}
+	return &ExamService{db: db, templateRepo: templateRepo, recordRepo: recordRepo, questionRepo: questionRepo, reviewSvc: reviewSvc}
 }
 
 // ListTemplates 公开考试模板列表。
@@ -103,15 +109,33 @@ func (s *ExamService) StartExam(userID, templateID uint) (*dto.StartExamResp, er
 		return s.loadExam(pending.ID, userID, template)
 	}
 
+	// OPT-07: 用事务包裹「查询 pending → 创建 record」，
+	// 配合 uk_exam_pending 唯一索引，并发 StartExam 仅一条成功。
 	now := time.Now()
-	record := &model.ExamRecord{
-		UserID:     userID,
-		TemplateID: templateID,
-		TotalScore: examPaperSize,
-		Status:     "pending",
-		StartedAt:  now,
-	}
-	if err := s.recordRepo.Create(record); err != nil {
+	var recordID uint
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		record := &model.ExamRecord{
+			UserID:     userID,
+			TemplateID: templateID,
+			TotalScore: examPaperSize,
+			Status:     "pending",
+			StartedAt:  now,
+		}
+		if err := tx.Create(record).Error; err != nil {
+			// MySQL 1062 唯一约束冲突 = 已有 pending 记录
+			var me *mysqldriver.MySQLError
+			if errors.As(err, &me) && me.Number == 1062 {
+				return ErrExamInProgress
+			}
+			return err
+		}
+		recordID = record.ID
+		return nil
+	})
+	if err != nil {
+		if errors.Is(err, ErrExamInProgress) {
+			return nil, err
+		}
 		return nil, err
 	}
 
@@ -125,6 +149,7 @@ func (s *ExamService) StartExam(userID, templateID uint) (*dto.StartExamResp, er
 	if err != nil {
 		return nil, err
 	}
+	record := &model.ExamRecord{ID: recordID}
 	if len(questions) > 0 {
 		record.TotalScore = len(questions)
 	}

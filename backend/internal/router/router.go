@@ -60,7 +60,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config) {
 	bookmarkSvc := service.NewBookmarkService(bookmarkRepo)
 	markSvc := service.NewQuestionMarkService(markRepo)
 	wrongSvc := service.NewWrongQuestionService(wrongRepo, questionRepo, practiceRecordRepo, reviewSvc)
-	examSvc := service.NewExamService(examTemplateRepo, examRecordRepo, questionRepo, reviewSvc)
+	examSvc := service.NewExamService(db, examTemplateRepo, examRecordRepo, questionRepo, reviewSvc)
 	// 注册并启动考试超时 janitor（每 30s 扫描 pending 记录并自动交卷）
 	service.SetExamJanitor(examSvc)
 	service.StartExamJanitor()
