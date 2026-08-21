@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 const username = ref('')
 const password = ref('')
 const error = ref('')
@@ -13,13 +14,22 @@ const showPassword = ref(false)
 
 const canSubmit = computed(() => username.value.trim().length > 0 && password.value.length >= 1)
 
+// OPT-22: 登录成功后跳回 `from` 指定的路径（受信任的同源站内路径）
+function getRedirectTarget(): string {
+  const from = route.query.from
+  if (typeof from !== 'string' || !from.startsWith('/') || from.startsWith('//')) {
+    return auth.getHomeRoute()
+  }
+  return from
+}
+
 async function handleLogin() {
   if (!canSubmit.value || loading.value) return
   try {
     loading.value = true
     error.value = ''
     await auth.login(username.value, password.value)
-    router.push(auth.getHomeRoute())
+    router.push(getRedirectTarget())
   } catch (e) {
     error.value = (e as Error).message
   } finally {
