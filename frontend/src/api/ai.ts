@@ -1,4 +1,5 @@
 import { get, post } from './request'
+import { getSessionItem } from '@/utils/storage'
 import type {
   AiProvider,
   GenerateQuestionsReq,
@@ -15,17 +16,32 @@ import type {
 } from '@/types/ai'
 import type { StartExamResp } from '@/types/exam'
 
+/**
+ * OPT-05: 每次请求前从 sessionStorage 实时取 AI Key，
+ * 不再依赖 store state，避免 store 与存储脱节时仍发送过期的 key。
+ * 约定请求体中 api_config.api_key 字段被覆盖为 sessionStorage 中的最新值。
+ */
+function withLiveApiKey<T>(body: T): T {
+  const liveKey = getSessionItem('ai_key') || ''
+  const b = body as unknown as Record<string, unknown>
+  if (b.api_config && typeof b.api_config === 'object') {
+    const ac = { ...(b.api_config as Record<string, unknown>), api_key: liveKey }
+    return { ...b, api_config: ac } as unknown as T
+  }
+  return body
+}
+
 export function getAiProviders() {
   return get<{ providers: AiProvider[] }>('/ai/providers')
 }
 
 export function generateQuestions(data: GenerateQuestionsReq) {
-  return post<GenerateQuestionsResp>('/ai/generate', data)
+  return post<GenerateQuestionsResp>('/ai/generate', withLiveApiKey(data))
 }
 
 // 异步 AI 出题：立即返回 task_id，后台生成完成后通过通知告知
 export function submitGenerateAsync(data: GenerateQuestionsReq) {
-  return post<AsyncSubmitResp>('/ai/generate/async', data)
+  return post<AsyncSubmitResp>('/ai/generate/async', withLiveApiKey(data))
 }
 
 export function getGenerateTask(id: string) {
@@ -54,16 +70,16 @@ export function getGenerateBatch(batchId: string) {
 }
 
 export function startAiExam(data: StartAiExamReq) {
-  return post<StartExamResp>('/ai/exam/start', data)
+  return post<StartExamResp>('/ai/exam/start', withLiveApiKey(data))
 }
 
 // AI 解析题目:对题目做整体解析,用于知识库提取失败时的兜底入口
 export function analyzeQuestion(data: AnalyzeQuestionReq) {
-  return post<AnalyzeQuestionResp>('/ai/analyze', data)
+  return post<AnalyzeQuestionResp>('/ai/analyze', withLiveApiKey(data))
 }
 
 export function essayScore(data: EssayScoreReq) {
-  return post<EssayScoreResp>('/ai/essay-score', data)
+  return post<EssayScoreResp>('/ai/essay-score', withLiveApiKey(data))
 }
 
 export function checkEssayScore(params: { record_type: string; record_id?: number; exam_answer_id?: number }) {
