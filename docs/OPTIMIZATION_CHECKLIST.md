@@ -618,6 +618,8 @@ OPT-18 ──> OPT-19（OPT-18 提供后端批量接口，OPT-19 调用之）
 - **类别**：性能
 - **风险等级**：低
 - **影响文件**：`frontend/vite.config.ts`
+- **状态**：completed
+- **Commit**：`9273523`
 
 **现状**：
 - 未配置 `build.rollupOptions.output.manualChunks`
@@ -658,6 +660,8 @@ OPT-18 ──> OPT-19（OPT-18 提供后端批量接口，OPT-19 调用之）
 - **类别**：质量 / 规范
 - **风险等级**：中
 - **影响文件**：`backend/internal/service/notification.go`、`backend/internal/repository/notification.go`（新建）
+- **状态**：completed
+- **Commit**：`1e36a7c`
 
 **现状**：
 - `NotificationService` 直接持有 `*gorm.DB`，绕过 repository 层
@@ -689,6 +693,8 @@ OPT-18 ──> OPT-19（OPT-18 提供后端批量接口，OPT-19 调用之）
 - **类别**：质量 / 规范
 - **风险等级**：中
 - **影响文件**：`backend/internal/service/ai_task.go`、`backend/internal/service/ai.go`、`backend/cmd/server/main.go`
+- **状态**：completed
+- **Commit**：`7476ef2`
 
 **现状**：
 - 包级全局变量 `aiTaskStore` / `aiTaskRepo` / `aiTaskTimeoutNotifier`
@@ -721,6 +727,8 @@ OPT-18 ──> OPT-19（OPT-18 提供后端批量接口，OPT-19 调用之）
 - **类别**：质量
 - **风险等级**：低
 - **影响文件**：`backend/internal/service/exam.go:100, 255, 619`、`backend/cmd/server/main.go`
+- **状态**：completed
+- **Commit**：`d9406a8`
 
 **现状**：
 - 多个 janitor 后台 goroutine（清理过期考试记录、清理 pending 答题等）使用 `go func() { for range ticker.C {...} }`
@@ -758,6 +766,8 @@ OPT-18 ──> OPT-19（OPT-18 提供后端批量接口，OPT-19 调用之）
 - **类别**：可维护性
 - **风险等级**：低
 - **影响文件**：`backend/internal/service/`、`backend/internal/middleware/`
+- **状态**：completed
+- **Commit**：`8b9fa9c`
 
 **现状**：
 - 后端无任何 `_test.go` 文件
@@ -788,6 +798,8 @@ OPT-18 ──> OPT-19（OPT-18 提供后端批量接口，OPT-19 调用之）
 - **类别**：质量
 - **风险等级**：低
 - **影响文件**：`frontend/src/api/request.ts`
+- **状态**：completed
+- **Commit**：`b11d28e`
 
 **现状**：
 - `request.ts:25-32` token 失效时使用 `window.location.href = '/login'` 硬跳转
