@@ -21,6 +21,7 @@ type Question struct {
 	SubjectID    uint      `gorm:"column:subject_id;not null;index"`
 	SubSubjectID uint      `gorm:"column:sub_subject_id;default:0;index"`
 	ChapterID    uint      `gorm:"column:chapter_id;default:0;index"`
+	ParentID     uint      `gorm:"column:parent_id;default:0;index"`
 	Type         string    `gorm:"column:type;type:varchar(20);not null"`
 	Difficulty   string    `gorm:"column:difficulty;type:varchar(20);not null"`
 	Content      string    `gorm:"column:content;type:text;not null"`
@@ -38,6 +39,9 @@ type Question struct {
 	Status       int       `gorm:"column:status;default:0"`
 	CreatedAt    time.Time `gorm:"column:created_at"`
 	UpdatedAt    time.Time `gorm:"column:updated_at"`
+
+	// Children 小题目列表（非持久化字段，由 Service 层按需填充）
+	Children []Question `gorm:"-"`
 }
 
 func (Question) TableName() string {

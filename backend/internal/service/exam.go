@@ -225,8 +225,9 @@ func (s *ExamService) loadExam(recordID, userID uint, template *model.ExamTempla
 		if !ok {
 			continue
 		}
-		questionList = append(questionList, dto.ExamQuesResp{
+		resp := dto.ExamQuesResp{
 			ID:           q.ID,
+			ParentID:     q.ParentID,
 			Type:         q.Type,
 			Content:      q.Content,
 			CaseMaterial: q.CaseMaterial,
@@ -236,7 +237,34 @@ func (s *ExamService) loadExam(recordID, userID uint, template *model.ExamTempla
 			Score:        1,
 			SortOrder:    i + 1,
 			Source:       q.Source,
-		})
+		}
+		// 案例分析大题目：附加子题列表
+		if q.Type == model.TypeCaseStudy && q.ParentID == 0 {
+			var children []model.Question
+			for _, cq := range questions {
+				if cq.ParentID == q.ID {
+					children = append(children, cq)
+				}
+			}
+			if len(children) > 0 {
+				childList := make([]dto.ExamQuesResp, 0, len(children))
+				for _, c := range children {
+					childList = append(childList, dto.ExamQuesResp{
+						ID:           c.ID,
+						ParentID:     c.ParentID,
+						Type:         c.Type,
+						Content:      c.Content,
+						Options:      c.Options,
+						BlankOptions: c.BlankOptions,
+						Difficulty:   c.Difficulty,
+						Score:        1,
+						Source:       c.Source,
+					})
+				}
+				resp.Children = childList
+			}
+		}
+		questionList = append(questionList, resp)
 	}
 
 	answerMap := make(map[uint]string)

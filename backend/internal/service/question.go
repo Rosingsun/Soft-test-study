@@ -48,7 +48,7 @@ func (s *QuestionService) GetRandomQuestions(subjectID uint, count int, difficul
 	return toQuestionRespList(questions), nil
 }
 
-// GetSpecialQuestions 专项练习：按题型/难度抽题
+// GetSpecialQuestions 专项练习：按题型/难度抽题（数量按大题计，案例分析小题挂 Children 不计数）
 func (s *QuestionService) GetSpecialQuestions(subjectID uint, qtype, difficulty string, count int) ([]dto.QuestionResp, error) {
 	if count <= 0 {
 		count = 10
@@ -60,7 +60,25 @@ func (s *QuestionService) GetSpecialQuestions(subjectID uint, qtype, difficulty 
 	if err != nil {
 		return nil, err
 	}
-	return toQuestionRespList(questions), nil
+	return toQuestionRespList(groupCaseStudyChildren(questions)), nil
+}
+
+// groupCaseStudyChildren 将平铺的父+子题目列表重组为树：
+// parent_id>0 的子题挂到对应父题的 Children，返回值仅保留大题级节点
+func groupCaseStudyChildren(questions []model.Question) []model.Question {
+	out := make([]model.Question, 0, len(questions))
+	childMap := make(map[uint][]model.Question)
+	for _, q := range questions {
+		if q.ParentID > 0 {
+			childMap[q.ParentID] = append(childMap[q.ParentID], q)
+			continue
+		}
+		out = append(out, q)
+	}
+	for i := range out {
+		out[i].Children = childMap[out[i].ID]
+	}
+	return out
 }
 
 func (s *QuestionService) GetEssayQuestions(subjectID uint, years int) ([]dto.QuestionResp, error) {
@@ -71,13 +89,26 @@ func (s *QuestionService) GetEssayQuestions(subjectID uint, years int) ([]dto.Qu
 	return toQuestionRespList(questions), nil
 }
 
-// GetCaseStudies 按子科目查询案例分析题
+// GetCaseStudies 按子科目查询案例分析题（大题目+小题目）
 func (s *QuestionService) GetCaseStudies(subSubjectID uint, year int) ([]dto.QuestionResp, error) {
-	questions, err := s.repo.FindCaseStudies(subSubjectID, year)
+	parents, err := s.repo.FindCaseStudies(subSubjectID, year)
 	if err != nil {
 		return nil, err
 	}
-	return toQuestionRespList(questions), nil
+	resp := make([]dto.QuestionResp, 0, len(parents))
+	for _, p := range parents {
+		r := toQuestionResp(p)
+		// 加载小题目
+		children, err := s.repo.FindByParentID(p.ID)
+		if err != nil {
+			return nil, err
+		}
+		if len(children) > 0 {
+			r.Children = toQuestionRespList(children)
+		}
+		resp = append(resp, r)
+	}
+	return resp, nil
 }
 
 func toQuestionRespList(questions []model.Question) []dto.QuestionResp {
@@ -89,11 +120,12 @@ func toQuestionRespList(questions []model.Question) []dto.QuestionResp {
 }
 
 func toQuestionResp(q model.Question) dto.QuestionResp {
-	return dto.QuestionResp{
+	resp := dto.QuestionResp{
 		ID:           q.ID,
 		SubjectID:    q.SubjectID,
 		SubSubjectID: q.SubSubjectID,
 		ChapterID:    q.ChapterID,
+		ParentID:     q.ParentID,
 		Type:         q.Type,
 		Difficulty:   q.Difficulty,
 		Content:      q.Content,
@@ -105,6 +137,10 @@ func toQuestionResp(q model.Question) dto.QuestionResp {
 		Year:         q.Year,
 		Source:       q.Source,
 	}
+	if len(q.Children) > 0 {
+		resp.Children = toQuestionRespList(q.Children)
+	}
+	return resp
 }
 
 // IsSubjectiveType 是否为主观题（论文 / 案例分析）：不自动判分，不收录错题本

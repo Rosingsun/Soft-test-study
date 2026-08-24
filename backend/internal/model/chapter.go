@@ -9,6 +9,7 @@ type Chapter struct {
 	ParentID     uint      `gorm:"column:parent_id;default:0"`
 	Name         string    `gorm:"column:name;type:varchar(200);not null"`
 	SortOrder    int       `gorm:"column:sort_order;default:0"`
+	Weight       float64   `gorm:"column:weight;type:decimal(5,2);default:1.00"`
 	CreatedAt    time.Time `gorm:"column:created_at"`
 }
 

@@ -1,21 +1,24 @@
 package dto
 
 type QuestionResp struct {
-	ID           uint   `json:"id"`
-	SubjectID    uint   `json:"subject_id"`
-	SubSubjectID uint   `json:"sub_subject_id"`
-	ChapterID    uint   `json:"chapter_id"`
-	Type         string `json:"type"`
-	Difficulty   string `json:"difficulty"`
-	Content      string `json:"content"`
-	CaseMaterial string `json:"case_material"`
-	Options      string `json:"options"`
+	ID           uint            `json:"id"`
+	SubjectID    uint            `json:"subject_id"`
+	SubSubjectID uint            `json:"sub_subject_id"`
+	ChapterID    uint            `json:"chapter_id"`
+	ParentID     uint            `json:"parent_id"`
+	Type         string          `json:"type"`
+	Difficulty   string          `json:"difficulty"`
+	Content      string          `json:"content"`
+	CaseMaterial string          `json:"case_material"`
+	Options      string          `json:"options"`
 	// BlankOptions 多空题专用：每空独立选项 JSON；其他题型为空字符串
-	BlankOptions string `json:"blank_options"`
-	Answer       string `json:"answer"`
-	Analysis     string `json:"analysis"`
-	Year         int    `json:"year"`
-	Source       string `json:"source"`
+	BlankOptions string          `json:"blank_options"`
+	Answer       string          `json:"answer"`
+	Analysis     string          `json:"analysis"`
+	Year         int             `json:"year"`
+	Source       string          `json:"source"`
+	// Children 小题目列表（仅案例分析大题目时填充）
+	Children     []QuestionResp  `json:"children,omitempty"`
 }
 
 type PracticeSubmitReq struct {

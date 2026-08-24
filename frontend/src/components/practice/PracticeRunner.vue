@@ -54,37 +54,54 @@ const favorited = ref<Record<number, boolean>>({})
 const showCard = ref(false)
 const loadingFavorites = ref(true)
 const caseExpanded = ref(true)
-// 案例分析题：把单题答案拆成若干个小节（“小的文章”）分别作答，提交时合并为一段
-const caseParts = ref<Record<number, string[]>>({})
-const CASE_PART_COUNT = 3
 
-function ensureCaseParts(q: Question): string[] {
-  if (q.type !== 'case_study') return []
-  let parts = caseParts.value[q.id] || []
-  const existing = answers.value[q.id] || ''
-  if (!parts.length) {
-    // 尝试从已存答案恢复（历史提交 / 重新进入）
-    if (existing) {
-      parts = existing.split(/\r?\n\s*\n/).filter(Boolean)
-    } else {
-      parts = Array.from({ length: CASE_PART_COUNT }, () => '')
+// ===== 案例分析大题+小题 =====
+function isCaseStudyParent(q: Question): boolean {
+  return q.type === 'case_study' && !!q.children && q.children.length > 0
+}
+
+function allChildrenAnswered(q: Question): boolean {
+  if (!q.children) return false
+  return q.children.every(c => !!answers.value[c.id])
+}
+
+function allChildrenSubmitted(q: Question): boolean {
+  if (!q.children) return false
+  return q.children.every(c => !!submitted.value[c.id])
+}
+
+async function submitCaseStudyChildren() {
+  const q = current.value
+  if (!q || !q.children) return
+  for (const child of q.children) {
+    if (submitted.value[child.id]) continue
+    if (!answers.value[child.id]) continue
+    submitted.value[child.id] = true
+    submitting.value[child.id] = true
+    submitError.value[child.id] = ''
+    const duration = Math.max(1, Math.round((Date.now() - (questionStart.value[child.id] || Date.now())) / 1000))
+    try {
+      const submit = props.submitHandler
+        ? props.submitHandler
+        : (questionId: number, answer: string, _duration: number) => submitPractice({
+          question_id: questionId,
+          mode: props.mode,
+          answer,
+          duration: _duration,
+        })
+      const res = await submit(child.id, answers.value[child.id], duration)
+      if (res.answer) answers.value[child.id] = res.answer
+      practiceRecordIds.value[child.id] = res.id
+    } catch (e) {
+      submitError.value[child.id] = (e as Error)?.message || '练习记录上报失败'
+    } finally {
+      submitting.value[child.id] = false
     }
-    caseParts.value[q.id] = parts
   }
-  return parts
 }
 
-function updateCaseAnswers(questionId: number, parts: string[]) {
-  caseParts.value[questionId] = parts
-  const joined = parts.map(p => p.trim()).filter(Boolean)
-  answers.value[questionId] = joined.join('\n\n')
-}
-
-// 分段作答的某一小节变化
-function onCaseInput(q: Question, idx: number, val: string) {
-  const parts = ensureCaseParts(q)
-  parts[idx] = val
-  updateCaseAnswers(q.id, parts)
+function isChildSubjective(childType: string): boolean {
+  return childType === 'essay' || childType === 'short' || childType === 'comprehensive'
 }
 
 const current = computed(() => props.questions[currentIndex.value])
@@ -152,8 +169,13 @@ function handleNext() {
 
 function selectAnswer(questionId: number, value: string) {
   const q = props.questions.find(x => x.id === questionId)
-  if (!q || submitted.value[questionId]) return
-  if (q.type === 'multi') {
+  // 子题：在 children 中查找
+  let target = q
+  if (!target && current.value?.children) {
+    target = current.value.children.find(c => c.id === questionId)
+  }
+  if (!target || submitted.value[questionId]) return
+  if (target.type === 'multi') {
     const current = answers.value[questionId] ? answers.value[questionId].split(',') : []
     const idx = current.indexOf(value)
     if (idx >= 0) current.splice(idx, 1)
@@ -164,21 +186,22 @@ function selectAnswer(questionId: number, value: string) {
     answers.value[questionId] = value
   }
   // 单选 / 判断题：选中后自动提交（立即判分并显示解析）
-  if (q.type === 'single' || q.type === 'judge') {
-    handleSubmit()
-    // 单选题：显示答案后自动跳转下一题（多选、输入框不自动跳转）
-    if (q.type === 'single' && autoNext.value) {
-      const fromIndex = currentIndex.value
-      setTimeout(() => {
-        // 用户已手动切换题目则不再自动跳转
-        if (currentIndex.value !== fromIndex) return
-        if (currentIndex.value === total.value - 1) {
-          emit('finish')
-          emit('back')
-          return
-        }
-        goTo(currentIndex.value + 1)
-      }, 1000)
+  if (target.type === 'single' || target.type === 'judge') {
+    handleSubmitForQuestion(questionId)
+    if (target.type === 'single' && autoNext.value) {
+      // 案例分析子题不自动跳转
+      if (!isCaseStudyParent(current.value)) {
+        const fromIndex = currentIndex.value
+        setTimeout(() => {
+          if (currentIndex.value !== fromIndex) return
+          if (currentIndex.value === total.value - 1) {
+            emit('finish')
+            emit('back')
+            return
+          }
+          goTo(currentIndex.value + 1)
+        }, 1000)
+      }
     }
   }
 }
@@ -359,39 +382,36 @@ async function handleAiScore() {
 }
 
 async function handleSubmit() {
-  const q = current.value
-  if (!q || !answers.value[q.id]) return
-  // 已在请求中（防双击/防重入）
-  if (submitting.value[q.id]) return
-  // 已有练习记录（重做 / 二次进入），仅置已提交位即可
-  if (practiceRecordIds.value[q.id]) {
-    submitted.value[q.id] = true
+  await handleSubmitForQuestion(current.value?.id)
+}
+
+async function handleSubmitForQuestion(questionId: number) {
+  if (!questionId || !answers.value[questionId]) return
+  if (submitting.value[questionId]) return
+  if (practiceRecordIds.value[questionId]) {
+    submitted.value[questionId] = true
     return
   }
-  // 乐观提交：先同步置位已提交，立即渲染解析与对错
-  submitted.value[q.id] = true
-  submitting.value[q.id] = true
-  submitError.value[q.id] = ''
-  const duration = Math.max(1, Math.round((Date.now() - (questionStart.value[q.id] || Date.now())) / 1000))
+  submitted.value[questionId] = true
+  submitting.value[questionId] = true
+  submitError.value[questionId] = ''
+  const duration = Math.max(1, Math.round((Date.now() - (questionStart.value[questionId] || Date.now())) / 1000))
   try {
     const submit = props.submitHandler
       ? props.submitHandler
-      : (questionId: number, answer: string, _duration: number) => submitPractice({
-        question_id: questionId,
+      : (qId: number, answer: string, _duration: number) => submitPractice({
+        question_id: qId,
         mode: props.mode,
         answer,
         duration: _duration,
       })
-    const res = await submit(q.id, answers.value[q.id], duration)
-    if (res.answer) answers.value[q.id] = res.answer
-    // 保存练习记录ID，供后续 AI 评分使用
-    practiceRecordIds.value[q.id] = res.id
+    const res = await submit(questionId, answers.value[questionId], duration)
+    if (res.answer) answers.value[questionId] = res.answer
+    practiceRecordIds.value[questionId] = res.id
   } catch (e) {
-    // 上报失败：保留 submitted 状态（用户仍能看到解析），但暴露错误与重提入口，
-    // 避免"记录提交中…"永久悬挂、AI 评分按钮永不可用
-    submitError.value[q.id] = (e as Error)?.message || '练习记录上报失败，AI 评分暂不可用'
+    submitError.value[questionId] = (e as Error)?.message || '练习记录上报失败'
   } finally {
-    submitting.value[q.id] = false
+    submitting.value[questionId] = false
   }
 }
 
@@ -401,6 +421,11 @@ function isSelected(questionId: number, value: string) {
 }
 
 function answeredText(q: Question): string {
+  // 新版大题目+小题目：显示子题作答概况
+  if (isCaseStudyParent(q) && q.children) {
+    const answered = q.children.filter(c => !!answers.value[c.id]).length
+    return `已作答 ${answered}/${q.children.length} 题`
+  }
   const ans = answers.value[q.id] || ''
   if (!ans) return '未作答'
   if (q.type === 'judge') {
@@ -418,13 +443,25 @@ function answeredText(q: Question): string {
 }
 
 function isCorrect(q: Question): boolean {
+  // 新版大题目+小题目：所有客观子题都正确才算正确
+  if (isCaseStudyParent(q) && q.children) {
+    const objectiveChildren = q.children.filter(c => !isChildSubjective(c.type))
+    if (objectiveChildren.length === 0) return false
+    return objectiveChildren.every(c => isCorrectAnswer(c.type, answers.value[c.id], c.answer))
+  }
   return isCorrectAnswer(q.type, answers.value[q.id], q.answer)
 }
 
 function statusClass(questionId: number) {
-  if (submitted.value[questionId]) {
-    const q = props.questions.find(x => x.id === questionId)
+  const q = props.questions.find(x => x.id === questionId)
+  const isSub = !!submitted.value[questionId] || (q && isCaseStudyParent(q) && allChildrenSubmitted(q))
+  if (isSub) {
     if (q && (q.type === 'essay' || q.type === 'case_study')) return 'bg-indigo-100 text-indigo-700'
+    if (q && isCaseStudyParent(q)) {
+      return q.children?.every(c => isChildSubjective(c.type) || isCorrectAnswer(c.type, answers.value[c.id], c.answer))
+        ? 'bg-emerald-500 text-white'
+        : 'bg-red-500 text-white'
+    }
     return q && isCorrect(q) ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
   }
   if (answers.value[questionId]) return 'bg-indigo-600 text-white'
@@ -468,8 +505,10 @@ function optionBadgeClass(q: Question, optValue: string, state: string) {
   return 'border-gray-300 text-gray-500'
 }
 
-// 主观题（论文 / 案例分析）：不自动判分，仅展示参考答案
+// 主观题（论文 / 旧版案例分析）：不自动判分，仅展示参考答案
 function isSubjective(q: Question): boolean {
+  // 新版大题目+小题目结构：不视为主观题（子题各自判分）
+  if (isCaseStudyParent(q)) return false
   return q.type === 'essay' || q.type === 'case_study'
 }
 
@@ -560,7 +599,7 @@ function openExtractModal() {
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <span
-          v-if="current && submitted[current.id]"
+          v-if="current && (submitted[current.id] || (isCaseStudyParent(current) && allChildrenSubmitted(current)))"
           class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600 ring-1 ring-inset ring-emerald-600/20"
         >
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -617,8 +656,10 @@ function openExtractModal() {
         <button
           v-if="current && !submitted[current.id] && current.type !== 'single' && current.type !== 'judge'"
           class="bg-brand-gradient cursor-pointer rounded-lg px-5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition-all duration-200 hover:shadow-lg hover:brightness-110 active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
-          :disabled="current && current.type === 'multi_blank' ? !blankAllAnswered(current) : !answers[current.id]"
-          @click="handleSubmit"
+          :disabled="isCaseStudyParent(current)
+            ? !allChildrenAnswered(current)
+            : current.type === 'multi_blank' ? !blankAllAnswered(current) : !answers[current.id]"
+          @click="isCaseStudyParent(current) ? submitCaseStudyChildren() : handleSubmit()"
         >
           提交答案
         </button>
@@ -731,34 +772,170 @@ function openExtractModal() {
         <p class="mt-2 text-xs text-gray-400">论文题无标准答案，作答后仅记录提交内容，不自动判分。</p>
       </div>
 
-      <!-- 案例分析：多个小的篇章分别作答 -->
-      <div v-else-if="current.type === 'case_study'">
-        <div class="space-y-4">
+      <!-- 案例分析：新版大题目+小题目 -->
+      <div v-else-if="current.type === 'case_study' && isCaseStudyParent(current)">
+        <div class="space-y-5">
           <div
-            v-for="(part, idx) in ensureCaseParts(current)"
-            :key="idx"
-            class="rounded-xl border border-gray-300 bg-white p-4 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-500/20"
+            v-for="(child, cIdx) in current.children"
+            :key="child.id"
+            class="rounded-xl border border-gray-200 bg-white p-5"
+            :class="submitted[child.id] && !isChildSubjective(child.type)
+              ? isCorrectAnswer(child.type, answers[child.id], child.answer)
+                ? 'border-emerald-300 bg-emerald-50/30'
+                : 'border-red-300 bg-red-50/30'
+              : ''"
           >
-            <div class="mb-1.5 flex items-center justify-between">
-              <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-700">
-                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                回答 {{ idx + 1 }}
+            <!-- 子题头部：题号 + 题型 -->
+            <div class="mb-3 flex items-center gap-2">
+              <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-600">
+                {{ cIdx + 1 }}
               </span>
-              <span class="text-xs text-gray-400">{{ part.length }} 字</span>
+              <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                {{ typeLabel(child.type) }}
+              </span>
+              <span
+                v-if="submitted[child.id] && !isChildSubjective(child.type)"
+                class="ml-auto text-xs font-medium"
+                :class="isCorrectAnswer(child.type, answers[child.id], child.answer) ? 'text-emerald-600' : 'text-red-500'"
+              >
+                {{ isCorrectAnswer(child.type, answers[child.id], child.answer) ? '✓ 正确' : '✗ 错误' }}
+              </span>
             </div>
-            <textarea
-              :value="part"
-              :disabled="!!submitted[current.id]"
-              rows="4"
-              class="w-full resize-y bg-transparent px-1 py-1.5 text-sm leading-6 text-gray-800 outline-none placeholder:text-gray-400 disabled:bg-gray-50"
-              :placeholder="idx === 0 ? '请结合上方案例材料，分点作答…' : `继续作答第 ${idx + 1} 部分…`"
-              @input="onCaseInput(current, idx, ($event.target as HTMLTextAreaElement).value)"
-            />
+
+            <!-- 子题题干 -->
+            <div class="mb-4 text-sm leading-7 text-gray-800" v-html="sanitizeHtml(child.content)" />
+
+            <!-- 子题：单选 / 多选 -->
+            <div v-if="child.type === 'single' || child.type === 'multi'" class="space-y-2">
+              <p v-if="child.type === 'multi' && !submitted[child.id]" class="mb-1 text-xs text-gray-400">本题为多选题，可选择多个选项</p>
+              <button
+                v-for="opt in parseOptions(child.options)"
+                :key="opt.label"
+                class="flex w-full cursor-pointer items-center gap-3.5 rounded-xl border-2 px-4 py-3 text-left text-sm transition-all duration-200"
+                :class="optionClass(optionState(child, opt.label))"
+                @click="selectAnswer(child.id, opt.label)"
+              >
+                <span
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors"
+                  :class="optionBadgeClass(child, opt.label, optionState(child, opt.label))"
+                >{{ opt.label }}</span>
+                <span class="leading-6">{{ opt.text }}</span>
+              </button>
+            </div>
+
+            <!-- 子题：判断题 -->
+            <div v-else-if="child.type === 'judge'" class="grid grid-cols-2 gap-3">
+              <button
+                v-for="val in ['正确', '错误']"
+                :key="val"
+                class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 px-6 py-3 text-sm font-semibold transition-all duration-200"
+                :class="optionClass(optionState(child, val === '正确' ? 'A' : 'B'))"
+                @click="selectAnswer(child.id, val === '正确' ? 'A' : 'B')"
+              >
+                <svg v-if="val === '正确'" class="h-4 w-4" :class="optionState(child, 'A') === 'correct' ? 'text-emerald-500' : optionState(child, 'A') === 'wrong' ? 'text-red-500' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <svg v-else class="h-4 w-4" :class="optionState(child, 'B') === 'correct' ? 'text-emerald-500' : optionState(child, 'B') === 'wrong' ? 'text-red-500' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ val }}
+              </button>
+            </div>
+
+            <!-- 子题：多空题 -->
+            <div v-else-if="child.type === 'multi_blank'" class="space-y-4">
+              <p v-if="!submitted[child.id]" class="mb-1 text-xs text-gray-400">本题为多空题，请在下方每个空位选择对应选项</p>
+              <div
+                v-for="blank in blankList(child)"
+                :key="blank.blank_index"
+                class="rounded-lg border border-gray-200 p-3"
+                :class="submitted[child.id] && blankAnswer(child, blank.blank_index) !== parseBlankAnswerList(child.answer)[blank.blank_index - 1] ? 'border-red-300 bg-red-50/30' : ''"
+              >
+                <div class="mb-2 flex items-center gap-2">
+                  <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-bold text-indigo-600">
+                    {{ blank.blank_index }}
+                  </span>
+                  <span class="text-xs font-medium text-gray-700">第 {{ blank.blank_index }} 空</span>
+                  <span v-if="submitted[child.id]" class="ml-auto text-[10px]" :class="blankAnswer(child, blank.blank_index) === parseBlankAnswerList(child.answer)[blank.blank_index - 1] ? 'text-emerald-600' : 'text-red-500'">
+                    {{ blankAnswer(child, blank.blank_index) === parseBlankAnswerList(child.answer)[blank.blank_index - 1] ? '正确' : '错误' }}
+                  </span>
+                </div>
+                <div class="grid gap-2 sm:grid-cols-2">
+                  <button
+                    v-for="opt in blank.options"
+                    :key="opt.id"
+                    class="flex w-full cursor-pointer items-center gap-3 rounded-xl border-2 px-3 py-2 text-left text-sm transition-all duration-200"
+                    :class="optionClass(blankOptionState(child, blank.blank_index, opt.id))"
+                    @click="selectBlankAnswer(child, blank.blank_index, opt.id)"
+                  >
+                    <span
+                      class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors"
+                      :class="optionBadgeClassForBlank(child, blank.blank_index, opt.id, blankOptionState(child, blank.blank_index, opt.id))"
+                    >{{ opt.id }}</span>
+                    <span class="leading-5">{{ opt.content }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 子题：填空 / 简答 / 综合 / 论文 -->
+            <div v-else>
+              <textarea
+                v-model="answers[child.id]"
+                :disabled="!!submitted[child.id]"
+                :rows="child.type === 'essay' ? 8 : 3"
+                class="w-full rounded-xl border border-gray-300 bg-gray-50/50 px-4 py-3 text-sm leading-6 transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:bg-gray-100"
+                :class="{
+                  'border-emerald-500 bg-emerald-50/50': submitted[child.id] && !isChildSubjective(child.type) && isCorrectAnswer(child.type, answers[child.id], child.answer),
+                  'border-red-400 bg-red-50/50': submitted[child.id] && !isChildSubjective(child.type) && answers[child.id] && !isCorrectAnswer(child.type, answers[child.id], child.answer),
+                }"
+                :placeholder="child.type === 'essay' ? '请在此撰写论文正文…' : child.type === 'fill' ? '请输入填空答案' : '请输入答案'"
+              />
+              <p v-if="child.type === 'essay'" class="mt-1 text-[10px] text-gray-400">论文题无标准答案，不自动判分。</p>
+            </div>
+
+            <!-- 子题解析（提交后显示） -->
+            <div
+              v-if="submitted[child.id]"
+              class="mt-4 rounded-lg border-l-3 p-4 text-sm"
+              :class="isChildSubjective(child.type)
+                ? 'border-l-indigo-400 bg-indigo-50/50'
+                : (isCorrectAnswer(child.type, answers[child.id], child.answer)
+                  ? 'border-l-emerald-400 bg-emerald-50/50'
+                  : 'border-l-red-400 bg-red-50/50')"
+            >
+              <div class="mb-2 flex items-center gap-2">
+                <span
+                  class="flex h-5 w-5 items-center justify-center rounded-full text-white"
+                  :class="isChildSubjective(child.type) ? 'bg-indigo-500' : (isCorrectAnswer(child.type, answers[child.id], child.answer) ? 'bg-emerald-500' : 'bg-red-500')"
+                >
+                  <svg v-if="isChildSubjective(child.type) || isCorrectAnswer(child.type, answers[child.id], child.answer)" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <svg v-else class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </span>
+                <span class="text-xs font-semibold" :class="isChildSubjective(child.type) ? 'text-indigo-700' : (isCorrectAnswer(child.type, answers[child.id], child.answer) ? 'text-emerald-700' : 'text-red-700')">
+                  {{ isChildSubjective(child.type) ? '已提交，不判分' : (isCorrectAnswer(child.type, answers[child.id], child.answer) ? '回答正确' : '回答错误') }}
+                </span>
+              </div>
+              <div class="space-y-1.5 text-xs">
+                <div class="flex gap-2">
+                  <span class="shrink-0 text-gray-500">你的答案</span>
+                  <span class="font-medium text-gray-800">{{ answeredText(child) }}</span>
+                </div>
+                <div v-if="!isChildSubjective(child.type) && !isCorrectAnswer(child.type, answers[child.id], child.answer)" class="flex gap-2">
+                  <span class="shrink-0 text-gray-500">正确答案</span>
+                  <span class="font-medium text-emerald-700">{{ correctAnswerText(child) }}</span>
+                </div>
+                <div v-if="child.analysis" class="rounded-md bg-white/70 p-2.5 leading-5 text-gray-600">
+                  <span class="font-medium text-gray-800">解析：</span>{{ child.analysis }}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <p class="mt-2 text-xs text-gray-400">案例分析题为主观题，可分段（如要点一、要点二…）作答，作答后仅展示参考答案与解析，不自动判分。</p>
       </div>
 
       <!-- 多空题：每个空为独立单选 -->
@@ -812,9 +989,9 @@ function openExtractModal() {
         />
       </div>
 
-      <!-- 解析（提交后显示） -->
+      <!-- 解析（提交后显示；案例分析大题目+小题目结构在子题内已展示解析，此处跳过） -->
       <div
-        v-if="submitted[current.id]"
+        v-if="submitted[current.id] && !isCaseStudyParent(current)"
         class="mt-6 rounded-xl border-l-4 p-5"
         :class="isSubjective(current)
           ? 'border-indigo-400 bg-indigo-50/50'

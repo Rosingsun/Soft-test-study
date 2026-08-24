@@ -36,6 +36,16 @@ const current = computed((): ExamQuesResp => examData.value?.questions[currentIn
 const total = computed(() => examData.value?.questions.length || 0)
 const answers = ref<Record<number, string>>({})
 
+// 案例分析大题目+小题目
+function isCaseStudyParent(q: ExamQuesResp): boolean {
+  return q.type === 'case_study' && !!q.children && q.children.length > 0
+}
+
+function allChildrenAnswered(q: ExamQuesResp): boolean {
+  if (!q.children) return false
+  return q.children.every(c => !!answers.value[c.id])
+}
+
 const answeredCount = computed(() => Object.keys(answers.value).filter(k => (answers.value as Record<string, string>)[k]).length)
 const progressPct = computed(() => total.value ? Math.round((answeredCount.value / total.value) * 100) : 0)
 const timeColor = computed(() => {
@@ -129,7 +139,11 @@ function goTo(index: number) {
 }
 
 function selectAnswer(questionId: number, value: string) {
-  const q = examData.value?.questions.find(x => x.id === questionId)
+  let q = examData.value?.questions.find(x => x.id === questionId)
+  // 子题：在 children 中查找
+  if (!q && current.value?.children) {
+    q = current.value.children.find(c => c.id === questionId) as ExamQuesResp
+  }
   if (!q) return
   if (q.type === 'multi') {
     const cur = answers.value[questionId] ? answers.value[questionId].split(',') : []
@@ -142,10 +156,18 @@ function selectAnswer(questionId: number, value: string) {
     answers.value[questionId] = value
   }
   saveAnswer(questionId, answers.value[questionId])
-  // 单选 / 判断题：选中后自动标记完成并跳到下一题
-  if ((q.type === 'single' || q.type === 'judge') && !completed.value[questionId]) {
-    completed.value[questionId] = true
-    goToNextUnanswered()
+  // 子题不自动跳转
+  if (!isCaseStudyParent(current.value)) {
+    // 单选 / 判断题：选中后自动标记完成并跳到下一题
+    if ((q.type === 'single' || q.type === 'judge') && !completed.value[questionId]) {
+      completed.value[questionId] = true
+      goToNextUnanswered()
+    }
+  } else {
+    // 案例分析子题：单选/判断选中即标记完成
+    if (q.type === 'single' || q.type === 'judge') {
+      completed.value[questionId] = true
+    }
   }
 }
 
@@ -193,8 +215,19 @@ function blankAllAnswered(q: ExamQuesResp): boolean {
 // 标记当前题完成（多选 / 主观题手动触发）
 function completeQuestion() {
   if (!current.value) return
-  completed.value[current.value.id] = true
-  if (answers.value[current.value.id]) saveAnswer(current.value.id, answers.value[current.value.id])
+  if (isCaseStudyParent(current.value)) {
+    // 案例分析大题目：标记所有已作答子题为完成
+    if (current.value.children) {
+      for (const child of current.value.children) {
+        if (answers.value[child.id]) {
+          completed.value[child.id] = true
+        }
+      }
+    }
+  } else {
+    completed.value[current.value.id] = true
+    if (answers.value[current.value.id]) saveAnswer(current.value.id, answers.value[current.value.id])
+  }
   goToNextUnanswered()
 }
 
@@ -230,6 +263,14 @@ function isSelected(questionId: number, value: string) {
 }
 
 function statusClass(questionId: number) {
+  const q = examData.value?.questions.find(x => x.id === questionId)
+  if (q && isCaseStudyParent(q)) {
+    const allDone = q.children?.every(c => !!completed.value[c.id] || !!answers.value[c.id])
+    if (allDone) return 'bg-emerald-500 text-white'
+    const anyAnswered = q.children?.some(c => !!answers.value[c.id])
+    if (anyAnswered) return 'bg-indigo-600 text-white'
+    return 'bg-gray-200 text-gray-600'
+  }
   if (completed.value[questionId]) return 'bg-emerald-500 text-white'
   if (answers.value[questionId]) return 'bg-indigo-600 text-white'
   return 'bg-gray-200 text-gray-600'
@@ -352,7 +393,7 @@ async function handleSubmit() {
             </div>
             <div class="flex flex-wrap items-center gap-2">
               <span
-                v-if="completed[current.id]"
+                v-if="completed[current.id] || (isCaseStudyParent(current) && current.children?.every(c => completed[c.id] || !!answers[c.id]))"
                 class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600 ring-1 ring-inset ring-emerald-600/20"
               >
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -361,9 +402,9 @@ async function handleSubmit() {
                 本题已完成
               </span>
               <button
-                v-if="!completed[current.id] && current.type !== 'single' && current.type !== 'judge'"
+                v-if="!(completed[current.id] || (isCaseStudyParent(current) && current.children?.every(c => completed[c.id] || !!answers[c.id]))) && current.type !== 'single' && current.type !== 'judge'"
                 class="bg-brand-gradient cursor-pointer rounded-lg px-5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition-all duration-200 hover:shadow-lg hover:brightness-110 active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
-                :disabled="current.type === 'multi_blank' ? !blankAllAnswered(current) : !answers[current.id]"
+                :disabled="isCaseStudyParent(current) ? !allChildrenAnswered(current) : current.type === 'multi_blank' ? !blankAllAnswered(current) : !answers[current.id]"
                 @click="completeQuestion"
               >
                 完成本题
@@ -488,16 +529,113 @@ async function handleSubmit() {
               </div>
             </div>
 
+            <!-- 案例分析：新版大题目+小题目 -->
+            <div v-else-if="current.type === 'case_study' && isCaseStudyParent(current)">
+              <div class="space-y-5">
+                <div
+                  v-for="(child, cIdx) in current.children"
+                  :key="child.id"
+                  class="rounded-xl border border-gray-200 p-5"
+                >
+                  <div class="mb-3 flex items-center gap-2">
+                    <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-600">
+                      {{ cIdx + 1 }}
+                    </span>
+                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                      {{ typeLabel(child.type) }}
+                    </span>
+                  </div>
+                  <div class="mb-4 text-sm leading-7 text-gray-800" v-html="sanitizeHtml(child.content)" />
+
+                  <!-- 子题：单选 / 多选 -->
+                  <div v-if="child.type === 'single' || child.type === 'multi'" class="space-y-2">
+                    <button
+                      v-for="opt in parseOptions(child.options)"
+                      :key="opt.label"
+                      class="flex w-full cursor-pointer items-center gap-3.5 rounded-xl border-2 px-4 py-3 text-left text-sm transition-all duration-200"
+                      :class="isSelected(child.id, opt.label)
+                        ? 'border-indigo-500 bg-indigo-50/70 shadow-sm'
+                        : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-sm'"
+                      @click="selectAnswer(child.id, opt.label)"
+                    >
+                      <span
+                        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors"
+                        :class="isSelected(child.id, opt.label) ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-gray-300 text-gray-500'"
+                      >{{ opt.label }}</span>
+                      <span class="leading-6">{{ opt.text }}</span>
+                    </button>
+                  </div>
+
+                  <!-- 子题：判断题 -->
+                  <div v-else-if="child.type === 'judge'" class="grid grid-cols-2 gap-3">
+                    <button
+                      v-for="val in ['正确', '错误']"
+                      :key="val"
+                      class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 px-6 py-3 text-sm font-semibold transition-all duration-200"
+                      :class="isSelected(child.id, val)
+                        ? 'border-indigo-500 bg-indigo-50/70 text-indigo-700 shadow-sm'
+                        : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-sm'"
+                      @click="selectAnswer(child.id, val)"
+                    >
+                      {{ val }}
+                    </button>
+                  </div>
+
+                  <!-- 子题：多空题 -->
+                  <div v-else-if="child.type === 'multi_blank'" class="space-y-4">
+                    <div
+                      v-for="blank in blankList(child)"
+                      :key="blank.blank_index"
+                      class="rounded-lg border border-gray-200 p-3"
+                    >
+                      <div class="mb-2 flex items-center gap-2">
+                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-bold text-indigo-600">{{ blank.blank_index }}</span>
+                        <span class="text-xs font-medium text-gray-700">第 {{ blank.blank_index }} 空</span>
+                      </div>
+                      <div class="grid gap-2 sm:grid-cols-2">
+                        <button
+                          v-for="opt in blank.options"
+                          :key="opt.id"
+                          class="flex w-full cursor-pointer items-center gap-3 rounded-xl border-2 px-3 py-2 text-left text-sm transition-all duration-200"
+                          :class="blankAnswer(child, blank.blank_index) === opt.id
+                            ? 'border-indigo-500 bg-indigo-50/70 shadow-sm'
+                            : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-sm'"
+                          @click="selectBlankAnswer(child, blank.blank_index, opt.id)"
+                        >
+                          <span
+                            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors"
+                            :class="blankAnswer(child, blank.blank_index) === opt.id ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-gray-300 text-gray-500'"
+                          >{{ opt.id }}</span>
+                          <span class="leading-5">{{ opt.content }}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 子题：填空 / 简答 / 综合 / 论文 -->
+                  <div v-else>
+                    <textarea
+                      :value="answers[child.id] || ''"
+                      :rows="child.type === 'essay' ? 6 : 3"
+                      class="w-full rounded-xl border border-gray-300 bg-gray-50/50 px-4 py-3 text-sm leading-6 transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      :placeholder="child.type === 'essay' ? '请在此撰写论文正文…' : '请输入答案'"
+                      @input="selectAnswer(child.id, ($event.target as HTMLTextAreaElement).value)"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div v-else>
               <textarea
                 :value="answers[current.id] || ''"
-                :rows="current.type === 'essay' || current.type === 'case_study' ? 10 : 4"
+                :rows="current.type === 'essay' ? 10 : 4"
                 class="w-full rounded-xl border border-gray-300 bg-gray-50/50 px-4 py-3 text-sm leading-6 transition-colors focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                :placeholder="current.type === 'essay' ? '请在此撰写论文正文…' : current.type === 'case_study' ? '请结合上方案例材料作答…' : '请输入答案'"
+                :placeholder="current.type === 'essay' ? '请在此撰写论文正文…' : '请输入答案'"
                 @input="selectAnswer(current.id, ($event.target as HTMLTextAreaElement).value)"
               />
-              <p v-if="current.type === 'essay' || current.type === 'case_study'" class="mt-2 text-xs text-gray-400">
-                {{ current.type === 'essay' ? '论文题无标准答案，作答后仅记录提交内容，不自动判分。' : '案例分析题为主观题，作答后仅记录提交内容，不自动判分。' }}
+              <p v-if="current.type === 'essay'" class="mt-2 text-xs text-gray-400">
+                论文题无标准答案，作答后仅记录提交内容，不自动判分。
               </p>
             </div>
           </div>

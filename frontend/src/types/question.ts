@@ -17,6 +17,7 @@ export interface Question {
   subject_id: number
   sub_subject_id: number
   chapter_id: number
+  parent_id: number
   type: QuestionType
   difficulty: Difficulty
   content: string
@@ -31,6 +32,8 @@ export interface Question {
   // AI 出题场景下携带的考点信息;非 AI 题目无此字段。
   // PracticeRunner 在 hideExtractWhenHasKnowledge=true 时据此判断是否展示"获取知识点"入口。
   knowledge_point?: string
+  // 小题目列表（仅案例分析大题目时填充）
+  children?: Question[]
 }
 
 export interface PracticeSubmitReq {

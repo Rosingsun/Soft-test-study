@@ -41,14 +41,22 @@ func (r *QuestionRepo) FindBySubSubjectID(subSubjectID uint) ([]model.Question, 
 	return list, err
 }
 
-// FindCaseStudies 按子科目查询案例分析题，支持按年份筛选
+// FindCaseStudies 按子科目查询案例分析题大题目（parent_id=0），支持按年份筛选
 func (r *QuestionRepo) FindCaseStudies(subSubjectID uint, year int) ([]model.Question, error) {
 	var list []model.Question
-	query := r.db.Where("sub_subject_id = ? AND type = ? AND status = 1", subSubjectID, model.TypeCaseStudy)
+	query := r.db.Where("sub_subject_id = ? AND type = ? AND parent_id = 0 AND status = 1", subSubjectID, model.TypeCaseStudy)
 	if year > 0 {
 		query = query.Where("year = ?", year)
 	}
 	err := query.Order("year desc, id asc").Find(&list).Error
+	return list, err
+}
+
+// FindByParentID 查询指定大题目下的所有小题目（按 id 升序）
+func (r *QuestionRepo) FindByParentID(parentID uint) ([]model.Question, error) {
+	var list []model.Question
+	err := r.db.Where("parent_id = ? AND status = 1", parentID).
+		Order("id asc").Find(&list).Error
 	return list, err
 }
 
@@ -79,11 +87,26 @@ func (r *QuestionRepo) FindRandom(subjectID uint, difficulty string, limit int) 
 
 // FindRandomFiltered 按条件随机抽 N 道题
 // excludeSource 非空时排除 source = excludeSource 的题（如排除 AI 生成的题，仅抽真题）
+// 当 qtype = 'case_study' 时，同时返回父题及其子题（parent_id 关联）
 func (r *QuestionRepo) FindRandomFiltered(subjectID uint, difficulty, qtype, excludeSource string, limit int) ([]model.Question, error) {
 	q := r.db.Model(&model.Question{}).
 		Where("subject_id = ? AND status = 1", subjectID)
 	if qtype == "" {
 		q = q.Where("type NOT IN ?", []string{model.TypeEssay, model.TypeCaseStudy})
+	} else if qtype == model.TypeCaseStudy {
+		// 案例分析：选择 parent_id=0 的大题目，同时带回子题
+		ids, err := r.randomIDs(q.Where("type = ? AND parent_id = 0", model.TypeCaseStudy), "difficulty", difficulty, limit)
+		if err != nil {
+			return nil, err
+		}
+		if len(ids) == 0 {
+			return nil, nil
+		}
+		// 查询父题 + 所有子题
+		var list []model.Question
+		err = r.db.Where("(id IN ? AND status = 1) OR parent_id IN ?", ids, ids).
+			Order("parent_id asc, id asc").Find(&list).Error
+		return list, err
 	} else {
 		q = q.Where("type = ?", qtype)
 	}
@@ -158,12 +181,13 @@ type SubjectTypePair struct {
 	Type      string
 }
 
-// FindSpecial 专项练习：按题型/难度随机抽题
-// 专项练习题源只取题库真题：过滤 source='ai' 的 AI 生成题
+// FindSpecial 专项练习：按题型/难度随机抽题（数量按大题计）
+// 题源 = 科目下 status=1 且 type 匹配的全部题目（含真题 + AI 生成题）
+// 统一只抽 parent_id=0 的题目，小题永不单独计入数量；
+// 案例分析等大题命中后自动带回其全部子题（parent_id 关联）
 func (r *QuestionRepo) FindSpecial(subjectID uint, qtype, difficulty string, limit int) ([]model.Question, error) {
 	q := r.db.Model(&model.Question{}).
-		Where("subject_id = ? AND status = 1", subjectID).
-		Where("(source IS NULL OR source <> ?)", "ai")
+		Where("subject_id = ? AND status = 1 AND parent_id = 0", subjectID)
 	if qtype != "" {
 		q = q.Where("type = ?", qtype)
 	}
@@ -171,7 +195,14 @@ func (r *QuestionRepo) FindSpecial(subjectID uint, qtype, difficulty string, lim
 	if err != nil {
 		return nil, err
 	}
-	return r.findByIDsOrdered(ids)
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	// 回表父题 + 子题：子题 parent_id 指向抽中的大题，按父题分组、组内按 id 升序
+	var list []model.Question
+	err = r.db.Where("(id IN ? AND status = 1) OR (parent_id IN ? AND status = 1)", ids, ids).
+		Order("parent_id asc, id asc").Find(&list).Error
+	return list, err
 }
 
 // FindEssayQuestions 论文题：按年份范围返回全部（不随机）

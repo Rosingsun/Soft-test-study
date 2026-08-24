@@ -25,6 +25,7 @@ type StartExamResp struct {
 
 type ExamQuesResp struct {
 	ID          uint   `json:"id"`
+	ParentID    uint   `json:"parent_id"`
 	Type        string `json:"type"`
 	Content     string `json:"content"`
 	CaseMaterial string `json:"case_material"`
@@ -35,6 +36,8 @@ type ExamQuesResp struct {
 	Score       int    `json:"score"`
 	SortOrder   int    `json:"sort_order"`
 	Source      string `json:"source"`
+	// Children 小题目列表（仅案例分析大题目时填充）
+	Children    []ExamQuesResp `json:"children,omitempty"`
 }
 
 type SubmitAnswerReq struct {

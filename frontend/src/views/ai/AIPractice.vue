@@ -107,6 +107,7 @@ const practiceQuestions = computed<Question[]>(() => {
     subject_id: subjectId.value,
     sub_subject_id: 0,
     chapter_id: chapterId.value,
+    parent_id: 0,
     type: q.type as Question['type'],
     difficulty: q.difficulty as Question['difficulty'],
     content: q.content,

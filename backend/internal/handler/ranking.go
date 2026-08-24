@@ -38,3 +38,20 @@ func (h *RankingHandler) Get(c *gin.Context) {
 	}
 	response.Success(c, data)
 }
+
+// GetEstimatedScores 分项预估分（选择题 / 案例分析 / 论文）
+func (h *RankingHandler) GetEstimatedScores(c *gin.Context) {
+	subjectID := uint(0)
+	if v := c.Query("subject_id"); v != "" {
+		if n, err := strconv.ParseUint(v, 10, 64); err == nil {
+			subjectID = uint(n)
+		}
+	}
+	uid, _ := c.Get("user_id")
+	data, err := h.svc.GetEstimatedSectionScores(uid.(uint), subjectID)
+	if err != nil {
+		response.Error(c, config.CodeBadRequest, "获取预估分失败")
+		return
+	}
+	response.Success(c, data)
+}

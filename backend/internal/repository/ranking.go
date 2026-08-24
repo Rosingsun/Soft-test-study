@@ -126,3 +126,139 @@ func (r *RankingRepo) PracticeAccuracy(levelID, subjectID uint) ([]PracticeRankR
 	err := q.Group("pr.user_id").Scan(&list).Error
 	return list, err
 }
+
+// SectionPracticeRow 分项预估中按章节聚合的练习/模考数据
+type SectionPracticeRow struct {
+	ChapterID uint
+	Total     int64
+	Correct   int64
+}
+
+// SectionPractice 按 (chapter_id) 聚合某用户某科目下指定题型的练习答题记录
+// types 限定题型（如 ["single","multi","judge","fill","short","multi_blank","comprehensive"]）
+func (r *RankingRepo) SectionPractice(userID, subjectID uint, types []string) ([]SectionPracticeRow, error) {
+	if len(types) == 0 {
+		return nil, nil
+	}
+	var list []SectionPracticeRow
+	err := r.db.Table("practice_records pr").
+		Select("q.chapter_id AS chapter_id, COUNT(*) AS total, COALESCE(SUM(pr.is_correct),0) AS correct").
+		Joins("JOIN questions q ON q.id = pr.question_id AND q.type IN ?", types).
+		Where("pr.user_id = ?", userID).
+		Where("q.chapter_id > 0").
+		Group("q.chapter_id").
+		Scan(&list).Error
+	if err != nil {
+		return nil, err
+	}
+	if subjectID > 0 {
+		filtered := make([]SectionPracticeRow, 0, len(list))
+		for _, row := range list {
+			if r.chapterBelongsSubject(row.ChapterID, subjectID) {
+				filtered = append(filtered, row)
+			}
+		}
+		return filtered, nil
+	}
+	return list, nil
+}
+
+// SectionExam 按 (chapter_id) 聚合某用户某科目下指定题型的已交卷模考答题记录
+// 模考答题通过 exam_record_answers.is_correct 判分；只统计 finished 状态记录
+func (r *RankingRepo) SectionExam(userID, subjectID uint, types []string) ([]SectionPracticeRow, error) {
+	if len(types) == 0 {
+		return nil, nil
+	}
+	var list []SectionPracticeRow
+	err := r.db.Table("exam_record_answers era").
+		Select("q.chapter_id AS chapter_id, COUNT(*) AS total, COALESCE(SUM(era.is_correct),0) AS correct").
+		Joins("JOIN exam_records er ON er.id = era.record_id AND er.status = 'finished' AND er.user_id = ?", userID).
+		Joins("JOIN questions q ON q.id = era.question_id AND q.type IN ?", types).
+		Where("q.chapter_id > 0").
+		Group("q.chapter_id").
+		Scan(&list).Error
+	if err != nil {
+		return nil, err
+	}
+	if subjectID > 0 {
+		filtered := make([]SectionPracticeRow, 0, len(list))
+		for _, row := range list {
+			if r.chapterBelongsSubject(row.ChapterID, subjectID) {
+				filtered = append(filtered, row)
+			}
+		}
+		return filtered, nil
+	}
+	return list, nil
+}
+
+// EssayScoreRow 论文 AI 评分记录（仅取 total_score + 创建时间）
+type EssayScoreRow struct {
+	TotalScore int
+	CreatedAt  time.Time
+}
+
+// UserEssayScores 拉取某用户某科目下所有论文 AI 评分记录
+func (r *RankingRepo) UserEssayScores(userID, subjectID uint) ([]EssayScoreRow, error) {
+	if subjectID <= 0 {
+		var list []EssayScoreRow
+		err := r.db.Table("essay_scores").
+			Select("total_score, created_at").
+			Where("user_id = ?", userID).
+			Order("created_at ASC").
+			Scan(&list).Error
+		return list, err
+	}
+	var list []EssayScoreRow
+	err := r.db.Table("essay_scores es").
+		Select("es.total_score, es.created_at").
+		Joins("JOIN questions q ON q.id = es.question_id").
+		Where("es.user_id = ? AND q.subject_id = ?", userID, subjectID).
+		Order("es.created_at ASC").
+		Scan(&list).Error
+	return list, err
+}
+
+// chapterBelongsSubject 校验章节是否属于某科目（避免 SQL 多次连表）
+func (r *RankingRepo) chapterBelongsSubject(chapterID, subjectID uint) bool {
+	var n int64
+	if err := r.db.Table("chapters").Where("id = ? AND subject_id = ?", chapterID, subjectID).Count(&n).Error; err != nil {
+		return false
+	}
+	return n > 0
+}
+
+// SectionChapterRow 章节基础信息（id/name/weight）
+type SectionChapterRow struct {
+	ChapterID uint
+	Name      string
+	Weight    float64
+}
+
+// SectionChapters 拉取某科目全部章节（id/name/weight）
+func (r *RankingRepo) SectionChapters(subjectID uint) ([]SectionChapterRow, error) {
+	var list []SectionChapterRow
+	err := r.db.Table("chapters").
+		Select("id AS chapter_id, name AS name, weight AS weight").
+		Where("subject_id = ?", subjectID).
+		Order("sort_order ASC, id ASC").
+		Scan(&list).Error
+	return list, err
+}
+
+// SectionChapterNames 拉取某科目全部章节名映射
+func (r *RankingRepo) SectionChapterNames(subjectID uint) (map[uint]string, error) {
+	var list []SectionChapterRow
+	err := r.db.Table("chapters").
+		Select("id AS chapter_id, name AS name, weight AS weight").
+		Where("subject_id = ?", subjectID).
+		Scan(&list).Error
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[uint]string, len(list))
+	for _, r := range list {
+		out[r.ChapterID] = r.Name
+	}
+	return out, nil
+}

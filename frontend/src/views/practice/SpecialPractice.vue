@@ -180,6 +180,7 @@ async function start() {
         subject_id: subjectId.value,
         sub_subject_id: 0,
         chapter_id: 0,
+        parent_id: 0,
         type: isEssay.value ? 'essay' : (q.type || 'essay'),
         difficulty: q.difficulty || 'medium',
         content: q.content,
@@ -223,11 +224,11 @@ function difficultyLabelByValue(v: string) {
   <div>
     <BasePageHeader title="专项练习" subtitle="针对特定题型集中训练，逐个突破薄弱环节">
       <template #actions>
-        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-600/20">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3" />
           </svg>
-          仅题库真题（已过滤 AI 题目）
+          题源：真题 + AI 题目
         </span>
         <BaseButton type="secondary" @click="router.push('/practice/random')">
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -350,6 +351,12 @@ function difficultyLabelByValue(v: string) {
                     {{ n }} 题
                   </button>
                 </div>
+                <p v-if="type === 'case_study'" class="mt-2.5 flex items-start gap-1.5 text-xs text-gray-400">
+                  <svg class="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                  </svg>
+                  案例分析按大题计数，每道大题包含若干小题，小题不计入总数量
+                </p>
               </div>
             </div>
 

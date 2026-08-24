@@ -20,6 +20,8 @@ export interface ExamQuesResp {
   score: number
   sort_order: number
   source: string
+  parent_id: number
+  children?: ExamQuesResp[]
 }
 
 export interface StartExamResp {

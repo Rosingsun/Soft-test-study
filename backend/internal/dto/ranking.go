@@ -34,3 +34,36 @@ type RankingResp struct {
 	Reference    RankingReferenceResp `json:"reference"`
 	Distribution []DistributionItem   `json:"distribution"`
 }
+
+// SectionChapterItem 分项预估中的单章节明细
+type SectionChapterItem struct {
+	ChapterID   uint    `json:"chapter_id"`
+	ChapterName string  `json:"chapter_name"`
+	Weight      float64 `json:"weight"`
+	Attempted   int     `json:"attempted"`
+	Correct     int     `json:"correct"`
+	Accuracy    float64 `json:"accuracy"`
+	EstScore    float64 `json:"est_score"`
+}
+
+// SectionBreakdown 单题型（选择题/案例分析/论文）分项预估
+type SectionBreakdown struct {
+	Section     string               `json:"section"`
+	SectionName string               `json:"section_name"`
+	MaxScore    float64              `json:"max_score"`
+	Attempted   int                  `json:"attempted"`
+	EstScore    float64              `json:"est_score"`
+	Accuracy    float64              `json:"accuracy"`
+	SampleSize  int                  `json:"sample_size"`
+	Sufficient  bool                 `json:"sufficient"`
+	Chapters    []SectionChapterItem `json:"chapters"`
+}
+
+// EstimatedScoreResp 分项预估响应（满分 225 = 75 × 3）
+type EstimatedScoreResp struct {
+	SubjectID   uint               `json:"subject_id"`
+	TotalEst    float64            `json:"total_est"`
+	TotalMax    float64            `json:"total_max"`
+	Sections    []SectionBreakdown `json:"sections"`
+	GeneratedAt string             `json:"generated_at"`
+}

@@ -212,6 +212,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config, ctx context.Context) 
 		auth.DELETE("/study-plans/:id", studyPlanH.Delete)
 
 		auth.GET("/rankings", rankingH.Get)
+		auth.GET("/rankings/estimated-section-scores", rankingH.GetEstimatedScores)
 
 		aiRateLimiter := middleware.RateLimit(10, time.Minute)
 		auth.POST("/ai/generate", aiRateLimiter, aiH.GenerateQuestions)

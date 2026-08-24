@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { getRanking } from '@/api/ranking'
+import { getRanking, getEstimatedSectionScores } from '@/api/ranking'
 import { useSubjectStore } from '@/stores/subject'
-import type { RankingResp, RankingCategory, RankingMetric, DistributionItem } from '@/types/ranking'
+import type { RankingResp, RankingCategory, RankingMetric, DistributionItem, EstimatedScoreResp, SectionBreakdown } from '@/types/ranking'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
 import BaseTabs from '@/components/common/BaseTabs.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
@@ -10,6 +10,7 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import BaseBadge from '@/components/common/BaseBadge.vue'
 import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
 import BaseEmpty from '@/components/common/BaseEmpty.vue'
+import BaseProgressBar from '@/components/common/BaseProgressBar.vue'
 
 const subjectStore = useSubjectStore()
 
@@ -19,6 +20,12 @@ const subjectId = ref<number>(0)
 const data = ref<RankingResp | null>(null)
 const loading = ref(true)
 const error = ref('')
+
+// 分项预估（选择题 / 案例分析 / 论文）
+const sectionData = ref<EstimatedScoreResp | null>(null)
+const sectionLoading = ref(false)
+const sectionError = ref('')
+const showChapterDetail = ref(false)
 
 const categoryTabs = [
   { label: '训练排名', value: 'practice' as RankingCategory },
@@ -160,14 +167,93 @@ async function load() {
   }
 }
 
+// 分项预估面板：仅当「预估分」维度 + 非打卡榜 时展示
+const showSectionPanel = computed(() => metric.value === 'score' && category.value !== 'checkin')
+
+// 章节权重总和（用于百分比展示）
+const totalChapterWeight = computed(() => {
+  if (!sectionData.value) return 0
+  let total = 0
+  for (const sec of sectionData.value.sections) {
+    for (const c of sec.chapters) {
+      total += c.weight
+    }
+  }
+  return total
+})
+
+async function loadSections() {
+  if (!showSectionPanel.value) {
+    sectionData.value = null
+    return
+  }
+  sectionLoading.value = true
+  sectionError.value = ''
+  try {
+    sectionData.value = await getEstimatedSectionScores(subjectId.value)
+  } catch (e) {
+    sectionError.value = (e as Error).message
+  } finally {
+    sectionLoading.value = false
+  }
+}
+
+// 配色：选择题 indigo / 案例分析 violet / 论文 emerald
+function sectionTheme(code: string) {
+  if (code === 'case_study') {
+    return {
+      bg: 'bg-violet-50', text: 'text-violet-700', icon: 'text-violet-600',
+      bar: 'from-violet-500 to-violet-400', ring: 'ring-violet-200', solid: 'bg-violet-500',
+    }
+  }
+  if (code === 'essay') {
+    return {
+      bg: 'bg-emerald-50', text: 'text-emerald-700', icon: 'text-emerald-600',
+      bar: 'from-emerald-500 to-emerald-400', ring: 'ring-emerald-200', solid: 'bg-emerald-500',
+    }
+  }
+  return {
+    bg: 'bg-indigo-50', text: 'text-indigo-700', icon: 'text-indigo-600',
+    bar: 'from-indigo-500 to-indigo-400', ring: 'ring-indigo-200', solid: 'bg-indigo-500',
+  }
+}
+
+function sectionIcon(code: string) {
+  if (code === 'case_study') {
+    return 'M3.75 9h16.5m-16.5 6.75h16.5'
+  }
+  if (code === 'essay') {
+    return 'M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125'
+  }
+  return 'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+}
+
+function sectionDesc(sec: SectionBreakdown) {
+  if (sec.section === 'essay') {
+    if (sec.sample_size === 0) return '未参加过 AI 论文评分'
+    return `基于 ${sec.sample_size} 次 AI 评分`
+  }
+  if (sec.sample_size === 0) return '暂无答题记录'
+  return `已答 ${sec.sample_size} 题`
+}
+
+function chapterPercent(weight: number) {
+  if (totalChapterWeight.value === 0) return 0
+  return Math.round((weight / totalChapterWeight.value) * 100)
+}
+
 onMounted(() => {
   if (!subjectStore.subjects.length) {
     subjectStore.fetchSubjectsByLevel(1).catch(() => {})
   }
   load()
+  loadSections()
 })
 
-watch([category, metric, subjectId], load)
+watch([category, metric, subjectId], () => {
+  load()
+  loadSections()
+})
 </script>
 
 <template>
@@ -519,6 +605,184 @@ watch([category, metric, subjectId], load)
           <li>· 默认与同等级用户对比，可选择科目进一步筛选；打卡榜单按等级对比。</li>
           <li>· 出于隐私考虑，仅展示你的名次与匿名统计线，不显示其他用户信息。</li>
         </ul>
+      </div>
+
+      <!-- 分项预估面板（仅预估分维度 + 非打卡榜） -->
+      <div v-if="showSectionPanel" class="mt-6 rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/30 to-violet-50/30 p-5 shadow-sm sm:p-6">
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="flex items-center gap-2 text-base font-semibold tracking-tight text-gray-900">
+              <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                </svg>
+              </span>
+              分项预估（满分 {{ sectionData?.total_max ?? 225 }}）
+            </h3>
+            <p class="mt-1 text-xs text-gray-500">基于你的答题正确率、各章节权重与历史 AI 评分，预估三块题型得分</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-400">当前科目</span>
+            <BaseBadge type="info" dot>
+              {{ subjectId ? (subjectStore.subjects.find(s => s.id === subjectId)?.short_name || subjectStore.subjects.find(s => s.id === subjectId)?.name || `#${subjectId}`) : '全部科目' }}
+            </BaseBadge>
+          </div>
+        </div>
+
+        <BaseSkeleton v-if="sectionLoading" variant="detail" />
+
+        <BaseEmpty v-else-if="sectionError" title="预估分加载失败" :description="sectionError">
+          <template #action>
+            <BaseButton type="secondary" size="sm" class="mt-4" @click="loadSections">重新加载</BaseButton>
+          </template>
+        </BaseEmpty>
+
+        <template v-else-if="sectionData">
+          <!-- 总分环 -->
+          <div class="mb-5 flex flex-wrap items-center gap-5 rounded-xl bg-white/70 p-4 ring-1 ring-inset ring-indigo-100">
+            <div class="flex items-baseline gap-2">
+              <span class="text-3xl font-bold tracking-tight text-gray-900 tabular-nums">{{ sectionData.total_est.toFixed(1) }}</span>
+              <span class="text-sm font-medium text-gray-400">/ {{ sectionData.total_max }} 分</span>
+            </div>
+            <div class="flex-1 min-w-[180px]">
+              <BaseProgressBar :value="(sectionData.total_est / sectionData.total_max) * 100" color="indigo" />
+            </div>
+            <div class="text-xs text-gray-400">
+              三块题型分项得分（各满分 75）
+            </div>
+          </div>
+
+          <!-- 三块分项卡 -->
+          <div class="grid gap-4 sm:grid-cols-3">
+            <div
+              v-for="sec in sectionData.sections"
+              :key="sec.section"
+              class="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+            >
+              <div class="absolute inset-x-0 top-0 h-1" :class="['bg-gradient-to-r', sectionTheme(sec.section).bar]" />
+              <div class="flex items-start justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div :class="['flex h-10 w-10 items-center justify-center rounded-xl', sectionTheme(sec.section).bg, sectionTheme(sec.section).icon]">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                      <path stroke-linecap="round" stroke-linejoin="round" :d="sectionIcon(sec.section)" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-gray-900">{{ sec.section_name }}</p>
+                    <p class="text-[11px] text-gray-400">满分 {{ sec.max_score }}</p>
+                  </div>
+                </div>
+                <BaseBadge v-if="!sec.sufficient" type="warning">样本不足</BaseBadge>
+              </div>
+
+              <div class="mt-4 flex items-baseline gap-2">
+                <span class="text-2xl font-bold tracking-tight text-gray-900 tabular-nums">{{ sec.est_score.toFixed(1) }}</span>
+                <span class="text-xs text-gray-400">/ {{ sec.max_score }} 分</span>
+              </div>
+
+              <div class="mt-2">
+                <BaseProgressBar
+                  :value="sec.max_score > 0 ? (sec.est_score / sec.max_score) * 100 : 0"
+                  :color="sec.section === 'case_study' ? 'indigo' : sec.section === 'essay' ? 'emerald' : 'indigo'"
+                  size="sm"
+                />
+              </div>
+
+              <div class="mt-3 flex items-center justify-between text-[11px]">
+                <span :class="sectionTheme(sec.section).text" class="font-medium">
+                  {{ sec.sample_size === 0 ? '—' : `正确率 ${sec.accuracy.toFixed(1)}%` }}
+                </span>
+                <span class="text-gray-400">{{ sectionDesc(sec) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 章节明细 -->
+          <div class="mt-5 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+            <button
+              type="button"
+              class="flex w-full items-center justify-between text-left"
+              @click="showChapterDetail = !showChapterDetail"
+            >
+              <div>
+                <p class="text-sm font-semibold text-gray-800">章节预估明细</p>
+                <p class="mt-0.5 text-[11px] text-gray-400">展示选择题 / 案例分析在各章节的预估分贡献，按章节权重计算</p>
+              </div>
+              <svg
+                class="h-4 w-4 text-gray-400 transition-transform"
+                :class="{ 'rotate-180': showChapterDetail }"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+            <Transition
+              enter-active-class="transition-all duration-300 ease-out"
+              enter-from-class="max-h-0 opacity-0"
+              enter-to-class="max-h-[2000px] opacity-100"
+              leave-active-class="transition-all duration-200 ease-in"
+              leave-from-class="max-h-[2000px] opacity-100"
+              leave-to-class="max-h-0 opacity-0"
+            >
+              <div v-show="showChapterDetail" class="overflow-hidden">
+                <div v-for="sec in sectionData.sections.filter(s => s.chapters.length > 0)" :key="sec.section" class="mt-4">
+                  <div class="mb-2 flex items-center gap-2">
+                    <span :class="['h-2 w-2 rounded-full', sectionTheme(sec.section).solid]" />
+                    <span class="text-xs font-semibold text-gray-700">{{ sec.section_name }}</span>
+                    <span class="text-[11px] text-gray-400">共 {{ sec.chapters.length }} 章</span>
+                  </div>
+                  <div class="overflow-hidden rounded-lg border border-gray-100">
+                    <table class="w-full text-xs">
+                      <thead class="bg-gray-50 text-[11px] uppercase tracking-wider text-gray-400">
+                        <tr>
+                          <th class="px-3 py-2 text-left font-medium">章节</th>
+                          <th class="px-3 py-2 text-right font-medium">权重</th>
+                          <th class="px-3 py-2 text-right font-medium">答题</th>
+                          <th class="px-3 py-2 text-right font-medium">正确率</th>
+                          <th class="px-3 py-2 text-right font-medium">预估分</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-100">
+                        <tr v-for="c in sec.chapters" :key="c.chapter_id" class="hover:bg-gray-50/60">
+                          <td class="px-3 py-2 text-gray-800">{{ c.chapter_name || `#${c.chapter_id}` }}</td>
+                          <td class="px-3 py-2 text-right tabular-nums text-gray-500">
+                            <span class="inline-flex items-center gap-1">
+                              <span :class="['h-1.5 w-1.5 rounded-full', sectionTheme(sec.section).solid]" />
+                              {{ c.weight.toFixed(2) }}
+                              <span class="text-[10px] text-gray-400">({{ chapterPercent(c.weight) }}%)</span>
+                            </span>
+                          </td>
+                          <td class="px-3 py-2 text-right tabular-nums text-gray-500">
+                            <span v-if="c.attempted > 0">{{ c.correct }}/{{ c.attempted }}</span>
+                            <span v-else class="text-gray-300">—</span>
+                          </td>
+                          <td class="px-3 py-2 text-right tabular-nums">
+                            <span v-if="c.attempted > 0" :class="c.accuracy >= 75 ? 'text-emerald-600' : c.accuracy >= 50 ? 'text-amber-600' : 'text-red-500'">
+                              {{ c.accuracy.toFixed(1) }}%
+                            </span>
+                            <span v-else class="text-gray-300">—</span>
+                          </td>
+                          <td class="px-3 py-2 text-right tabular-nums font-semibold" :class="sectionTheme(sec.section).text">
+                            {{ c.est_score.toFixed(1) }}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <p v-if="sectionData.sections.every(s => s.chapters.length === 0)" class="mt-3 text-center text-[11px] text-gray-400">
+                  当前科目下暂无章节数据
+                </p>
+              </div>
+            </Transition>
+          </div>
+
+          <p class="mt-4 text-[11px] leading-relaxed text-gray-400">
+            · 选择题 / 案例分析：基于练习+已交卷模考的客观题答题记录，按章节权重加权，样本不足 10 题会向平均水平收缩（贝叶斯平滑）<br />
+            · 论文：基于 essay_scores 表中 AI 评分的总分，按 30 天半衰期时间加权平均；未参加过 AI 评分的论文不计入<br />
+            · 章节权重默认 1.00；管理员可在「科目管理」中按考纲调整
+          </p>
+        </template>
       </div>
     </template>
   </div>

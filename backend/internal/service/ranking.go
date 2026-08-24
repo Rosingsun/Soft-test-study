@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/soft-test-study/backend/internal/dto"
+	"github.com/soft-test-study/backend/internal/model"
 	"github.com/soft-test-study/backend/internal/repository"
 )
 
@@ -15,6 +16,16 @@ const (
 	rankPracticePriorTotal   = 50.0
 	rankExamScoreHalfLifeDay = 30.0
 	rankExamTotalScore       = 75.0
+)
+
+// 分项预估（选择题 / 案例分析 / 论文）
+const (
+	sectionMaxScore     = 75.0
+	sectionPriorCorrect = 10.0 // 贝叶斯平滑先验正确数
+	sectionPriorTotal   = 20.0 // 贝叶斯平滑先验总题数
+	sectionMinSample    = 10   // 低于此值标记 sufficient=false
+	essayHalfLifeDay    = 30.0 // 论文评分时间加权半衰期
+	sectionTotalMax     = 225.0
 )
 
 // RankingService 成绩排行（三类榜单 × 双维度）
@@ -336,4 +347,260 @@ func (s *RankingService) practice(levelID, subjectID uint, metric string) ([]ran
 		}
 	}
 	return items, nil
+}
+
+// ========================================================================
+// 分项预估（选择题 / 案例分析 / 论文）
+// ========================================================================
+
+// sectionChoiceTypes 选择题对应的客观题型（不含 case_study / essay）
+var sectionChoiceTypes = []string{
+	model.TypeSingle, model.TypeMulti, model.TypeJudge, model.TypeFill,
+	model.TypeShort, model.TypeComprehensive, model.TypeMultiBlank,
+}
+
+// sectionConfig 各 section 的配置
+type sectionConfig struct {
+	Code     string   // choice / case_study / essay
+	Name     string   // 展示名
+	Types    []string // 关联题型（仅客观题使用）
+	FromEssay bool     // 是否走 essay_scores 表
+}
+
+// GetEstimatedSectionScores 计算用户在指定科目下的三项预估分（满分 225）
+func (s *RankingService) GetEstimatedSectionScores(userID, subjectID uint) (*dto.EstimatedScoreResp, error) {
+	sections := []sectionConfig{
+		{Code: "choice", Name: "选择题", Types: sectionChoiceTypes},
+		{Code: "case_study", Name: "案例分析", Types: []string{model.TypeCaseStudy}},
+		{Code: "essay", Name: "论文", FromEssay: true},
+	}
+
+	// 拉取该科目下所有章节（含 weight）作为权重基准
+	chapterMap, err := s.loadChaptersForSubject(subjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]dto.SectionBreakdown, 0, len(sections))
+	for _, cfg := range sections {
+		if cfg.FromEssay {
+			result = append(result, s.computeEssaySection(userID, subjectID, cfg))
+			continue
+		}
+		result = append(result, s.computeObjectiveSection(userID, subjectID, cfg, chapterMap))
+	}
+
+	total := 0.0
+	for _, sec := range result {
+		total += sec.EstScore
+	}
+	total = math.Round(total*100) / 100
+
+	return &dto.EstimatedScoreResp{
+		SubjectID:   subjectID,
+		TotalEst:    total,
+		TotalMax:    sectionTotalMax,
+		Sections:    result,
+		GeneratedAt: time.Now().Format("2006-01-02 15:04:05"),
+	}, nil
+}
+
+// loadChaptersForSubject 拉取该科目的全部章节权重（subjectID=0 时返回空 map）
+func (s *RankingService) loadChaptersForSubject(subjectID uint) (map[uint]float64, error) {
+	if subjectID <= 0 {
+		return map[uint]float64{}, nil
+	}
+	rows, err := s.repo.SectionChapters(subjectID)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[uint]float64, len(rows))
+	for _, r := range rows {
+		w := r.Weight
+		if w <= 0 {
+			w = 1.0
+		}
+		out[r.ChapterID] = w
+	}
+	return out, nil
+}
+
+// computeObjectiveSection 客观题分项（选择题/案例分析）
+func (s *RankingService) computeObjectiveSection(userID, subjectID uint, cfg sectionConfig, chapterWeights map[uint]float64) dto.SectionBreakdown {
+	// 合并 练习 + 模考 的章节答题数
+	practiceRows, _ := s.repo.SectionPractice(userID, subjectID, cfg.Types)
+	examRows, _ := s.repo.SectionExam(userID, subjectID, cfg.Types)
+
+	merged := make(map[uint]*struct {
+		Total   int64
+		Correct int64
+	}, len(practiceRows)+len(examRows))
+	for _, r := range practiceRows {
+		v, ok := merged[r.ChapterID]
+		if !ok {
+			v = &struct {
+				Total   int64
+				Correct int64
+			}{}
+			merged[r.ChapterID] = v
+		}
+		v.Total += r.Total
+		v.Correct += r.Correct
+	}
+	for _, r := range examRows {
+		v, ok := merged[r.ChapterID]
+		if !ok {
+			v = &struct {
+				Total   int64
+				Correct int64
+			}{}
+			merged[r.ChapterID] = v
+		}
+		v.Total += r.Total
+		v.Correct += r.Correct
+	}
+
+	// 拉取章节名映射
+	chapterNames, _ := s.repo.SectionChapterNames(subjectID)
+
+	// 收集所有出现过的章节（含未答的以便完整展示权重）
+	chapterSet := make(map[uint]struct{}, len(merged))
+	for cid := range merged {
+		chapterSet[cid] = struct{}{}
+	}
+	for cid := range chapterWeights {
+		chapterSet[cid] = struct{}{}
+	}
+
+	// 计算加权预估分
+	var weightSum, weightedSum float64
+	totalAttempted, totalCorrect := int64(0), int64(0)
+	chapterItems := make([]dto.SectionChapterItem, 0, len(chapterSet))
+	for cid := range chapterSet {
+		w := chapterWeights[cid]
+		if w <= 0 {
+			// 未配置权重的章节：仅在有答题数据时纳入，权重按 1.0
+			if _, hasData := merged[cid]; hasData {
+				w = 1.0
+			} else {
+				continue
+			}
+		}
+		m := merged[cid]
+		var attempted, correct int64
+		var rawAccuracy float64
+		if m != nil {
+			attempted = m.Total
+			correct = m.Correct
+			if attempted > 0 {
+				rawAccuracy = float64(correct) / float64(attempted) * 100
+			}
+		}
+
+		// 贝叶斯平滑正确率
+		smoothed := (float64(correct) + sectionPriorCorrect) /
+			(float64(attempted) + sectionPriorTotal)
+
+		// 该章节对该 section 的贡献分（加权后）
+		est := smoothed * w * sectionMaxScore
+		weightSum += w
+		weightedSum += smoothed * w
+
+		chapterItems = append(chapterItems, dto.SectionChapterItem{
+			ChapterID:   cid,
+			ChapterName: chapterNames[cid],
+			Weight:      w,
+			Attempted:   int(attempted),
+			Correct:     int(correct),
+			Accuracy:    math.Round(rawAccuracy*100) / 100,
+			EstScore:    math.Round(est*100) / 100,
+		})
+
+		totalAttempted += attempted
+		totalCorrect += correct
+	}
+
+	// 排序：按 est_score DESC
+	sort.Slice(chapterItems, func(i, j int) bool {
+		if chapterItems[i].EstScore != chapterItems[j].EstScore {
+			return chapterItems[i].EstScore > chapterItems[j].EstScore
+		}
+		return chapterItems[i].ChapterID < chapterItems[j].ChapterID
+	})
+
+	// section 总分：Σ(章节贝叶斯正确率 × weight) / Σ(weight) × 75
+	var sectionScore float64
+	if weightSum > 0 {
+		sectionScore = weightedSum / weightSum * sectionMaxScore
+	}
+	sectionScore = math.Round(sectionScore*100) / 100
+
+	accuracy := 0.0
+	if totalAttempted > 0 {
+		accuracy = math.Round(float64(totalCorrect)/float64(totalAttempted)*10000) / 100
+	}
+
+	// 若没有任何权重配置（subjectID=0），回退为整体累计
+	if weightSum == 0 && totalAttempted > 0 {
+		rawRate := float64(totalCorrect) / float64(totalAttempted)
+		sectionScore = math.Round(rawRate*sectionMaxScore*100) / 100
+	}
+
+	return dto.SectionBreakdown{
+		Section:     cfg.Code,
+		SectionName: cfg.Name,
+		MaxScore:    sectionMaxScore,
+		Attempted:   int(totalAttempted),
+		EstScore:    sectionScore,
+		Accuracy:    accuracy,
+		SampleSize:  int(totalAttempted),
+		Sufficient:  int(totalAttempted) >= sectionMinSample,
+		Chapters:    chapterItems,
+	}
+}
+
+// computeEssaySection 论文分项（基于 essay_scores 表时间加权）
+func (s *RankingService) computeEssaySection(userID, subjectID uint, cfg sectionConfig) dto.SectionBreakdown {
+	rows, err := s.repo.UserEssayScores(userID, subjectID)
+	if err != nil {
+		rows = nil
+	}
+	now := time.Now()
+	var weighted, wSum float64
+	for _, r := range rows {
+		if r.TotalScore < 0 {
+			continue
+		}
+		score := float64(r.TotalScore)
+		if score > sectionMaxScore {
+			score = sectionMaxScore
+		}
+		days := now.Sub(r.CreatedAt).Hours() / 24
+		if days < 0 {
+			days = 0
+		}
+		w := math.Pow(0.5, days/essayHalfLifeDay)
+		weighted += score * w
+		wSum += w
+	}
+	est := 0.0
+	if wSum > 0 {
+		est = weighted / wSum
+	}
+	est = math.Round(est*100) / 100
+	accuracy := 0.0
+	if wSum > 0 && est > 0 {
+		accuracy = math.Round(est/sectionMaxScore*10000) / 100
+	}
+	return dto.SectionBreakdown{
+		Section:     cfg.Code,
+		SectionName: cfg.Name,
+		MaxScore:    sectionMaxScore,
+		Attempted:   len(rows),
+		EstScore:    est,
+		Accuracy:    accuracy,
+		SampleSize:  len(rows),
+		Sufficient:  len(rows) >= 1,
+		Chapters:    []dto.SectionChapterItem{},
+	}
 }
