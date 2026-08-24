@@ -13,3 +13,9 @@ export interface StudyMaterialResp {
   view_count: number
   created_at: string
 }
+
+// 思维导图节点（children 为空表示叶子）
+export interface MindMapNode {
+  title: string
+  children?: MindMapNode[]
+}

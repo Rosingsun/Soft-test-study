@@ -127,27 +127,31 @@ var chapterNamesBySubject = map[string][]string{
 	"网络管理员": {"网络基础", "网络设备与配置", "网络安全与管理"},
 	"信息处理技术员": {"信息处理基础", "办公软件应用", "信息安全与法规"},
 	"信息系统管理工程师": {"信息系统基础", "系统运维管理", "IT服务管理"},
-	// 系统分析师综合知识按官方考纲知识域完整拆分为 18 章，
+	// 系统分析师综合知识按官方考纲知识域完整拆分为 22 章，
 	// 覆盖教材全部考点（章名须与 ai_syllabus.go 的 systemAnalystChapters 保持一致）
 	"系统分析师": {
 		"绪论",
-		"法律法规与标准化",
-		"数学基础",
-		"运筹学基础",
-		"数据结构与算法",
-		"计算机组成与体系结构",
-		"操作系统",
-		"程序设计语言与语言处理",
-		"嵌入式系统",
-		"计算机网络",
-		"分布式系统与中间件",
-		"多媒体基础",
+		"数学与工程基础",
+		"计算机系统",
+		"计算机网络与分布式系统",
 		"数据库系统",
 		"企业信息化",
 		"软件工程",
-		"面向对象方法与设计模式",
 		"项目管理",
 		"信息安全",
+		"系统规划与分析",
+		"软件需求工程",
+		"软件架构设计",
+		"系统设计",
+		"软件实现与测试",
+		"系统运行与维护",
+		"Web 应用系统",
+		"嵌入式系统",
+		"移动应用系统",
+		"大数据处理系统",
+		"微服务系统",
+		"信息物理系统",
+		"系统分析师论文写作要点",
 	},
 	"系统架构设计师": {"架构设计基础", "软件架构风格", "系统质量与性能", "云与大数据架构"},
 	"网络规划设计师": {"网络规划基础", "网络拓扑设计", "网络性能与安全"},
@@ -163,7 +167,7 @@ func seedChapters(db *gorm.DB) {
 			continue
 		}
 
-		// 系统分析师-综合知识按考纲 18 章重建：先强制删除该子科目下旧题目与旧章节，避免残留旧分类
+		// 系统分析师-综合知识按考纲 22 章重建：先强制删除该子科目下旧题目与旧章节，避免残留旧分类
 		if subject.Name == "系统分析师" && ss.Name == "综合知识" {
 			db.Unscoped().Where("subject_id = ? AND sub_subject_id = ?", subject.ID, ss.ID).
 				Delete(&model.Question{})
@@ -218,7 +222,7 @@ func assignQuestionsToChapters(db *gorm.DB) {
 	var questions []model.Question
 	db.Where("chapter_id = 0 AND status = 1").Order("subject_id asc, sub_subject_id asc, id asc").Find(&questions)
 
-	// 系统分析师「综合知识」由 import_real 按第二版教材9章精确归类，seed 不随机分配
+	// 系统分析师「综合知识」由 import_real 按第二版教材 22 章精确归类，seed 不随机分配
 	skipSubject, skipSub := resolveSAZongheIDs(db)
 
 	// 按 (subject_id, sub_subject_id) 缓存的章节列表

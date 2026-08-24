@@ -828,26 +828,34 @@ SELECT * FROM (
   SELECT  26,         8,                3,                   0,             '论文写作专题',                                1 UNION ALL
 
   -- ============ 系统分析师 (subject_id=9) ============
-  -- 综合知识 (sub_subject_id=4) - 18 章
-  -- 注: 使用独立 ID 段 200~217, 避免与其他科目章节的固定 ID 冲突
+  -- 综合知识 (sub_subject_id=4) - 22 章
+  -- 注: 使用独立 ID 段 200~221, 避免与其他科目章节的固定 ID 冲突
+  -- 按《系统分析师教程（第 2 版 · 2024）》清华大学出版社官方目录:
+  --   第一篇 基础知识 第 1~9 章
+  --   第二篇 关键技术 第 10~15 章
+  --   第三篇 案例实践 第 16~22 章
   SELECT 200,         9,                4,                   0,             '绪论',                                        1 UNION ALL
-  SELECT 201,         9,                4,                   0,             '法律法规与标准化',                            2 UNION ALL
-  SELECT 202,         9,                4,                   0,             '数学基础',                                    3 UNION ALL
-  SELECT 203,         9,                4,                   0,             '运筹学基础',                                  4 UNION ALL
-  SELECT 204,         9,                4,                   0,             '数据结构与算法',                              5 UNION ALL
-  SELECT 205,         9,                4,                   0,             '计算机组成与体系结构',                        6 UNION ALL
-  SELECT 206,         9,                4,                   0,             '操作系统',                                    7 UNION ALL
-  SELECT 207,         9,                4,                   0,             '程序设计语言与语言处理',                      8 UNION ALL
-  SELECT 208,         9,                4,                   0,             '嵌入式系统',                                  9 UNION ALL
-  SELECT 209,         9,                4,                   0,             '计算机网络',                                 10 UNION ALL
-  SELECT 210,         9,                4,                   0,             '分布式系统与中间件',                         11 UNION ALL
-  SELECT 211,         9,                4,                   0,             '多媒体基础',                                 12 UNION ALL
-  SELECT 212,         9,                4,                   0,             '数据库系统',                                 13 UNION ALL
-  SELECT 213,         9,                4,                   0,             '企业信息化',                                 14 UNION ALL
-  SELECT 214,         9,                4,                   0,             '软件工程',                                   15 UNION ALL
-  SELECT 215,         9,                4,                   0,             '面向对象方法与设计模式',                     16 UNION ALL
-  SELECT 216,         9,                4,                   0,             '项目管理',                                   17 UNION ALL
-  SELECT 217,         9,                4,                   0,             '信息安全',                                   18 UNION ALL
+  SELECT 201,         9,                4,                   0,             '数学与工程基础',                                2 UNION ALL
+  SELECT 202,         9,                4,                   0,             '计算机系统',                                    3 UNION ALL
+  SELECT 203,         9,                4,                   0,             '计算机网络与分布式系统',                        4 UNION ALL
+  SELECT 204,         9,                4,                   0,             '数据库系统',                                    5 UNION ALL
+  SELECT 205,         9,                4,                   0,             '企业信息化',                                    6 UNION ALL
+  SELECT 206,         9,                4,                   0,             '软件工程',                                      7 UNION ALL
+  SELECT 207,         9,                4,                   0,             '项目管理',                                      8 UNION ALL
+  SELECT 208,         9,                4,                   0,             '信息安全',                                      9 UNION ALL
+  SELECT 209,         9,                4,                   0,             '系统规划与分析',                               10 UNION ALL
+  SELECT 210,         9,                4,                   0,             '软件需求工程',                                 11 UNION ALL
+  SELECT 211,         9,                4,                   0,             '软件架构设计',                                 12 UNION ALL
+  SELECT 212,         9,                4,                   0,             '系统设计',                                     13 UNION ALL
+  SELECT 213,         9,                4,                   0,             '软件实现与测试',                               14 UNION ALL
+  SELECT 214,         9,                4,                   0,             '系统运行与维护',                               15 UNION ALL
+  SELECT 215,         9,                4,                   0,             'Web 应用系统',                                 16 UNION ALL
+  SELECT 216,         9,                4,                   0,             '嵌入式系统',                                   17 UNION ALL
+  SELECT 217,         9,                4,                   0,             '移动应用系统',                                 18 UNION ALL
+  SELECT 218,         9,                4,                   0,             '大数据处理系统',                               19 UNION ALL
+  SELECT 219,         9,                4,                   0,             '微服务系统',                                   20 UNION ALL
+  SELECT 220,         9,                4,                   0,             '信息物理系统',                                 21 UNION ALL
+  SELECT 221,         9,                4,                   0,             '系统分析师论文写作要点',                       22 UNION ALL
   -- 案例分析 (sub_subject_id=5)
   SELECT  36,         9,                5,                   0,             '综合案例（一）',                              1 UNION ALL
   SELECT  37,         9,                5,                   0,             '综合案例（二）',                              2 UNION ALL

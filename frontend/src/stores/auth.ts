@@ -23,7 +23,8 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function getHomeRoute(): string {
-    return '/'
+    // 默认进入「科目导航-综合知识」
+    return '/subjects'
   }
 
   async function login(username: string, password: string) {

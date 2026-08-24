@@ -1,7 +1,10 @@
 package service
 
 import (
+	"archive/zip"
+	"encoding/json"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,7 +15,10 @@ import (
 	"github.com/soft-test-study/backend/internal/repository"
 )
 
-var ErrInvalidFilePath = errors.New("非法文件路径")
+var (
+	ErrInvalidFilePath = errors.New("非法文件路径")
+	ErrInvalidXmind    = errors.New("xmind 文件格式错误或内容为空")
+)
 
 type StudyMaterialService struct {
 	repo        *repository.StudyMaterialRepo
@@ -120,4 +126,124 @@ func (s *StudyMaterialService) toResp(m model.StudyMaterial) dto.StudyMaterialRe
 		ViewCount:     m.ViewCount,
 		CreatedAt:     m.CreatedAt.Format(time.DateTime),
 	}
+}
+
+// ========================================================================
+// 思维导图在线阅读：解析 xmind（ZIP 包内 content.json）为树形结构
+// ========================================================================
+
+// xmindTopic xmind content.json 中的主题节点（仅解析所需字段）
+type xmindTopic struct {
+	ID       string `json:"id"`
+	Title    string `json:"title"`
+	Href     string `json:"href"`
+	Children *struct {
+		Attached []xmindTopic `json:"attached"`
+		Detached []xmindTopic `json:"detached"`
+	} `json:"children"`
+}
+
+type xmindSheet struct {
+	ID        string     `json:"id"`
+	Class     string     `json:"class"`
+	RootTopic xmindTopic `json:"rootTopic"`
+}
+
+// Content 返回资料的思维导图树形结构（不改变预览计数）
+func (s *StudyMaterialService) Content(id uint) ([]dto.MindMapNode, error) {
+	m, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, ErrNotFound
+	}
+	if m.Status != 1 {
+		return nil, ErrNotFound
+	}
+	absPath, err := s.resolveFilePath(m.FileURL)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := os.Stat(absPath); err != nil {
+		return nil, ErrNotFound
+	}
+
+	topics, err := parseXmind(absPath)
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := make([]dto.MindMapNode, 0, len(topics))
+	for _, t := range topics {
+		if node := convertTopic(t); node != nil {
+			nodes = append(nodes, *node)
+		}
+	}
+	if len(nodes) == 0 {
+		return nil, ErrInvalidXmind
+	}
+	return nodes, nil
+}
+
+// parseXmind 解压并解析 xmind 文件的 content.json，返回所有画布的根主题
+func parseXmind(path string) ([]xmindTopic, error) {
+	reader, err := zip.OpenReader(path)
+	if err != nil {
+		return nil, ErrInvalidXmind
+	}
+	defer reader.Close()
+
+	var raw []byte
+	for _, f := range reader.File {
+		if f.Name == "content.json" {
+			rc, err := f.Open()
+			if err != nil {
+				return nil, ErrInvalidXmind
+			}
+			raw, err = io.ReadAll(rc)
+			rc.Close()
+			if err != nil {
+				return nil, ErrInvalidXmind
+			}
+			break
+		}
+	}
+	if len(raw) == 0 {
+		return nil, ErrInvalidXmind
+	}
+
+	var sheets []xmindSheet
+	if err := json.Unmarshal(raw, &sheets); err != nil {
+		return nil, ErrInvalidXmind
+	}
+	roots := make([]xmindTopic, 0, len(sheets))
+	for _, sheet := range sheets {
+		if sheet.RootTopic.Title != "" || len(sheet.RootTopic.Children.Attached) > 0 {
+			roots = append(roots, sheet.RootTopic)
+		}
+	}
+	if len(roots) == 0 {
+		return nil, ErrInvalidXmind
+	}
+	return roots, nil
+}
+
+// convertTopic 递归将 xmind 主题转换为 DTO 节点，空标题节点被跳过
+func convertTopic(t xmindTopic) *dto.MindMapNode {
+	title := strings.TrimSpace(t.Title)
+	var children []dto.MindMapNode
+	if t.Children != nil {
+		for _, child := range t.Children.Attached {
+			if node := convertTopic(child); node != nil {
+				children = append(children, *node)
+			}
+		}
+		for _, child := range t.Children.Detached {
+			if node := convertTopic(child); node != nil {
+				children = append(children, *node)
+			}
+		}
+	}
+	if title == "" && len(children) == 0 {
+		return nil
+	}
+	return &dto.MindMapNode{Title: title, Children: children}
 }

@@ -2,7 +2,7 @@ package service
 
 import "strings"
 
-// systemAnalystSyllabus 系统分析师综合知识 18 章
+// systemAnalystSyllabus 系统分析师综合知识 22 章
 // 章→节→考点 三级结构。该数据用于在 AI 出题 prompt 中精准注入考点清单，
 // 让 LLM 知道"当前是哪一章、该章有哪些必考细分知识点"，
 // 避免出现与教材无关的通用泛题。
@@ -28,9 +28,9 @@ type SAChapter struct {
 	Sections []SASection // 章下的节
 }
 
-// systemAnalystChapters 系统分析师综合知识 18 章完整大纲（章→节→考点）。
+// systemAnalystChapters 系统分析师综合知识 22 章完整大纲（章→节→考点）。
 // 章节按官方考纲知识域拆分，与 seed 数据 chapter.name 一一对应；
-// 节与考点按《系统分析师教程（第 2 版）》综合知识篇整理；
+// 节与考点按《系统分析师教程（第 2 版 · 2024）》清华大学出版社综合知识篇整理；
 // 供 AI 出题 prompt 在 buildGeneratePrompt 中按章节名匹配注入。
 var systemAnalystChapters = []SAChapter{
 	{
@@ -41,146 +41,51 @@ var systemAnalystChapters = []SAChapter{
 				Points: []SAPoint{
 					{Section: "角色与职责", Name: "系统分析师角色定位与职责", Tags: []string{"系统分析师", "角色", "职责", "桥梁"}},
 					{Section: "生命周期", Name: "信息系统生命周期各阶段任务", Tags: []string{"生命周期", "立项", "开发", "运维", "消亡"}},
-					{Section: "需求获取", Name: "需求获取方法", Tags: []string{"访谈", "问卷", "原型法", "观察", "焦点小组"}},
+					{Section: "职业道德", Name: "系统分析师职业道德与职业规范", Tags: []string{"诚信", "公正", "保密", "职业操守"}},
 				},
 			},
 			{
-				Name: "职业道德与职业规范",
-				Points: []SAPoint{
-					{Section: "职业道德", Name: "系统分析师职业道德", Tags: []string{"诚信", "公正", "保密", "职业操守"}},
-				},
-			},
-		},
-	},
-	{
-		Name: "法律法规与标准化",
-		Sections: []SASection{
-			{
-				Name: "法律法规",
-				Points: []SAPoint{
-					{Section: "法律法规", Name: "信息化相关法律法规", Tags: []string{"招投标法", "政府采购法", "合同法", "著作权法", "专利法", "商标法", "网络安全法"}},
-					{Section: "保护条例", Name: "计算机软件保护条例", Tags: []string{"软件登记", "侵权认定", "反向工程"}},
-				},
-			},
-			{
-				Name: "标准化基础",
-				Points: []SAPoint{
-					{Section: "标准化", Name: "标准化基础与常用标准", Tags: []string{"ISO", "GB", "国标", "行标", "强制性标准", "推荐性标准", "CMMI"}},
-					{Section: "标准分类", Name: "标准的层级与有效期", Tags: []string{"国际标准", "国家标准", "行业标准", "地方标准", "企业标准", "复审"}},
-				},
-			},
-			{
-				Name: "知识产权",
+				Name: "信息化与法律法规基础",
 				Points: []SAPoint{
 					{Section: "知识产权", Name: "知识产权归属与保护", Tags: []string{"著作权", "专利权", "商标权", "职务作品", "委托开发归属", "保护期限"}},
+					{Section: "标准化", Name: "标准化基础与常用标准", Tags: []string{"ISO", "GB", "国标", "行标", "强制性标准", "推荐性标准", "CMMI"}},
+					{Section: "法律法规", Name: "信息化相关法律法规", Tags: []string{"招投标法", "政府采购法", "合同法", "网络安全法", "数据安全法", "个人信息保护法"}},
 				},
 			},
 		},
 	},
 	{
-		Name: "数学基础",
+		Name: "数学与工程基础",
 		Sections: []SASection{
 			{
-				Name: "集合论与数理逻辑",
+				Name: "工程数学",
 				Points: []SAPoint{
-					{Section: "集合", Name: "集合运算与关系", Tags: []string{"并", "交", "差", "对称差", "笛卡尔积", "等价关系", "偏序"}},
-					{Section: "命题逻辑", Name: "命题逻辑与真值表", Tags: []string{"合取", "析取", "蕴含", "等价", "主范式"}},
-					{Section: "谓词逻辑", Name: "谓词逻辑推理", Tags: []string{"量词", "推理规则", "归结原理"}},
+					{Section: "高等数学", Name: "微积分与函数基础", Tags: []string{"极限", "导数", "积分", "多元函数"}},
+					{Section: "线性代数", Name: "矩阵运算与线性方程组", Tags: []string{"行列式", "逆矩阵", "秩", "特征值"}},
+					{Section: "概率统计", Name: "概率论与数理统计", Tags: []string{"数学期望", "方差", "正态分布", "二项分布", "参数估计", "假设检验"}},
 				},
 			},
 			{
-				Name: "概率论与数理统计",
+				Name: "离散数学",
 				Points: []SAPoint{
-					{Section: "概率分布", Name: "常见概率分布", Tags: []string{"二项分布", "泊松分布", "正态分布", "指数分布"}},
-					{Section: "数字特征", Name: "期望方差与排列组合", Tags: []string{"数学期望", "方差", "加法原理", "乘法原理", "鸽巢原理", "容斥原理"}},
-					{Section: "参数估计", Name: "参数估计与抽样", Tags: []string{"点估计", "区间估计", "置信区间"}},
-					{Section: "假设检验", Name: "假设检验", Tags: []string{"原假设", "显著性", "两类错误", "p 值"}},
+					{Section: "集合与关系", Name: "集合运算与关系", Tags: []string{"并", "交", "差", "笛卡尔积", "等价关系", "偏序"}},
+					{Section: "数理逻辑", Name: "命题逻辑与谓词逻辑", Tags: []string{"合取", "析取", "蕴含", "真值表", "归结原理"}},
+					{Section: "图论", Name: "图论基础", Tags: []string{"最小生成树", "Prim", "Kruskal", "最短路径 Dijkstra", "Floyd", "拓扑排序"}},
 				},
 			},
 			{
-				Name: "数值分析与计算方法",
+				Name: "运筹学与决策分析",
 				Points: []SAPoint{
-					{Section: "数值分析", Name: "数值分析基础", Tags: []string{"误差", "插值", "拟合", "数值积分", "牛顿迭代", "二分法"}},
-					{Section: "矩阵计算", Name: "矩阵运算基础", Tags: []string{"行列式", "逆矩阵", "秩", "线性方程组"}},
+					{Section: "线性规划", Name: "线性规划建模与单纯形法", Tags: []string{"约束", "目标函数", "单纯形", "对偶", "0-1 规划"}},
+					{Section: "运输与指派", Name: "运输问题与指派问题", Tags: []string{"产销平衡", "表上作业法", "匈牙利法"}},
+					{Section: "排队与博弈", Name: "排队论与博弈论", Tags: []string{"M/M/1", "Little 定律", "纳什均衡", "囚徒困境"}},
+					{Section: "决策分析", Name: "决策树与不确定性决策", Tags: []string{"期望收益", "乐观法", "悲观法", "后悔值", "盈亏平衡"}},
 				},
 			},
 		},
 	},
 	{
-		Name: "运筹学基础",
-		Sections: []SASection{
-			{
-				Name: "图论",
-				Points: []SAPoint{
-					{Section: "最小生成树", Name: "最小生成树算法", Tags: []string{"Prim", "Kruskal", "生成树"}},
-					{Section: "最短路径", Name: "最短路径算法", Tags: []string{"Dijkstra", "Floyd", "Bellman-Ford"}},
-				},
-			},
-			{
-				Name: "线性规划与整数规划",
-				Points: []SAPoint{
-					{Section: "线性规划", Name: "线性规划建模与单纯形法", Tags: []string{"约束", "目标函数", "单纯形", "对偶"}},
-					{Section: "整数规划", Name: "整数规划与分支定界", Tags: []string{"0-1 规划", "分支定界", "割平面"}},
-					{Section: "运输问题", Name: "运输问题与表上作业法", Tags: []string{"产销平衡", "初始解", "最优解判别", "指派问题"}},
-				},
-			},
-			{
-				Name: "排队论与博弈论",
-				Points: []SAPoint{
-					{Section: "排队论", Name: "排队论与 M/M/1 模型", Tags: []string{"M/M/1", "M/M/c", "Little 定律", "服务强度", "泊松流"}},
-					{Section: "博弈论", Name: "博弈论基本概念", Tags: []string{"纳什均衡", "囚徒困境", "合作博弈"}},
-				},
-			},
-			{
-				Name: "决策分析",
-				Points: []SAPoint{
-					{Section: "决策论", Name: "决策树与不确定决策", Tags: []string{"期望收益", "乐观法", "悲观法", "后悔值", "盈亏平衡"}},
-				},
-			},
-		},
-	},
-	{
-		Name: "数据结构与算法",
-		Sections: []SASection{
-			{
-				Name: "线性结构",
-				Points: []SAPoint{
-					{Section: "线性表", Name: "顺序表与链表", Tags: []string{"单链表", "双向链表", "循环链表", "插入删除"}},
-					{Section: "栈和队列", Name: "栈与队列及其应用", Tags: []string{"表达式求值", "循环队列", "逆波兰式", "递归"}},
-					{Section: "串", Name: "串匹配算法", Tags: []string{"KMP", "模式串", "next 数组", "朴素匹配"}},
-				},
-			},
-			{
-				Name: "树与二叉树",
-				Points: []SAPoint{
-					{Section: "二叉树", Name: "二叉树性质与遍历", Tags: []string{"前序", "中序", "后序", "层序", "完全二叉树", "满二叉树"}},
-					{Section: "特殊树", Name: "哈夫曼树与平衡树", Tags: []string{"哈夫曼编码", "最优二叉树", "AVL", "红黑树", "B 树", "B+ 树"}},
-				},
-			},
-			{
-				Name: "图",
-				Points: []SAPoint{
-					{Section: "图的存储", Name: "图的存储结构", Tags: []string{"邻接矩阵", "邻接表", "十字链表"}},
-					{Section: "图的遍历", Name: "图的遍历与应用", Tags: []string{"DFS", "BFS", "拓扑排序", "AOV 网", "AOE 网", "关键路径"}},
-				},
-			},
-			{
-				Name: "排序与查找",
-				Points: []SAPoint{
-					{Section: "排序", Name: "排序算法及复杂度对比", Tags: []string{"冒泡", "快速排序", "归并排序", "堆排序", "基数排序", "希尔排序", "稳定性"}},
-					{Section: "查找", Name: "查找算法与散列", Tags: []string{"折半查找", "散列表", "冲突处理", "装填因子", "平均查找长度"}},
-				},
-			},
-			{
-				Name: "算法策略",
-				Points: []SAPoint{
-					{Section: "经典策略", Name: "常用算法设计策略", Tags: []string{"贪心", "动态规划", "分治法", "回溯法", "分支限界", "时间复杂度分析"}},
-				},
-			},
-		},
-	},
-	{
-		Name: "计算机组成与体系结构",
+		Name: "计算机系统",
 		Sections: []SASection{
 			{
 				Name: "计算机组成与体系结构",
@@ -191,28 +96,11 @@ var systemAnalystChapters = []SAChapter{
 					{Section: "Cache", Name: "Cache 映射与命中率", Tags: []string{"直接映射", "组相联", "全相联", "命中率", "缺失率"}},
 					{Section: "数据表示", Name: "进制转换与码制", Tags: []string{"原码", "反码", "补码", "移码", "浮点数", "规格化"}},
 					{Section: "校验码", Name: "校验码原理", Tags: []string{"奇偶校验", "CRC", "海明码"}},
-				},
-			},
-			{
-				Name: "体系结构分类与并行处理",
-				Points: []SAPoint{
 					{Section: "CISC/RISC", Name: "CISC 与 RISC 对比", Tags: []string{"复杂指令集", "精简指令集", "流水线"}},
 					{Section: "Flynn 分类", Name: "Flynn 分类法", Tags: []string{"SISD", "SIMD", "MISD", "MIMD"}},
-					{Section: "多核与并行", Name: "多核与并行处理", Tags: []string{"多核", "对称多处理", "集群"}},
-					{Section: "总线与中断", Name: "总线、中断与 I/O 控制", Tags: []string{"总线仲裁", "中断", "DMA", "通道", "程序查询"}},
+					{Section: "可靠性", Name: "系统可靠性模型", Tags: []string{"串联系统", "并联系统", "模冗余", "MTBF", "MTTR"}},
 				},
 			},
-			{
-				Name: "系统可靠性",
-				Points: []SAPoint{
-					{Section: "可靠性计算", Name: "系统可靠性模型与计算", Tags: []string{"串联系统", "并联系统", "模冗余", "MTBF", "MTTR", "失效率"}},
-				},
-			},
-		},
-	},
-	{
-		Name: "操作系统",
-		Sections: []SASection{
 			{
 				Name: "操作系统",
 				Points: []SAPoint{
@@ -220,72 +108,60 @@ var systemAnalystChapters = []SAChapter{
 					{Section: "同步互斥", Name: "进程同步与互斥", Tags: []string{"信号量", "管程", "PV 操作", "临界区"}},
 					{Section: "死锁", Name: "死锁与处理", Tags: []string{"死锁条件", "银行家算法", "预防", "检测", "解除"}},
 					{Section: "调度", Name: "处理机调度算法", Tags: []string{"FCFS", "SJF", "时间片轮转", "优先级", "多级反馈队列", "响应比"}},
-					{Section: "内存管理", Name: "虚拟内存与页面置换", Tags: []string{"分页", "分段", "段页式", "FIFO", "LRU", "缺页率", "页式虚存地址变换"}},
-					{Section: "文件系统", Name: "文件管理与磁盘调度", Tags: []string{"FCFS", "SSTF", "SCAN", "索引节点", "位示图", "空闲空间管理"}},
-					{Section: "设备管理", Name: "设备管理与 Spooling", Tags: []string{"Spooling", "缓冲区", "设备分配"}},
-				},
-			},
-		},
-	},
-	{
-		Name: "程序设计语言与语言处理",
-		Sections: []SASection{
-			{
-				Name: "程序语言基础",
-				Points: []SAPoint{
-					{Section: "语言范式", Name: "程序设计语言分类与特点", Tags: []string{"命令式", "函数式", "逻辑式", "面向对象语言", "动态语言"}},
-					{Section: "参数传递", Name: "传值调用与引用调用", Tags: []string{"值传递", "地址传递", "副作用", "递归"}},
-					{Section: "作用域", Name: "作用域与闭包", Tags: []string{"静态作用域", "动态作用域", "闭包"}},
+					{Section: "内存管理", Name: "虚拟内存与页面置换", Tags: []string{"分页", "分段", "段页式", "FIFO", "LRU", "缺页率"}},
+					{Section: "文件系统", Name: "文件管理与磁盘调度", Tags: []string{"FCFS", "SSTF", "SCAN", "索引节点", "位示图"}},
 				},
 			},
 			{
-				Name: "语言处理程序基础",
+				Name: "程序设计语言与语言处理",
 				Points: []SAPoint{
+					{Section: "语言范式", Name: "程序设计语言分类", Tags: []string{"命令式", "函数式", "逻辑式", "面向对象语言", "动态语言"}},
+					{Section: "参数传递", Name: "传值调用与引用调用", Tags: []string{"值传递", "地址传递", "递归"}},
 					{Section: "文法", Name: "文法分类与正规式", Tags: []string{"0 型", "1 型", "2 型", "3 型文法", "正则表达式", "有限自动机"}},
-					{Section: "编译过程", Name: "编译过程与中间代码", Tags: []string{"词法分析", "语法分析", "语义分析", "三地址码", "逆波兰式", "目标代码生成"}},
-					{Section: "解释与编译", Name: "解释器与编译器对比", Tags: []string{"解释执行", "编译执行", "混合型", "JIT"}},
+					{Section: "编译过程", Name: "编译过程与中间代码", Tags: []string{"词法分析", "语法分析", "语义分析", "三地址码", "逆波兰式"}},
+					{Section: "解释与编译", Name: "解释器与编译器对比", Tags: []string{"解释执行", "编译执行", "JIT"}},
 				},
 			},
-		},
-	},
-	{
-		Name: "嵌入式系统",
-		Sections: []SASection{
 			{
-				Name: "嵌入式系统",
+				Name: "数据结构与算法",
 				Points: []SAPoint{
-					{Section: "嵌入式", Name: "嵌入式系统组成与特点", Tags: []string{"实时", "固件", "ARM", "DSP", "SoC", "微控制器"}},
-					{Section: "RTOS", Name: "实时操作系统特性", Tags: []string{"硬实时", "软实时", "任务调度", "优先级反转", "看门狗"}},
-					{Section: "开发调试", Name: "嵌入式开发与调试技术", Tags: []string{"交叉编译", "JTAG", "在线仿真", "Bootloader"}},
+					{Section: "线性结构", Name: "线性表、栈与队列", Tags: []string{"顺序表", "链表", "栈", "队列", "表达式求值", "KMP"}},
+					{Section: "树", Name: "二叉树与特殊树", Tags: []string{"二叉树遍历", "哈夫曼", "AVL", "红黑树", "B 树", "B+ 树"}},
+					{Section: "图", Name: "图的存储与遍历", Tags: []string{"邻接矩阵", "邻接表", "DFS", "BFS", "拓扑排序", "关键路径"}},
+					{Section: "排序查找", Name: "排序与查找算法", Tags: []string{"冒泡", "快速排序", "归并排序", "堆排序", "折半查找", "散列表"}},
+					{Section: "算法策略", Name: "算法设计策略", Tags: []string{"贪心", "动态规划", "分治法", "回溯法", "分支限界", "时间复杂度"}},
+				},
+			},
+			{
+				Name: "多媒体基础",
+				Points: []SAPoint{
+					{Section: "图像基础", Name: "图像存储容量计算", Tags: []string{"分辨率", "像素深度", "色深", "存储容量计算"}},
+					{Section: "音视频", Name: "音频采样与视频编码", Tags: []string{"采样频率", "量化位数", "帧率", "MPEG", "H.264"}},
+					{Section: "压缩编码", Name: "有损与无损压缩", Tags: []string{"JPEG", "哈夫曼编码", "行程编码", "预测编码"}},
 				},
 			},
 		},
 	},
 	{
-		Name: "计算机网络",
+		Name: "计算机网络与分布式系统",
 		Sections: []SASection{
 			{
 				Name: "网络基础与体系结构",
 				Points: []SAPoint{
 					{Section: "OSI/TCP-IP", Name: "OSI 七层与 TCP/IP 四层模型", Tags: []string{"物理层", "数据链路", "网络层", "传输层", "应用层"}},
 					{Section: "IP 地址", Name: "IP 地址与子网划分", Tags: []string{"A 类", "B 类", "C 类", "子网掩码", "CIDR", "IPv6"}},
-					{Section: "数据通信", Name: "数据通信基础", Tags: []string{"曼彻斯特编码", "奈奎斯特定理", "香农定理", "多路复用", "波特率"}},
-					{Section: "路由", Name: "路由协议与设备", Tags: []string{"RIP", "OSPF", "BGP", "静态路由", "交换机", "VLAN", "网桥"}},
+					{Section: "数据通信", Name: "数据通信基础", Tags: []string{"曼彻斯特编码", "奈奎斯特定理", "香农定理", "多路复用"}},
+					{Section: "路由", Name: "路由协议与设备", Tags: []string{"RIP", "OSPF", "BGP", "静态路由", "交换机", "VLAN"}},
 					{Section: "局域网", Name: "局域网技术", Tags: []string{"以太网", "CSMA/CD", "令牌环", "拓扑结构"}},
 				},
 			},
 			{
-				Name: "应用层与传输层协议",
+				Name: "应用与传输层协议",
 				Points: []SAPoint{
 					{Section: "应用层", Name: "常用应用层协议", Tags: []string{"HTTP", "HTTPS", "DNS", "FTP", "SMTP", "POP3", "SNMP", "DHCP"}},
 					{Section: "传输层", Name: "TCP 与 UDP 对比", Tags: []string{"三次握手", "四次挥手", "拥塞控制", "滑动窗口"}},
 				},
 			},
-		},
-	},
-	{
-		Name: "分布式系统与中间件",
-		Sections: []SASection{
 			{
 				Name: "分布式系统理论",
 				Points: []SAPoint{
@@ -295,25 +171,11 @@ var systemAnalystChapters = []SAChapter{
 				},
 			},
 			{
-				Name: "微服务与中间件",
+				Name: "中间件与分布式组件",
 				Points: []SAPoint{
-					{Section: "微服务", Name: "微服务架构特点", Tags: []string{"服务拆分", "独立部署", "服务治理", "去中心化", "SOA 对比"}},
 					{Section: "消息中间件", Name: "消息队列与发布订阅", Tags: []string{"Kafka", "RabbitMQ", "RocketMQ", "发布订阅"}},
-					{Section: "网关", Name: "API 网关与限流熔断", Tags: []string{"网关", "限流", "熔断", "服务降级"}},
-					{Section: "缓存与分片", Name: "分布式缓存与数据分片", Tags: []string{"Redis", "缓存穿透", "读写分离", "分库分表"}},
-				},
-			},
-		},
-	},
-	{
-		Name: "多媒体基础",
-		Sections: []SASection{
-			{
-				Name: "多媒体基础",
-				Points: []SAPoint{
-					{Section: "图像基础", Name: "图像存储容量计算", Tags: []string{"分辨率", "像素深度", "色深", "存储容量计算"}},
-					{Section: "音频视频", Name: "音频采样与视频编码", Tags: []string{"采样频率", "量化位数", "帧率", "MPEG", "H.264"}},
-					{Section: "压缩编码", Name: "有损与无损压缩", Tags: []string{"JPEG", "哈夫曼编码压缩", "行程编码", "预测编码"}},
+					{Section: "缓存", Name: "分布式缓存与数据分片", Tags: []string{"Redis", "缓存穿透", "读写分离", "分库分表"}},
+					{Section: "负载均衡", Name: "负载均衡与高可用", Tags: []string{"轮询", "加权轮询", "一致性哈希", "CDN"}},
 				},
 			},
 		},
@@ -326,7 +188,7 @@ var systemAnalystChapters = []SAChapter{
 				Points: []SAPoint{
 					{Section: "E-R 模型", Name: "E-R 图与关系模式转换", Tags: []string{"实体", "属性", "联系", "1:1", "1:n", "m:n"}},
 					{Section: "关系模型", Name: "关系模型与关系代数", Tags: []string{"选择", "投影", "连接", "并", "差", "笛卡尔积"}},
-					{Section: "范式", Name: "范式理论 1NF/2NF/3NF/BCNF", Tags: []string{"函数依赖", "码", "范式", "分解"}},
+					{Section: "范式", Name: "范式理论 1NF/2NF/3NF/BCNF", Tags: []string{"函数依赖", "码", "范式", "模式分解"}},
 				},
 			},
 			{
@@ -351,7 +213,6 @@ var systemAnalystChapters = []SAChapter{
 					{Section: "数据仓库", Name: "数据仓库与维度建模", Tags: []string{"事实表", "维度表", "星型模型", "雪花模型"}},
 					{Section: "OLAP", Name: "OLAP 多维分析", Tags: []string{"钻取", "切片", "旋转", "上卷"}},
 					{Section: "NoSQL", Name: "NoSQL 数据库分类", Tags: []string{"键值", "文档", "列式", "图数据库"}},
-					{Section: "大数据", Name: "大数据与分布式数据库", Tags: []string{"Hadoop", "HDFS", "MapReduce", "分库分表"}},
 				},
 			},
 		},
@@ -362,7 +223,7 @@ var systemAnalystChapters = []SAChapter{
 			{
 				Name: "信息化战略与规划",
 				Points: []SAPoint{
-					{Section: "信息化战略", Name: "企业信息化战略与规划", Tags: []string{"战略", "规划", "数字化转型"}},
+					{Section: "信息化战略", Name: "企业信息化战略与规划", Tags: []string{"战略", "规划", "数字化转型", "两化融合"}},
 				},
 			},
 			{
@@ -402,17 +263,37 @@ var systemAnalystChapters = []SAChapter{
 		Name: "软件工程",
 		Sections: []SASection{
 			{
-				Name: "需求工程",
+				Name: "软件过程与开发模型",
 				Points: []SAPoint{
-					{Section: "需求获取", Name: "需求获取与需求分类", Tags: []string{"访谈", "问卷", "原型", "功能需求", "非功能需求"}},
-					{Section: "结构化分析", Name: "数据流图与结构化方法", Tags: []string{"DFD", "数据字典", "加工", "外部实体"}},
-					{Section: "需求验证", Name: "需求验证与需求管理", Tags: []string{"需求评审", "需求跟踪", "需求变更"}},
+					{Section: "开发模型", Name: "软件开发模型", Tags: []string{"瀑布", "增量", "迭代", "原型", "螺旋", "敏捷", "RUP"}},
+					{Section: "敏捷", Name: "敏捷开发 Scrum", Tags: []string{"Sprint", "Backlog", "Stand-up", "Retrospective", "极限编程"}},
+					{Section: "CMMI", Name: "CMMI 能力成熟度模型", Tags: []string{"初始级", "可重复级", "已定义级", "定量管理", "优化级"}},
 				},
 			},
 			{
-				Name: "软件设计",
+				Name: "需求与设计基础",
 				Points: []SAPoint{
+					{Section: "需求基础", Name: "需求获取与需求分类", Tags: []string{"访谈", "问卷", "原型", "功能需求", "非功能需求"}},
+					{Section: "结构化分析", Name: "数据流图与结构化方法", Tags: []string{"DFD", "数据字典", "加工", "外部实体"}},
 					{Section: "设计原则", Name: "模块设计与耦合内聚", Tags: []string{"高内聚低耦合", "模块独立性", "信息隐藏"}},
+				},
+			},
+			{
+				Name: "面向对象方法",
+				Points: []SAPoint{
+					{Section: "OO 概念", Name: "封装继承多态", Tags: []string{"封装", "继承", "多态", "重载", "重写"}},
+					{Section: "设计原则", Name: "面向对象设计原则", Tags: []string{"SOLID", "开闭原则", "里氏替换", "依赖倒置", "接口隔离"}},
+					{Section: "UML 静态", Name: "UML 静态建模图", Tags: []string{"用例图", "类图", "对象图", "构件图", "部署图", "包图"}},
+					{Section: "UML 动态", Name: "UML 动态建模图", Tags: []string{"时序图", "顺序图", "通信图", "活动图", "状态图"}},
+					{Section: "用例关系", Name: "用例间关系", Tags: []string{"包含 include", "扩展 extend", "泛化"}},
+				},
+			},
+			{
+				Name: "设计模式",
+				Points: []SAPoint{
+					{Section: "创建型", Name: "创建型设计模式", Tags: []string{"单例", "工厂方法", "抽象工厂", "建造者", "原型"}},
+					{Section: "结构型", Name: "结构型设计模式", Tags: []string{"适配器", "装饰器", "代理", "外观", "组合", "桥接", "享元"}},
+					{Section: "行为型", Name: "行为型设计模式", Tags: []string{"观察者", "策略", "命令", "责任链", "中介者", "备忘录", "迭代器", "状态", "访问者"}},
 				},
 			},
 			{
@@ -424,53 +305,12 @@ var systemAnalystChapters = []SAChapter{
 				},
 			},
 			{
-				Name: "软件维护与重构",
+				Name: "维护、配置与质量保证",
 				Points: []SAPoint{
 					{Section: "维护类型", Name: "软件维护类型", Tags: []string{"改正性", "适应性", "完善性", "预防性"}},
 					{Section: "重构", Name: "软件重构与再工程", Tags: []string{"代码重构", "坏味道", "逆向工程", "正向工程"}},
-				},
-			},
-			{
-				Name: "软件过程与项目管理",
-				Points: []SAPoint{
-					{Section: "开发模型", Name: "软件开发模型", Tags: []string{"瀑布", "增量", "迭代", "原型", "螺旋", "敏捷", "RUP"}},
-					{Section: "敏捷", Name: "敏捷开发 Scrum", Tags: []string{"Sprint", "Backlog", "Stand-up", "Retrospective", "极限编程"}},
-					{Section: "CMMI", Name: "CMMI 能力成熟度模型", Tags: []string{"初始级", "可重复级", "已定义级", "定量管理", "优化级"}},
-				},
-			},
-			{
-				Name: "配置管理与质量保证",
-				Points: []SAPoint{
-					{Section: "配置项", Name: "软件配置管理与基线", Tags: []string{"配置项", "基线", "版本控制", "变更控制"}},
+					{Section: "配置管理", Name: "软件配置管理与基线", Tags: []string{"配置项", "基线", "版本控制", "变更控制"}},
 					{Section: "质量管理", Name: "质量保证与质量度量", Tags: []string{"QA", "QC", "评审", "审计", "功能点估算", "COCOMO"}},
-				},
-			},
-		},
-	},
-	{
-		Name: "面向对象方法与设计模式",
-		Sections: []SASection{
-			{
-				Name: "面向对象基础",
-				Points: []SAPoint{
-					{Section: "OO 概念", Name: "封装继承多态", Tags: []string{"封装", "继承", "多态", "重载", "重写"}},
-					{Section: "设计原则", Name: "面向对象设计原则", Tags: []string{"SOLID", "开闭原则", "里氏替换", "依赖倒置", "接口隔离"}},
-				},
-			},
-			{
-				Name: "UML 建模",
-				Points: []SAPoint{
-					{Section: "UML 静态图", Name: "UML 静态建模图", Tags: []string{"用例图", "类图", "对象图", "构件图", "部署图", "包图"}},
-					{Section: "UML 动态图", Name: "UML 动态建模图", Tags: []string{"时序图", "顺序图", "通信图", "活动图", "状态图"}},
-					{Section: "用例关系", Name: "用例间关系", Tags: []string{"包含 include", "扩展 extend", "泛化"}},
-				},
-			},
-			{
-				Name: "设计模式",
-				Points: []SAPoint{
-					{Section: "创建型模式", Name: "创建型设计模式", Tags: []string{"单例", "工厂方法", "抽象工厂", "建造者", "原型"}},
-					{Section: "结构型模式", Name: "结构型设计模式", Tags: []string{"适配器", "装饰器", "代理", "外观", "组合", "桥接", "享元"}},
-					{Section: "行为型模式", Name: "行为型设计模式", Tags: []string{"观察者", "策略", "命令", "责任链", "中介者", "备忘录", "迭代器", "状态", "访问者"}},
 				},
 			},
 		},
@@ -554,7 +394,6 @@ var systemAnalystChapters = []SAChapter{
 				Points: []SAPoint{
 					{Section: "防火墙", Name: "防火墙类型与工作原理", Tags: []string{"包过滤", "状态检测", "代理防火墙", "WAF"}},
 					{Section: "IDS/IPS", Name: "入侵检测与入侵防御", Tags: []string{"误用检测", "异常检测", "Snort", "签名"}},
-					{Section: "VPN", Name: "VPN 与远程安全接入", Tags: []string{"IPSec VPN", "SSL VPN", "MPLS VPN"}},
 				},
 			},
 			{
@@ -569,6 +408,347 @@ var systemAnalystChapters = []SAChapter{
 				Points: []SAPoint{
 					{Section: "安全策略", Name: "信息安全策略与管理", Tags: []string{"安全策略", "安全审计", "风险评估"}},
 					{Section: "等级保护", Name: "等级保护与灾备", Tags: []string{"等保 2.0", "五级", "灾备", "RPO", "RTO"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "系统规划与分析",
+		Sections: []SASection{
+			{
+				Name: "系统规划",
+				Points: []SAPoint{
+					{Section: "总体规划", Name: "信息系统总体规划方法", Tags: []string{"战略目标", "业务规划", "技术规划", "信息化战略"}},
+					{Section: "可行性研究", Name: "可行性研究内容", Tags: []string{"技术可行性", "经济可行性", "社会可行性", "运行可行性", "可行性研究报告"}},
+				},
+			},
+			{
+				Name: "系统分析",
+				Points: []SAPoint{
+					{Section: "业务流程分析", Name: "业务流程分析与建模", Tags: []string{"业务流程图", "BPMN", "流程优化", "业务流程重组"}},
+					{Section: "数据分析", Name: "数据分析与数据流", Tags: []string{"数据字典", "数据流图 DFD", "数据存储"}},
+					{Section: "系统分析报告", Name: "系统分析说明书编写", Tags: []string{"系统目标", "功能需求", "数据需求", "分析报告"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "软件需求工程",
+		Sections: []SASection{
+			{
+				Name: "需求获取与分析",
+				Points: []SAPoint{
+					{Section: "需求获取", Name: "需求获取技术", Tags: []string{"访谈", "问卷调查", "原型法", "观察法", "焦点小组", "联合需求计划 JRP"}},
+					{Section: "需求分类", Name: "需求分类与层次", Tags: []string{"业务需求", "用户需求", "功能需求", "非功能需求"}},
+				},
+			},
+			{
+				Name: "需求建模与规格说明",
+				Points: []SAPoint{
+					{Section: "需求建模", Name: "需求建模方法", Tags: []string{"用例图", "活动图", "状态图", "类图"}},
+					{Section: "SRS 编写", Name: "软件需求规格说明书 SRS", Tags: []string{"SRS 模板", "功能描述", "性能指标", "接口需求"}},
+				},
+			},
+			{
+				Name: "需求验证与管理",
+				Points: []SAPoint{
+					{Section: "需求验证", Name: "需求验证方法", Tags: []string{"需求评审", "需求测试", "原型验证", "一致性检查"}},
+					{Section: "需求管理", Name: "需求变更与跟踪", Tags: []string{"基线", "需求跟踪矩阵", "变更控制", "版本管理"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "软件架构设计",
+		Sections: []SASection{
+			{
+				Name: "架构基础与视图",
+				Points: []SAPoint{
+					{Section: "架构概念", Name: "软件架构概念与生命周期", Tags: []string{"架构定义", "架构 4+1 视图", "架构与生命周期"}},
+					{Section: "架构描述", Name: "架构描述语言 ADL", Tags: []string{"组件", "连接件", "配置", "约束"}},
+				},
+			},
+			{
+				Name: "架构风格",
+				Points: []SAPoint{
+					{Section: "经典风格", Name: "经典架构风格", Tags: []string{"分层", "管道-过滤器", "客户端-服务器", "MVC"}},
+					{Section: "现代风格", Name: "现代架构风格", Tags: []string{"微服务", "事件驱动", "SOA", "微内核", "云原生"}},
+				},
+			},
+			{
+				Name: "架构评估",
+				Points: []SAPoint{
+					{Section: "质量属性", Name: "质量属性与架构权衡", Tags: []string{"性能", "可用性", "可维护性", "安全性", "可扩展性"}},
+					{Section: "评估方法", Name: "架构评估方法", Tags: []string{"ATAM", "SAAM", "CBAM", "场景评估"}},
+				},
+			},
+			{
+				Name: "特定领域架构",
+				Points: []SAPoint{
+					{Section: "中间件", Name: "中间件与系统集成", Tags: []string{"消息中间件", "事务中间件", "对象请求代理"}},
+					{Section: "J2EE/.NET", Name: "J2EE 与 .NET 平台", Tags: []string{"EJB", "Servlet", "Spring", ".NET Framework"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "系统设计",
+		Sections: []SASection{
+			{
+				Name: "概要设计",
+				Points: []SAPoint{
+					{Section: "模块设计", Name: "模块结构与功能划分", Tags: []string{"模块化", "功能分解", "模块独立性"}},
+					{Section: "接口设计", Name: "接口与数据格式设计", Tags: []string{"外部接口", "内部接口", "用户接口", "数据格式"}},
+				},
+			},
+			{
+				Name: "详细设计",
+				Points: []SAPoint{
+					{Section: "数据结构", Name: "数据结构与数据库设计", Tags: []string{"逻辑结构", "物理结构", "数据规范化"}},
+					{Section: "算法设计", Name: "关键算法详细设计", Tags: []string{"程序流程图", "N-S 图", "PAD 图", "PDL 伪代码"}},
+				},
+			},
+			{
+				Name: "设计评审与模式",
+				Points: []SAPoint{
+					{Section: "设计评审", Name: "设计评审内容", Tags: []string{"概要设计评审", "详细设计评审", "设计验证"}},
+					{Section: "设计模式应用", Name: "设计模式在系统设计中的应用", Tags: []string{"GoF 模式", "架构模式", "反模式"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "软件实现与测试",
+		Sections: []SASection{
+			{
+				Name: "软件实现",
+				Points: []SAPoint{
+					{Section: "编码规范", Name: "编码规范与编程风格", Tags: []string{"命名规范", "注释规范", "代码风格", "代码审查"}},
+					{Section: "编程技术", Name: "程序设计实现技术", Tags: []string{"结构化编程", "面向对象编程", "函数式编程", "泛型"}},
+				},
+			},
+			{
+				Name: "软件测试方法",
+				Points: []SAPoint{
+					{Section: "测试阶段", Name: "测试阶段与测试策略", Tags: []string{"单元测试", "集成测试", "确认测试", "系统测试", "验收测试"}},
+					{Section: "测试技术", Name: "白盒与黑盒测试", Tags: []string{"语句覆盖", "分支覆盖", "路径覆盖", "等价类", "边界值", "判定表"}},
+				},
+			},
+			{
+				Name: "测试管理与度量",
+				Points: []SAPoint{
+					{Section: "测试管理", Name: "测试过程管理", Tags: []string{"测试计划", "测试用例", "缺陷管理", "测试报告"}},
+					{Section: "测试度量", Name: "测试覆盖率与质量度量", Tags: []string{"覆盖率", "缺陷密度", "MTTF", "MTBF"}},
+				},
+			},
+			{
+				Name: "调试与发布",
+				Points: []SAPoint{
+					{Section: "调试", Name: "调试技术", Tags: []string{"蛮力法", "回溯法", "原因排除法", "演绎法", "归纳法"}},
+					{Section: "发布", Name: "软件发布与持续集成", Tags: []string{"持续集成 CI", "持续交付 CD", "灰度发布", "版本管理"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "系统运行与维护",
+		Sections: []SASection{
+			{
+				Name: "系统运行管理",
+				Points: []SAPoint{
+					{Section: "运行制度", Name: "系统运行管理制度", Tags: []string{"操作规程", "运行记录", "值班制度", "用户管理"}},
+					{Section: "运维管理", Name: "IT 服务与运维管理", Tags: []string{"ITIL", "ITSS", "服务级别协议 SLA", "事件管理"}},
+				},
+			},
+			{
+				Name: "系统维护",
+				Points: []SAPoint{
+					{Section: "维护类型", Name: "软件维护类型", Tags: []string{"改正性维护", "适应性维护", "完善性维护", "预防性维护"}},
+					{Section: "维护过程", Name: "维护过程管理", Tags: []string{"维护申请", "维护分析", "维护实施", "维护评审"}},
+				},
+			},
+			{
+				Name: "系统评价与改进",
+				Points: []SAPoint{
+					{Section: "系统评价", Name: "系统评价指标", Tags: []string{"性能指标", "经济效益", "用户满意度", "系统可靠性"}},
+					{Section: "系统改进", Name: "系统改进与重构", Tags: []string{"代码重构", "架构演进", "技术债务", "再工程"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "Web 应用系统",
+		Sections: []SASection{
+			{
+				Name: "Web 架构与技术",
+				Points: []SAPoint{
+					{Section: "Web 架构", Name: "Web 系统分层架构", Tags: []string{"表现层", "业务层", "持久层", "前后端分离"}},
+					{Section: "前端技术", Name: "Web 前端开发技术", Tags: []string{"HTML5", "CSS3", "JavaScript", "Vue", "React", "Angular"}},
+					{Section: "后端技术", Name: "Web 后端开发技术", Tags: []string{"Spring", "Django", "Node.js", "RESTful API", "GraphQL"}},
+				},
+			},
+			{
+				Name: "Web 性能与安全",
+				Points: []SAPoint{
+					{Section: "性能优化", Name: "Web 性能优化", Tags: []string{"CDN", "缓存", "压缩", "懒加载", "负载均衡"}},
+					{Section: "Web 安全", Name: "Web 应用安全", Tags: []string{"SQL 注入", "XSS", "CSRF", "会话劫持", "WAF"}},
+				},
+			},
+			{
+				Name: "新兴 Web 技术",
+				Points: []SAPoint{
+					{Section: "云原生", Name: "云原生 Web 架构", Tags: []string{"容器", "Kubernetes", "Serverless", "Service Mesh"}},
+					{Section: "PWA", Name: "渐进式 Web 应用 PWA", Tags: []string{"Service Worker", "离线缓存", "消息推送"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "嵌入式系统",
+		Sections: []SASection{
+			{
+				Name: "嵌入式系统基础",
+				Points: []SAPoint{
+					{Section: "嵌入式组成", Name: "嵌入式系统组成与特点", Tags: []string{"实时", "固件", "ARM", "DSP", "SoC", "微控制器"}},
+					{Section: "RTOS", Name: "实时操作系统特性", Tags: []string{"硬实时", "软实时", "任务调度", "优先级反转", "看门狗"}},
+				},
+			},
+			{
+				Name: "嵌入式开发与调试",
+				Points: []SAPoint{
+					{Section: "开发流程", Name: "嵌入式系统开发流程", Tags: []string{"需求分析", "硬件选型", "驱动开发", "应用开发"}},
+					{Section: "调试技术", Name: "嵌入式开发与调试", Tags: []string{"交叉编译", "JTAG", "在线仿真", "Bootloader"}},
+				},
+			},
+			{
+				Name: "嵌入式通信与接口",
+				Points: []SAPoint{
+					{Section: "通信接口", Name: "常用嵌入式通信接口", Tags: []string{"UART", "SPI", "I2C", "CAN", "USB"}},
+					{Section: "无线通信", Name: "嵌入式无线通信", Tags: []string{"蓝牙", "Wi-Fi", "ZigBee", "LoRa", "NB-IoT"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "移动应用系统",
+		Sections: []SASection{
+			{
+				Name: "移动平台与开发",
+				Points: []SAPoint{
+					{Section: "平台架构", Name: "iOS 与 Android 架构", Tags: []string{"Cocoa Touch", "Activity", "Service", "BroadcastReceiver"}},
+					{Section: "开发模式", Name: "移动应用开发模式", Tags: []string{"原生开发", "混合开发", "跨平台", "Flutter", "React Native"}},
+				},
+			},
+			{
+				Name: "移动网络与性能",
+				Points: []SAPoint{
+					{Section: "网络通信", Name: "移动网络通信", Tags: []string{"HTTP/HTTPS", "WebSocket", "推送服务", "心跳机制"}},
+					{Section: "性能优化", Name: "移动端性能优化", Tags: []string{"启动速度", "内存优化", "电量优化", "卡顿监控"}},
+				},
+			},
+			{
+				Name: "移动安全与体验",
+				Points: []SAPoint{
+					{Section: "移动安全", Name: "移动应用安全", Tags: []string{"代码混淆", "数据加密", "防逆向", "权限控制"}},
+					{Section: "用户体验", Name: "移动端 UX 设计原则", Tags: []string{"响应式布局", "Material Design", "人机交互", "无障碍"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "大数据处理系统",
+		Sections: []SASection{
+			{
+				Name: "大数据基础",
+				Points: []SAPoint{
+					{Section: "大数据特征", Name: "大数据 4V/5V 特征", Tags: []string{"Volume", "Velocity", "Variety", "Value", "Veracity"}},
+					{Section: "Hadoop 生态", Name: "Hadoop 生态体系", Tags: []string{"HDFS", "MapReduce", "YARN", "HBase", "Hive"}},
+				},
+			},
+			{
+				Name: "大数据处理",
+				Points: []SAPoint{
+					{Section: "批处理", Name: "大数据批处理", Tags: []string{"MapReduce", "Spark", "Spark RDD", "Spark SQL"}},
+					{Section: "流处理", Name: "大数据流处理", Tags: []string{"Storm", "Flink", "Spark Streaming", "Kafka Streams"}},
+				},
+			},
+			{
+				Name: "大数据应用",
+				Points: []SAPoint{
+					{Section: "数据湖", Name: "数据湖与数据中台", Tags: []string{"数据湖", "数据中台", "湖仓一体", "元数据管理"}},
+					{Section: "数据挖掘", Name: "数据挖掘算法", Tags: []string{"分类", "聚类", "关联规则", "协同过滤", "机器学习"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "微服务系统",
+		Sections: []SASection{
+			{
+				Name: "微服务基础",
+				Points: []SAPoint{
+					{Section: "微服务概念", Name: "微服务架构特点", Tags: []string{"服务拆分", "独立部署", "服务治理", "去中心化", "轻量通信"}},
+					{Section: "服务拆分", Name: "微服务拆分策略", Tags: []string{"业务能力", "子域", "康威定律", "DDD 领域驱动"}},
+				},
+			},
+			{
+				Name: "微服务通信与治理",
+				Points: []SAPoint{
+					{Section: "服务通信", Name: "微服务通信方式", Tags: []string{"RESTful", "gRPC", "消息队列", "事件总线"}},
+					{Section: "服务治理", Name: "服务注册与发现", Tags: []string{"Eureka", "Consul", "Nacos", "ZooKeeper"}},
+					{Section: "网关与限流", Name: "API 网关与限流熔断", Tags: []string{"Kong", "Zuul", "Spring Cloud Gateway", "Hystrix", "Sentinel"}},
+				},
+			},
+			{
+				Name: "微服务高级特性",
+				Points: []SAPoint{
+					{Section: "分布式事务", Name: "分布式事务解决方案", Tags: []string{"两阶段提交", "TCC", "Saga", "本地消息表", "最大努力通知"}},
+					{Section: "容器化", Name: "容器化与服务网格", Tags: []string{"Docker", "Kubernetes", "Istio", "Service Mesh"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "信息物理系统",
+		Sections: []SASection{
+			{
+				Name: "CPS 基础",
+				Points: []SAPoint{
+					{Section: "CPS 概念", Name: "信息物理系统 CPS 概念", Tags: []string{"计算", "通信", "控制", "物理实体", "深度融合"}},
+					{Section: "CPS 体系", Name: "CPS 体系结构", Tags: []string{"感知层", "网络层", "平台层", "应用层"}},
+				},
+			},
+			{
+				Name: "工业互联网与智能制造",
+				Points: []SAPoint{
+					{Section: "工业互联网", Name: "工业互联网架构", Tags: []string{"边缘计算", "工业云", "工业 PaaS", "工业 APP"}},
+					{Section: "智能制造", Name: "智能制造与 CPS 应用", Tags: []string{"智能工厂", "数字孪生", "工业 4.0", "柔性制造"}},
+				},
+			},
+			{
+				Name: "CPS 安全与标准",
+				Points: []SAPoint{
+					{Section: "CPS 安全", Name: "CPS 安全挑战", Tags: []string{"设备认证", "数据加密", "固件安全", "供应链安全"}},
+					{Section: "标准与协议", Name: "CPS 标准化与协议", Tags: []string{"OPC UA", "MQTT", "CoAP", "时间敏感网络 TSN"}},
+				},
+			},
+		},
+	},
+	{
+		Name: "系统分析师论文写作要点",
+		Sections: []SASection{
+			{
+				Name: "论文结构与写作",
+				Points: []SAPoint{
+					{Section: "论文结构", Name: "论文标准结构", Tags: []string{"摘要", "正文", "项目背景", "论点展开", "总结"}},
+					{Section: "写作要点", Name: "论文写作要点", Tags: []string{"结合实践", "论点明确", "论据充分", "条理清晰", "字数控制"}},
+				},
+			},
+			{
+				Name: "常考主题与素材",
+				Points: []SAPoint{
+					{Section: "常考主题", Name: "常考论题方向", Tags: []string{"需求工程", "系统架构", "项目管理", "信息安全", "新技术应用"}},
+					{Section: "素材组织", Name: "论据与素材组织", Tags: []string{"项目背景", "技术难点", "解决方案", "效果评价", "经验总结"}},
 				},
 			},
 		},

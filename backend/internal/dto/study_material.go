@@ -15,3 +15,9 @@ type StudyMaterialResp struct {
 	ViewCount     int    `json:"view_count"`
 	CreatedAt     string `json:"created_at"`
 }
+
+// MindMapNode 思维导图节点（递归结构，children 为空表示叶子）
+type MindMapNode struct {
+	Title    string        `json:"title"`
+	Children []MindMapNode `json:"children,omitempty"`
+}

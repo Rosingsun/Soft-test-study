@@ -259,6 +259,45 @@ func (r *QuestionRepo) CountByChapterID(chapterID uint) (int64, error) {
 	return count, err
 }
 
+// CountBySubSubjectGroupChapter 按章节分组统计某子科目下的启用题目数，返回 chapter_id -> 题目数
+func (r *QuestionRepo) CountBySubSubjectGroupChapter(subSubjectID uint) (map[uint]int64, error) {
+	rows, err := r.countGroupByChapter("sub_subject_id = ?", subSubjectID)
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+// CountBySubjectGroupChapter 按章节分组统计某科目下的启用题目数，返回 chapter_id -> 题目数
+func (r *QuestionRepo) CountBySubjectGroupChapter(subjectID uint) (map[uint]int64, error) {
+	rows, err := r.countGroupByChapter("subject_id = ?", subjectID)
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+func (r *QuestionRepo) countGroupByChapter(where string, arg uint) (map[uint]int64, error) {
+	type countRow struct {
+		ChapterID uint  `gorm:"column:chapter_id"`
+		Cnt       int64 `gorm:"column:cnt"`
+	}
+	var rows []countRow
+	err := r.db.Model(&model.Question{}).
+		Select("chapter_id, COUNT(*) AS cnt").
+		Where(where + " AND status = 1 AND chapter_id > 0", arg).
+		Group("chapter_id").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[uint]int64, len(rows))
+	for _, row := range rows {
+		result[row.ChapterID] = row.Cnt
+	}
+	return result, nil
+}
+
 func (r *QuestionRepo) BatchCreate(questions []model.Question) error {
 	if len(questions) == 0 {
 		return nil

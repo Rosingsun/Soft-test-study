@@ -18,10 +18,12 @@ type SubSubjectResp struct {
 }
 
 type ChapterResp struct {
-	ID           uint   `json:"id"`
-	SubjectID    uint   `json:"subject_id"`
-	SubSubjectID uint   `json:"sub_subject_id"`
-	ParentID     uint   `json:"parent_id"`
-	Name         string `json:"name"`
-	SortOrder    int    `json:"sort_order"`
+	ID            uint   `json:"id"`
+	SubjectID     uint   `json:"subject_id"`
+	SubSubjectID  uint   `json:"sub_subject_id"`
+	ParentID      uint   `json:"parent_id"`
+	Name          string `json:"name"`
+	SortOrder     int    `json:"sort_order"`
+	QuestionCount int64  `json:"question_count"`
+	MaterialID    uint   `json:"material_id"`
 }

@@ -27,4 +27,6 @@ export interface Chapter {
   parent_id: number
   name: string
   sort_order: number
+  question_count: number
+  material_id: number
 }

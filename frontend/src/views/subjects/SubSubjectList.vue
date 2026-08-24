@@ -27,6 +27,14 @@ async function load() {
     await store.fetchSubSubjects(id)
     if (store.subSubjects.length === 1) {
       router.replace(`/sub-subjects/${store.subSubjects[0].id}/chapters`)
+      return
+    }
+    // 优先跳转到「综合知识」子科目（软考默认上午场），保持与"科目导航-综合知识"语义一致
+    const preferred = store.subSubjects.find(s => s.name === '综合知识')
+      || store.subSubjects.find(s => s.sort_order === 1)
+      || null
+    if (preferred) {
+      router.replace(`/sub-subjects/${preferred.id}/chapters`)
     }
   } catch (e) {
     error.value = (e as Error).message

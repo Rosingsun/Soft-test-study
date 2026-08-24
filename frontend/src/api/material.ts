@@ -1,6 +1,6 @@
 import { get } from './request'
 import { showToast } from '@/utils/toast'
-import type { StudyMaterialResp } from '@/types/material'
+import type { StudyMaterialResp, MindMapNode } from '@/types/material'
 
 const BASE_URL = import.meta.env.DEV ? '/api/v1' : 'http://www.fazhiyinqing.cn:3000/api/v1'
 
@@ -10,6 +10,11 @@ export function listMaterials(subjectId?: number) {
 
 export function getMaterial(id: number) {
   return get<StudyMaterialResp>(`/materials/${id}`)
+}
+
+// 思维导图树形结构（xmind 在线阅读）
+export function getMaterialContent(id: number) {
+  return get<MindMapNode[]>(`/materials/${id}/content`)
 }
 
 // 下载 xmind：携带 Bearer token 拉取二进制流，并解析文件名触发浏览器下载

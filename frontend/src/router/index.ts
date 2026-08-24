@@ -41,6 +41,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/materials/MaterialList.vue'),
       },
       {
+        path: 'materials/:id/view',
+        name: 'MaterialViewer',
+        component: () => import('@/views/materials/MaterialViewer.vue'),
+      },
+      {
         path: 'check-in',
         name: 'DailyCheckIn',
         component: () => import('@/views/checkin/DailyCheckIn.vue'),
@@ -64,6 +69,11 @@ const routes: RouteRecordRaw[] = [
         path: 'sub-subjects/:id/chapters',
         name: 'ChapterList',
         component: () => import('@/views/subjects/SubjectDetail.vue'),
+      },
+      {
+        path: 'chapters/:id',
+        name: 'ChapterDocument',
+        component: () => import('@/views/subjects/ChapterDocument.vue'),
       },
       {
         path: 'practice/chapter/:chapterId',

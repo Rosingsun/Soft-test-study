@@ -49,6 +49,20 @@ func (h *StudyMaterialHandler) Detail(c *gin.Context) {
 	response.Success(c, resp)
 }
 
+func (h *StudyMaterialHandler) Content(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, config.CodeParamError, "参数格式错误")
+		return
+	}
+	nodes, err := h.svc.Content(uint(id))
+	if err != nil {
+		respondError(c, err, "解析思维导图失败，请下载 xmind 查看")
+		return
+	}
+	response.Success(c, nodes)
+}
+
 func (h *StudyMaterialHandler) Download(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
