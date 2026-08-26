@@ -72,8 +72,6 @@ async function loadPoints() {
       api_config: aiStore.getConfig(),
       question_content: props.questionContent,
       question_type: props.questionType || '',
-      question_answer: props.questionAnswer || '',
-      question_analysis: props.questionAnalysis || '',
       subject_id: props.subjectId,
     })
     points.value = res.points

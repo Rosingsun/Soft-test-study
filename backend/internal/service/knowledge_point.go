@@ -19,9 +19,9 @@ import (
 const maxKnowledgeDescriptionLen = 1000
 
 type KnowledgePointService struct {
-	repo           *repository.KnowledgePointRepo
-	questionRepo   *repository.QuestionRepo
-	subjectRepo    *repository.SubjectRepo
+	repo         *repository.KnowledgePointRepo
+	questionRepo *repository.QuestionRepo
+	subjectRepo  *repository.SubjectRepo
 }
 
 func NewKnowledgePointService(
@@ -85,7 +85,7 @@ func (s *KnowledgePointService) ExtractKnowledgePoints(req dto.ExtractKnowledgeP
 			desc = string([]rune(desc)[:maxKnowledgeDescriptionLen])
 		}
 		cleaned = append(cleaned, dto.KnowledgePointItem{Name: name, Description: desc})
-		if len(cleaned) >= 8 {
+		if len(cleaned) >= 1 {
 			break
 		}
 	}
@@ -286,12 +286,12 @@ func (s *KnowledgePointService) List(userID uint, req dto.ListKnowledgePointReq)
 		req.PageSize = 20
 	}
 	list, total, err := s.repo.ListUserKP(repository.ListUserKPParams{
-		UserID:   userID,
-		Filter:   req.Filter,
+		UserID:    userID,
+		Filter:    req.Filter,
 		SubjectID: req.SubjectID,
-		Keyword:  req.Keyword,
-		Page:     req.Page,
-		PageSize: req.PageSize,
+		Keyword:   req.Keyword,
+		Page:      req.Page,
+		PageSize:  req.PageSize,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -360,16 +360,6 @@ func buildExtractKnowledgePointsPrompt(req dto.ExtractKnowledgePointsReq) string
 	if req.QuestionContent != "" {
 		sb.WriteString("题干：")
 		sb.WriteString(req.QuestionContent)
-		sb.WriteString("\n")
-	}
-	if req.QuestionAnswer != "" {
-		sb.WriteString("正确答案：")
-		sb.WriteString(req.QuestionAnswer)
-		sb.WriteString("\n")
-	}
-	if req.QuestionAnalysis != "" {
-		sb.WriteString("解析：")
-		sb.WriteString(req.QuestionAnalysis)
 		sb.WriteString("\n")
 	}
 	return sb.String()

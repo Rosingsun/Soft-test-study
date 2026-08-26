@@ -12,7 +12,9 @@ export interface ExtractKnowledgePointsReq {
   }
   question_content: string
   question_type: string
+  /** 保留字段，后端不再读取 */
   question_answer?: string
+  /** 保留字段，后端不再读取 */
   question_analysis?: string
   subject_id?: number
 }

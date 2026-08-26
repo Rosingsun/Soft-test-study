@@ -2,12 +2,14 @@ package dto
 
 // ExtractKnowledgePointsReq AI 提取知识点请求
 type ExtractKnowledgePointsReq struct {
-	ApiConfig        AiApiConfig `json:"api_config" binding:"required"`
-	QuestionContent  string      `json:"question_content" binding:"required"`
-	QuestionType     string      `json:"question_type" binding:"required"`
-	QuestionAnswer   string      `json:"question_answer"`
-	QuestionAnalysis string      `json:"question_analysis"`
-	SubjectID        uint        `json:"subject_id"`
+	ApiConfig       AiApiConfig `json:"api_config" binding:"required"`
+	QuestionContent string      `json:"question_content" binding:"required"`
+	QuestionType    string      `json:"question_type" binding:"required"`
+	// QuestionAnswer 保留字段，已不再用于知识点提取 prompt
+	QuestionAnswer string `json:"question_answer"`
+	// QuestionAnalysis 保留字段，已不再用于知识点提取 prompt
+	QuestionAnalysis string `json:"question_analysis"`
+	SubjectID        uint   `json:"subject_id"`
 }
 
 // KnowledgePointItem 知识点条目
@@ -40,12 +42,12 @@ type AddKnowledgePointItemResp struct {
 
 // ExistingKnowledgePoint 冲突时返回的旧记录
 type ExistingKnowledgePoint struct {
-	UserKPID      uint   `json:"user_kp_id"`
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	IsImportant   bool   `json:"is_important"`
-	IsMastered    bool   `json:"is_mastered"`
-	CreatedAt     string `json:"created_at"`
+	UserKPID    uint   `json:"user_kp_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	IsImportant bool   `json:"is_important"`
+	IsMastered  bool   `json:"is_mastered"`
+	CreatedAt   string `json:"created_at"`
 }
 
 // KnowledgePointResp 知识点详情
@@ -61,17 +63,17 @@ type KnowledgePointResp struct {
 
 // UserKnowledgePointResp 用户知识点列表项
 type UserKnowledgePointResp struct {
-	ID               uint                 `json:"id"`
-	UserID           uint                 `json:"user_id"`
-	KnowledgePointID uint                 `json:"knowledge_point_id"`
-	SourceQuestionID uint                 `json:"source_question_id"`
-	IsImportant      bool                 `json:"is_important"`
-	IsMastered       bool                 `json:"is_mastered"`
-	MasteredAt       string               `json:"mastered_at"`
-	Note             string               `json:"note"`
-	CreatedAt        string               `json:"created_at"`
-	UpdatedAt        string               `json:"updated_at"`
-	Knowledge        KnowledgePointResp   `json:"knowledge"`
+	ID               uint               `json:"id"`
+	UserID           uint               `json:"user_id"`
+	KnowledgePointID uint               `json:"knowledge_point_id"`
+	SourceQuestionID uint               `json:"source_question_id"`
+	IsImportant      bool               `json:"is_important"`
+	IsMastered       bool               `json:"is_mastered"`
+	MasteredAt       string             `json:"mastered_at"`
+	Note             string             `json:"note"`
+	CreatedAt        string             `json:"created_at"`
+	UpdatedAt        string             `json:"updated_at"`
+	Knowledge        KnowledgePointResp `json:"knowledge"`
 }
 
 // BatchAddKnowledgePointReq 批量加入请求
@@ -82,16 +84,16 @@ type BatchAddKnowledgePointReq struct {
 
 // BatchAddKnowledgePointResp 批量加入响应
 type BatchAddKnowledgePointResp struct {
-	Added      []AddKnowledgePointItemResp   `json:"added"`
-	Duplicates []AddKnowledgePointItemResp   `json:"duplicates"`
+	Added      []AddKnowledgePointItemResp `json:"added"`
+	Duplicates []AddKnowledgePointItemResp `json:"duplicates"`
 }
 
 // ResolveDuplicateReq 冲突解决请求
 type ResolveDuplicateReq struct {
-	Action      string `json:"action" binding:"required"`
-	NewName     string `json:"new_name"`
-	NewDesc     string `json:"new_description"`
-	SubjectID   uint   `json:"subject_id"`
+	Action    string `json:"action" binding:"required"`
+	NewName   string `json:"new_name"`
+	NewDesc   string `json:"new_description"`
+	SubjectID uint   `json:"subject_id"`
 }
 
 // UpdateUserKnowledgePointReq 更新用户知识点（重点/掌握）
@@ -102,18 +104,18 @@ type UpdateUserKnowledgePointReq struct {
 
 // KnowledgePointStatsResp 统计
 type KnowledgePointStatsResp struct {
-	Total       int64 `json:"total"`
-	Important   int64 `json:"important"`
-	Mastered    int64 `json:"mastered"`
-	Unmastered  int64 `json:"unmastered"`
-	RecentWeek  int64 `json:"recent_week"`
+	Total      int64 `json:"total"`
+	Important  int64 `json:"important"`
+	Mastered   int64 `json:"mastered"`
+	Unmastered int64 `json:"unmastered"`
+	RecentWeek int64 `json:"recent_week"`
 }
 
 // ListKnowledgePointReq 列表查询参数
 type ListKnowledgePointReq struct {
-	Filter     string `form:"filter"`
-	SubjectID  uint   `form:"subject_id"`
-	Keyword    string `form:"keyword"`
-	Page       int    `form:"page"`
-	PageSize   int    `form:"page_size"`
+	Filter    string `form:"filter"`
+	SubjectID uint   `form:"subject_id"`
+	Keyword   string `form:"keyword"`
+	Page      int    `form:"page"`
+	PageSize  int    `form:"page_size"`
 }

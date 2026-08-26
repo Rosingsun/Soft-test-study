@@ -12,11 +12,12 @@ package service
 // 难度定义、分析三段式、Few-shot、输出格式约束。
 //
 // 参数：
-//   subject    - 科目名（用于头部「本次范围」展示）
-//   chapter    - 章节名（"不限定"表示全章节随机）
-//   kpBlock    - 考点清单（formatChapterKPBlock / formatChapterOutlineBlock 格式化后）
-//   difficulty - 难度描述（简单 / 中等 / 困难）
-//   count      - 数量
+//
+//	subject    - 科目名（用于头部「本次范围」展示）
+//	chapter    - 章节名（"不限定"表示全章节随机）
+//	kpBlock    - 考点清单（formatChapterKPBlock / formatChapterOutlineBlock 格式化后）
+//	difficulty - 难度描述（简单 / 中等 / 困难）
+//	count      - 数量
 func commonPromptHead(subject, chapter, kpBlock, difficulty, count string) string {
 	// 章节命中时强调"必须从该章节出题"；不限定时强调"从考点清单中任选"
 	chapterRule := "请从下方「考点清单」中任选 1~3 个考点作为本题核心考查点。"
@@ -221,20 +222,23 @@ const outputFormatEssay = `【论文命制要求】本任务为系统分析师�
   }
 ]`
 
-// extractKnowledgePointsPrompt 从一道题目中提取 3-5 个核心知识点的 prompt。
-// 输出严格 JSON 数组，每条包含 name（<=30字名词短语）+ description（<=150字，Markdown）。
-const extractKnowledgePointsPrompt = `【角色】你是软考辅导专家，擅长从题目中拆解核心知识点。
+// extractKnowledgePointsPrompt 从一道题目中识别其考查的核心考点（仅 1 个）的 prompt。
+// 输出严格 JSON 数组（仅含 1 个元素），name（<=30字名词短语）+ description（<=150字，Markdown）。
+const extractKnowledgePointsPrompt = `【角色】你是软考辅导专家，擅长识别题目所考查的考点。
 
-【任务】根据给定的题目信息，提取 3~5 个核心知识点。这些知识点会被用户收录到「我的知识点」中作为长期复习资料。
+【任务】根据给定的题目信息，识别这道题在考查的**核心考点**（仅 1 个）。该知识点会被用户收录到「我的知识点」中作为长期复习资料。
 
 【要求】
+- 只依据「题干」判断考点，识别题目本身在考查什么。
 - name：30 字以内的名词短语，使用软考官方考纲用语，例如「指令流水线与吞吐率」「访问控制模型」。
-- description：150 字以内，聚焦该知识点的"定义"与"关键要点"，可使用 Markdown 加粗、列表等简单格式。
-- 严格按重要度排序，最重要的放最前。
+- description：150 字以内，聚焦该考点的"定义"与"关键要点"，可使用 Markdown 加粗、列表等简单格式。
+- **严禁**从选项内容、正确答案、解析中提取知识点。
+- **严禁**输出「选项 A 的含义」「B 为什么错」这类拆解选项的子概念。
+- 严禁拆解题干中的具体案例/情景，只提取其背后对应的考纲考点。
 - 不要直接复述题目本身。
 
 【输出格式】严格遵守：
-- 只输出一个 JSON 数组，禁止任何其他文字、解释、问候语。
+- 只输出一个 JSON 数组（仅 1 个元素），禁止任何其他文字、解释、问候语。
 - 禁止使用 markdown 代码块。
 - 禁止截断、禁止用 "..." 省略内容。
 - 数组中所有字符串值必须使用合法 JSON 转义。
@@ -242,12 +246,7 @@ const extractKnowledgePointsPrompt = `【角色】你是软考辅导专家，擅
 【Few-shot 参考示例】
 [
   {
-    "name": "指令流水线与吞吐率",
-    "description": "**定义**：将指令执行过程拆分为多个并行阶段（IF/ID/EX/WB）。\n\n**要点**：\n- 流水线建立时间 = (段数 - 1) × 单段时间\n- 吞吐率 = 1 / 单段时间（理想情况）\n- 存在结构、数据、控制三类冒险需处理"
-  },
-  {
     "name": "访问控制模型",
     "description": "**DAC**（自主）：资源所有者决定访问权限，如 ACL。\n\n**MAC**（强制）：依据主体与客体的安全级别决定访问。\n\n**RBAC**（角色）：通过角色间接授权用户权限。"
   }
 ]`
-
