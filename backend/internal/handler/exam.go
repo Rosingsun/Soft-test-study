@@ -28,14 +28,17 @@ func (h *ExamHandler) ListTemplates(c *gin.Context) {
 }
 
 func (h *ExamHandler) StartExam(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, ok := mustUserID(c)
+	if !ok {
+		return
+	}
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
 		response.Error(c, config.CodeParamError, "参数格式错误")
 		return
 	}
-	resp, err := h.svc.StartExam(userID.(uint), uint(id))
+	resp, err := h.svc.StartExam(userID, uint(id))
 	if err != nil {
 		respondError(c, err, "开始考试失败")
 		return
@@ -44,7 +47,10 @@ func (h *ExamHandler) StartExam(c *gin.Context) {
 }
 
 func (h *ExamHandler) SubmitAnswer(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, ok := mustUserID(c)
+	if !ok {
+		return
+	}
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -57,7 +63,7 @@ func (h *ExamHandler) SubmitAnswer(c *gin.Context) {
 		response.Error(c, config.CodeParamError, "参数错误")
 		return
 	}
-	if err := h.svc.SubmitAnswer(userID.(uint), uint(id), req); err != nil {
+	if err := h.svc.SubmitAnswer(userID, uint(id), req); err != nil {
 		respondError(c, err, "提交答案失败")
 		return
 	}
@@ -65,14 +71,17 @@ func (h *ExamHandler) SubmitAnswer(c *gin.Context) {
 }
 
 func (h *ExamHandler) SubmitExam(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, ok := mustUserID(c)
+	if !ok {
+		return
+	}
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
 		response.Error(c, config.CodeParamError, "参数格式错误")
 		return
 	}
-	result, err := h.svc.SubmitExam(userID.(uint), uint(id))
+	result, err := h.svc.SubmitExam(userID, uint(id))
 	if err != nil {
 		respondError(c, err, "交卷失败")
 		return
@@ -81,14 +90,17 @@ func (h *ExamHandler) SubmitExam(c *gin.Context) {
 }
 
 func (h *ExamHandler) GetResult(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, ok := mustUserID(c)
+	if !ok {
+		return
+	}
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
 		response.Error(c, config.CodeParamError, "参数格式错误")
 		return
 	}
-	result, err := h.svc.GetResult(userID.(uint), uint(id))
+	result, err := h.svc.GetResult(userID, uint(id))
 	if err != nil {
 		respondError(c, err, "获取成绩失败")
 		return
@@ -97,8 +109,11 @@ func (h *ExamHandler) GetResult(c *gin.Context) {
 }
 
 func (h *ExamHandler) ListRecords(c *gin.Context) {
-	userID, _ := c.Get("user_id")
-	list, err := h.svc.ListRecords(userID.(uint))
+	userID, ok := mustUserID(c)
+	if !ok {
+		return
+	}
+	list, err := h.svc.ListRecords(userID)
 	if err != nil {
 		response.Error(c, config.CodeBadRequest, "获取考试记录失败")
 		return

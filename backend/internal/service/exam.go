@@ -197,6 +197,8 @@ func (s *ExamService) loadExam(recordID, userID uint, template *model.ExamTempla
 		return nil, ErrNotFound
 	}
 	if record.UserID != userID {
+		log.Printf("[exam] loadExam 归属校验失败 record_id=%d record_user_id=%d request_user_id=%d template_id=%d status=%s",
+			recordID, record.UserID, userID, template.ID, record.Status)
 		return nil, ErrForbidden
 	}
 
@@ -293,6 +295,8 @@ func (s *ExamService) SubmitAnswer(userID, recordID uint, req dto.SubmitAnswerRe
 		return ErrNotFound
 	}
 	if record.UserID != userID {
+		log.Printf("[exam] SubmitAnswer 归属校验失败 record_id=%d record_user_id=%d request_user_id=%d",
+			recordID, record.UserID, userID)
 		return ErrForbidden
 	}
 	if record.Status != "pending" {
@@ -362,6 +366,8 @@ func (s *ExamService) finishExam(userID, recordID uint) (*dto.ExamResultResp, er
 		return nil, ErrNotFound
 	}
 	if record.UserID != userID {
+		log.Printf("[exam] finishExam 归属校验失败 record_id=%d record_user_id=%d request_user_id=%d",
+			recordID, record.UserID, userID)
 		return nil, ErrForbidden
 	}
 	if record.Status == "finished" {
@@ -446,6 +452,8 @@ func (s *ExamService) GetResult(userID, recordID uint) (*dto.ExamResultResp, err
 		return nil, ErrNotFound
 	}
 	if record.UserID != userID {
+		log.Printf("[exam] GetResult 归属校验失败 record_id=%d record_user_id=%d request_user_id=%d",
+			recordID, record.UserID, userID)
 		return nil, ErrForbidden
 	}
 

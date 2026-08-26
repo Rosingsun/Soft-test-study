@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSubjectStore } from '@/stores/subject'
 import { getChapterProgress } from '@/api/stats'
+import { useAiStore } from '@/stores/ai'
 import type { ChapterProgressResp } from '@/types/stats'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
 import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
@@ -11,15 +12,19 @@ import BaseCard from '@/components/common/BaseCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseProgressBar from '@/components/common/BaseProgressBar.vue'
+import ChapterAiGenerateModal from '@/components/knowledge/ChapterAiGenerateModal.vue'
 
 const store = useSubjectStore()
 const route = useRoute()
 const router = useRouter()
+const aiStore = useAiStore()
 const loading = ref(true)
 const error = ref('')
 const subSubjectName = ref('')
 const progressMap = ref<Map<number, ChapterProgressResp>>(new Map())
 const keyword = ref('')
+const aiModalVisible = ref(false)
+const aiTargetChapter = ref<{ id: number; name: string; subject_id: number; sub_subject_id: number; material_id: number } | null>(null)
 
 async function load() {
   loading.value = true
@@ -112,6 +117,25 @@ function accuracyClass(accuracy: number | null): string {
 
 function goDocument(ch: { id: number }) {
   router.push(`/chapters/${ch.id}`)
+}
+
+function openAiModal(ch: { id: number; name: string; subject_id: number; sub_subject_id: number; material_id: number }) {
+  if (!aiStore.hasConfig) {
+    aiStore.syncConfig()
+  }
+  aiTargetChapter.value = ch
+  aiModalVisible.value = true
+}
+
+async function onAiGenerated() {
+  const id = Number(route.params.id)
+  if (id) {
+    try {
+      await store.fetchChapters(id)
+    } catch {
+      // 忽略错误，UI 不阻塞
+    }
+  }
 }
 
 onMounted(load)
@@ -222,6 +246,19 @@ onMounted(load)
                 </span>
               </div>
             </div>
+            <div class="-mx-1 flex items-center gap-1 border-t border-gray-50 pt-2.5">
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors duration-200 hover:bg-violet-50 hover:text-violet-700"
+                title="为「{{ ch.name }}」AI 生成题目"
+                @click.stop="openAiModal(ch)"
+              >
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                </svg>
+                AI 出题
+              </button>
+            </div>
           </BaseCard>
           <BaseCard
             v-else
@@ -249,9 +286,29 @@ onMounted(load)
               <span class="rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-400 ring-1 ring-inset ring-gray-200">暂无题目</span>
               <span class="text-gray-400">{{ progressOf(ch.id).practiced > 0 ? `历史已练 ${progressOf(ch.id).practiced} 题` : '' }}</span>
             </div>
+            <div class="-mx-1 flex items-center gap-1 border-t border-gray-50 pt-2.5">
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-violet-600 transition-colors duration-200 hover:bg-violet-50 hover:text-violet-700"
+                title="为「{{ ch.name }}」AI 生成题目"
+                @click.stop="openAiModal(ch)"
+              >
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                </svg>
+                AI 出题
+              </button>
+            </div>
           </BaseCard>
         </template>
       </div>
     </template>
+
+    <ChapterAiGenerateModal
+      v-if="aiTargetChapter"
+      v-model:visible="aiModalVisible"
+      :chapter="aiTargetChapter"
+      @generated="onAiGenerated"
+    />
   </div>
 </template>

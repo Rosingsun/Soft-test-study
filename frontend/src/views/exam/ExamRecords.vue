@@ -167,7 +167,7 @@ function goDetail(r: ExamRecordResp) {
   if (r.status === 'finished') {
     router.push(`/exam/${r.id}/result`)
   } else {
-    router.push(`/exam/${r.template_id}`)
+    router.push({ path: `/exam/${r.template_id}`, query: { source: 'template' } })
   }
 }
 

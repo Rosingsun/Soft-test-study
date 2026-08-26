@@ -15,6 +15,8 @@ const router = useRouter()
 const examStore = useExamStore()
 const examData = ref<StartExamResp | null>(null)
 const isAiMode = computed(() => route.query.source === 'ai')
+const isTemplateMode = computed(() => route.query.source === 'template')
+const hasSourceHint = computed(() => isAiMode.value || isTemplateMode.value)
 const currentIndex = ref(0)
 const loading = ref(true)
 const error = ref('')
@@ -80,7 +82,13 @@ onMounted(async () => {
     }
     startTimer()
   } catch (e) {
-    error.value = (e as Error).message
+    const msg = (e as Error).message || ''
+    if (!hasSourceHint.value && (msg.includes('无权') || msg.includes('资源不存在'))) {
+      showToast('未找到对应的考试，正在为你跳转考试记录', 'info')
+      router.replace('/exam-records')
+      return
+    }
+    error.value = msg
   } finally {
     loading.value = false
   }

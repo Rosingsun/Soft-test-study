@@ -41,7 +41,7 @@ onMounted(async () => {
 })
 
 function goExam(t: ExamTemplateResp) {
-  router.push(`/exam/${t.id}`)
+  router.push({ path: `/exam/${t.id}`, query: { source: 'template' } })
 }
 
 function openAiModal() {

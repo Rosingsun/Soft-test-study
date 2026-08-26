@@ -247,10 +247,8 @@ func (h *AiHandler) Analyze(c *gin.Context) {
 }
 
 func (h *AiHandler) StartExam(c *gin.Context) {
-	userIDVal, _ := c.Get("user_id")
-	userID, ok := userIDVal.(uint)
-	if !ok || userID == 0 {
-		response.Error(c, config.CodeUnauthorized, "未登录")
+	userID, ok := mustUserID(c)
+	if !ok {
 		return
 	}
 
@@ -276,10 +274,8 @@ func (h *AiHandler) StartExam(c *gin.Context) {
 
 // EssayScore 论文 AI 评分
 func (h *AiHandler) EssayScore(c *gin.Context) {
-	userIDVal, _ := c.Get("user_id")
-	userID, ok := userIDVal.(uint)
-	if !ok || userID == 0 {
-		response.Error(c, config.CodeUnauthorized, "未登录")
+	userID, ok := mustUserID(c)
+	if !ok {
 		return
 	}
 
@@ -320,10 +316,8 @@ func (h *AiHandler) EssayScore(c *gin.Context) {
 
 // CheckEssayScore 检查论文是否已有评分
 func (h *AiHandler) CheckEssayScore(c *gin.Context) {
-	userIDVal, _ := c.Get("user_id")
-	userID, ok := userIDVal.(uint)
-	if !ok || userID == 0 {
-		response.Error(c, config.CodeUnauthorized, "未登录")
+	userID, ok := mustUserID(c)
+	if !ok {
 		return
 	}
 

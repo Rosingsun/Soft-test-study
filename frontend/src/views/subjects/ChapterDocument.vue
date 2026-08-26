@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useSubjectStore } from '@/stores/subject'
 import { getMaterial, getMaterialContent } from '@/api/material'
 import { useAuthStore } from '@/stores/auth'
+import { useAiStore } from '@/stores/ai'
 import type { StudyMaterialResp, MindMapNode } from '@/types/material'
 import BasePageHeader from '@/components/common/BasePageHeader.vue'
 import BaseSkeleton from '@/components/common/BaseSkeleton.vue'
@@ -11,11 +12,13 @@ import BaseEmpty from '@/components/common/BaseEmpty.vue'
 import BaseCard from '@/components/common/BaseCard.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import ChapterDocNode from '@/components/knowledge/ChapterDocNode.vue'
+import ChapterAiGenerateModal from '@/components/knowledge/ChapterAiGenerateModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const subjectStore = useSubjectStore()
 const auth = useAuthStore()
+const aiStore = useAiStore()
 
 const chapterId = computed(() => Number(route.params.id))
 
@@ -101,6 +104,20 @@ function goPractice() {
   router.push(`/practice/chapter/${chapter.value.id}`)
 }
 
+const aiModalVisible = ref(false)
+
+function openAiModal() {
+  if (!chapter.value) return
+  if (!aiStore.hasConfig) {
+    aiStore.syncConfig()
+  }
+  aiModalVisible.value = true
+}
+
+async function onAiGenerated() {
+  await load()
+}
+
 onMounted(load)
 </script>
 
@@ -112,6 +129,19 @@ onMounted(load)
     >
       <template #actions>
         <BaseButton type="secondary" @click="goBack">← 返回章节</BaseButton>
+        <BaseButton
+          v-if="chapter"
+          type="secondary"
+          class="!border-violet-200 !bg-white !text-violet-700 hover:!bg-violet-50/60 hover:!text-violet-800"
+          @click="openAiModal"
+        >
+          <span class="flex items-center gap-1.5">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+            </svg>
+            AI 出题
+          </span>
+        </BaseButton>
         <BaseButton
           type="primary"
           :disabled="!chapter || chapter.question_count === 0"
@@ -164,6 +194,15 @@ onMounted(load)
               <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" />
             </svg>
             练习本章
+          </button>
+          <button
+            class="group flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-violet-600 shadow-sm ring-1 ring-inset ring-violet-200 transition-all duration-200 hover:shadow-md hover:ring-violet-300"
+            @click="openAiModal"
+          >
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+            </svg>
+            AI 出题
           </button>
         </div>
       </BaseCard>
@@ -236,17 +275,34 @@ onMounted(load)
               <p class="text-sm font-semibold text-gray-900">已读文档，开始刷题</p>
               <p class="mt-0.5 text-xs text-gray-500">本章共 {{ chapter.question_count }} 道题，做完即可查看解析</p>
             </div>
-            <BaseButton type="primary" @click="goPractice">
-              <span class="flex items-center gap-1.5">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                开始练习
-              </span>
-            </BaseButton>
+            <div class="flex flex-wrap gap-2">
+              <BaseButton type="secondary" @click="openAiModal">
+                <span class="flex items-center gap-1.5">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                  </svg>
+                  AI 出题
+                </span>
+              </BaseButton>
+              <BaseButton type="primary" @click="goPractice">
+                <span class="flex items-center gap-1.5">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  开始练习
+                </span>
+              </BaseButton>
+            </div>
           </div>
         </BaseCard>
       </template>
     </template>
+
+    <ChapterAiGenerateModal
+      v-if="chapter"
+      v-model:visible="aiModalVisible"
+      :chapter="chapter"
+      @generated="onAiGenerated"
+    />
   </div>
 </template>
