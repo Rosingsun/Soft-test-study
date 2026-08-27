@@ -49,6 +49,48 @@ func (r *EmailVerificationCodeRepo) FindLatest(userID uint, purpose string) (*mo
 	return &rec, nil
 }
 
+// FindValidByEmail 按 (email, purpose, code) 查有效记录（未登录重置密码场景，user_id 为 NULL）
+func (r *EmailVerificationCodeRepo) FindValidByEmail(email, purpose, code string) (*model.EmailVerificationCode, error) {
+	var rec model.EmailVerificationCode
+	err := r.db.Where("email = ? AND purpose = ? AND code = ? AND used = 0 AND expires_at > ?",
+		email, purpose, code, time.Now()).
+		Order("id DESC").
+		First(&rec).Error
+	if err != nil {
+		return nil, err
+	}
+	return &rec, nil
+}
+
+// FindLatestByEmail 按 (email, purpose) 查最近一条（未登录场景 60s 冷却）
+func (r *EmailVerificationCodeRepo) FindLatestByEmail(email, purpose string) (*model.EmailVerificationCode, error) {
+	var rec model.EmailVerificationCode
+	err := r.db.Where("email = ? AND purpose = ?", email, purpose).
+		Order("id DESC").
+		First(&rec).Error
+	if err != nil {
+		return nil, err
+	}
+	return &rec, nil
+}
+
+// CountTodayByEmail 按 email 维度统计今日发送次数（未登录重置密码场景）
+func (r *EmailVerificationCodeRepo) CountTodayByEmail(email string) (int64, error) {
+	var n int64
+	startOfDay := startOfToday()
+	err := r.db.Model(&model.EmailVerificationCode{}).
+		Where("email = ? AND created_at >= ?", email, startOfDay).
+		Count(&n).Error
+	return n, err
+}
+
+// InvalidateActiveByEmail 失效同 (email, purpose) 的所有「未使用且未过期」记录（未登录场景发新码前清理）
+func (r *EmailVerificationCodeRepo) InvalidateActiveByEmail(email, purpose string) error {
+	return r.db.Model(&model.EmailVerificationCode{}).
+		Where("email = ? AND purpose = ? AND used = 0 AND expires_at > ?", email, purpose, time.Now()).
+		Update("used", true).Error
+}
+
 // CountToday 统计用户今日发送次数（purpose 不区分）
 func (r *EmailVerificationCodeRepo) CountToday(userID uint) (int64, error) {
 	var n int64

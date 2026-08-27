@@ -1,4 +1,5 @@
 import { get, post, patch, del } from './request'
+import { withLiveApiKey } from './ai'
 import type {
   ExtractKnowledgePointsReq,
   ExtractKnowledgePointsResp,
@@ -15,7 +16,7 @@ import type {
 } from '@/types/knowledge'
 
 export async function extractKnowledgePoints(data: ExtractKnowledgePointsReq) {
-  return post<ExtractKnowledgePointsResp>('/ai/knowledge-points/extract', data)
+  return post<ExtractKnowledgePointsResp>('/ai/knowledge-points/extract', withLiveApiKey(data))
 }
 
 export async function addKnowledgePoint(data: AddKnowledgePointReq) {

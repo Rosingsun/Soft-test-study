@@ -49,7 +49,7 @@ export interface ChangePasswordReq {
 }
 
 // 邮箱验证码用途
-export type EmailPurpose = 'verify' | 'change'
+export type EmailPurpose = 'verify' | 'change' | 'reset_password'
 
 export interface SendEmailCodeReq {
   email: string
@@ -60,4 +60,15 @@ export interface VerifyEmailCodeReq {
   email: string
   code: string
   purpose: EmailPurpose
+}
+
+export interface ResetPasswordSendCodeReq {
+  email: string
+}
+
+export interface ResetPasswordReq {
+  email: string
+  code: string
+  new_password: string
+  confirm_password: string
 }

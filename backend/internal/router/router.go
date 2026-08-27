@@ -136,6 +136,9 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config, ctx context.Context) 
 	api.POST("/auth/login", rateLimiter, userH.Login)
 	// 发送邮箱验证码：需要登录态（避免匿名刷验证码），加限流防刷
 	api.POST("/auth/email/send-code", middleware.Auth(cfg.JWTSecret), rateLimiter, userH.SendEmailCode)
+	// 未登录重置密码：公开接口，加限流防刷
+	api.POST("/auth/password/reset-code", rateLimiter, userH.SendResetPasswordCode)
+	api.POST("/auth/password/reset", rateLimiter, userH.ResetPasswordByCode)
 
 	api.GET("/exam-levels", examLevelH.List)
 	api.GET("/subjects", subjectH.ListByLevel)

@@ -21,7 +21,7 @@ import type { StartExamResp } from '@/types/exam'
  * 不再依赖 store state，避免 store 与存储脱节时仍发送过期的 key。
  * 约定请求体中 api_config.api_key 字段被覆盖为 sessionStorage 中的最新值。
  */
-function withLiveApiKey<T>(body: T): T {
+export function withLiveApiKey<T>(body: T): T {
   const liveKey = getSessionItem('ai_key') || ''
   const b = body as unknown as Record<string, unknown>
   if (b.api_config && typeof b.api_config === 'object') {

@@ -168,3 +168,33 @@ func (h *UserHandler) VerifyEmailCode(c *gin.Context) {
 	}
 	response.Success(c, nil)
 }
+
+// SendResetPasswordCode 未登录场景发送重置密码验证码（公开接口，带限流）
+//
+// 安全策略：邮箱不存在 / 未验证时也返回成功（防枚举）
+func (h *UserHandler) SendResetPasswordCode(c *gin.Context) {
+	var req dto.ResetPasswordSendCodeReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 10002, translateBindingError(err))
+		return
+	}
+	if err := h.emailSvc.SendResetPasswordCode(req.Email); err != nil {
+		response.Error(c, 10001, err.Error())
+		return
+	}
+	response.Success(c, nil)
+}
+
+// ResetPasswordByCode 未登录场景校验验证码并重置密码（公开接口，带限流）
+func (h *UserHandler) ResetPasswordByCode(c *gin.Context) {
+	var req dto.ResetPasswordReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 10002, translateBindingError(err))
+		return
+	}
+	if err := h.emailSvc.ResetPasswordByCode(req.Email, req.Code, req.NewPassword); err != nil {
+		response.Error(c, 10001, err.Error())
+		return
+	}
+	response.Success(c, nil)
+}

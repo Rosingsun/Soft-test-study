@@ -54,7 +54,13 @@ export const useAiStore = defineStore('ai', () => {
           base_url: parsed?.base_url || '',
           model: parsed?.model || '',
         })
-        // api_key 已在 sessionStorage 中（迁移后），删除原复合键
+        // 兼容旧版本：旧 ai_api_config 复合键中内嵌的 api_key 也要搬到 sessionStorage。
+        // OPT-05 初版只迁了 localStorage.ai_key 简单键，会导致只用复合键保存的旧用户
+        // 出现 hasConfig 一直为 false、反复提示「尚未配置 AI API Key」的问题。
+        if (!getSessionItem(AI_KEY) && typeof parsed?.api_key === 'string' && parsed.api_key.trim()) {
+          setSessionItem(AI_KEY, parsed.api_key)
+        }
+        // 删除原复合键
         localStorage.removeItem(LEGACY_STORAGE_KEY)
       }
     } catch { /* ignore */ }

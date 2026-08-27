@@ -11,6 +11,7 @@ import (
 
 	"github.com/soft-test-study/backend/internal/model"
 	"github.com/soft-test-study/backend/internal/repository"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // EmailService 邮箱验证码业务
@@ -40,8 +41,9 @@ const (
 	emailCodeTTL       = 5 * time.Minute
 	emailCodeCooldown  = 60 * time.Second
 	emailCodeDailyMax  = 10
-	emailPurposeVerify = "verify"
-	emailPurposeChange = "change"
+	emailPurposeVerify         = "verify"
+	emailPurposeChange         = "change"
+	emailPurposeResetPassword  = "reset_password"
 )
 
 // SendCode 生成并发送 6 位验证码
@@ -103,8 +105,9 @@ func (s *EmailService) SendCode(userID uint, email, purpose string) error {
 	}
 
 	// 入库
+	uid := userID
 	rec := &model.EmailVerificationCode{
-		UserID:    userID,
+		UserID:    &uid,
 		Email:     email,
 		Code:      code,
 		Purpose:   purpose,
@@ -179,6 +182,128 @@ func generateCode() (string, error) {
 	return fmt.Sprintf("%06d", n.Int64()), nil
 }
 
+// SendResetPasswordCode 未登录场景发送重置密码验证码
+//
+// 安全策略：
+//   - 邮箱不存在 / 邮箱未验证：静默返回 nil（防止通过接口枚举已注册邮箱）
+//   - 60s 冷却 / 单邮箱每日 10 条上限（复用常量）
+//   - 验证码 user_id 写 NULL，service 层走 email 维度查
+func (s *EmailService) SendResetPasswordCode(rawEmail string) error {
+	email := strings.TrimSpace(strings.ToLower(rawEmail))
+	if !isValidEmail(email) {
+		return errors.New("邮箱格式不正确")
+	}
+
+	// 查用户：找不到 / 未验证 → 静默成功
+	user, err := s.userRepo.FindByEmail(email)
+	if err != nil || user == nil || user.ID == 0 {
+		return nil
+	}
+	if !user.EmailVerified {
+		return nil
+	}
+
+	// 60s 冷却
+	latest, err := s.repo.FindLatestByEmail(email, emailPurposeResetPassword)
+	if err == nil && latest != nil {
+		if time.Since(latest.CreatedAt) < emailCodeCooldown {
+			remaining := emailCodeCooldown - time.Since(latest.CreatedAt)
+			return fmt.Errorf("请等待 %d 秒后再试", int(remaining.Seconds())+1)
+		}
+	}
+
+	// 每日上限
+	today, _ := s.repo.CountTodayByEmail(email)
+	if today >= emailCodeDailyMax {
+		return errors.New("今日发送次数已达上限，请明天再试")
+	}
+
+	// 失效旧码
+	if err := s.repo.InvalidateActiveByEmail(email, emailPurposeResetPassword); err != nil {
+		return errors.New("发送失败，请稍后重试")
+	}
+
+	// 生成验证码
+	code, err := generateCode()
+	if err != nil {
+		return errors.New("生成验证码失败")
+	}
+
+	// 入库（user_id 为 NULL）
+	rec := &model.EmailVerificationCode{
+		UserID:    nil,
+		Email:     email,
+		Code:      code,
+		Purpose:   emailPurposeResetPassword,
+		Used:      false,
+		ExpiresAt: time.Now().Add(emailCodeTTL),
+	}
+	if err := s.repo.Create(rec); err != nil {
+		return errors.New("发送失败，请稍后重试")
+	}
+
+	// 发送邮件
+	subject, body := renderEmail(email, code, emailPurposeResetPassword)
+	if err := s.sender.Send(email, subject, body); err != nil {
+		return fmt.Errorf("邮件发送失败：%v", err)
+	}
+	return nil
+}
+
+// ResetPasswordByCode 校验重置密码验证码并写入新密码
+//
+// 入参：
+//   - rawEmail：用户提交的邮箱
+//   - code：6 位数字验证码
+//   - newPassword：新密码（明文）
+//
+// 行为：
+//   - 验证码错误 / 已失效：返回错误
+//   - 校验通过后：标记 used → 写新密码 hash → 落库 → 清空登录失败计数与锁定状态
+//   - 邮箱在 users 中查不到：返回「验证码错误或已失效」（防枚举）
+func (s *EmailService) ResetPasswordByCode(rawEmail, code, newPassword string) error {
+	email := strings.TrimSpace(strings.ToLower(rawEmail))
+	if !isValidEmail(email) {
+		return errors.New("邮箱格式不正确")
+	}
+	if len(code) != 6 {
+		return errors.New("请输入 6 位验证码")
+	}
+	if err := validatePassword(newPassword); err != nil {
+		return err
+	}
+
+	// 按 email 查用户
+	user, err := s.userRepo.FindByEmail(email)
+	if err != nil || user == nil || user.ID == 0 {
+		return errors.New("验证码错误或已失效")
+	}
+
+	// 查有效码
+	rec, err := s.repo.FindValidByEmail(email, emailPurposeResetPassword, code)
+	if err != nil {
+		return errors.New("验证码错误或已失效")
+	}
+	if err := s.repo.MarkUsed(rec.ID); err != nil {
+		return errors.New("重置失败，请稍后重试")
+	}
+
+	// 写新密码 hash
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return errors.New("重置失败，请稍后重试")
+	}
+	user.PasswordHash = string(hash)
+	// 改密成功后清空登录失败计数与锁定状态，避免被锁定的账号改密后仍不可用
+	user.FailedAttempts = 0
+	user.LockedUntil = nil
+
+	if err := s.userRepo.Update(user); err != nil {
+		return errors.New("重置失败，请稍后重试")
+	}
+	return nil
+}
+
 // isValidEmail 校验邮箱格式（使用标准库 net/mail）
 func isValidEmail(s string) bool {
 	if len(s) > 100 {
@@ -191,9 +316,12 @@ func isValidEmail(s string) bool {
 // renderEmail 渲染邮件标题与正文
 func renderEmail(email, code, purpose string) (subject, body string) {
 	var action string
-	if purpose == emailPurposeChange {
+	switch purpose {
+	case emailPurposeChange:
 		action = "换绑"
-	} else {
+	case emailPurposeResetPassword:
+		action = "重置密码"
+	default:
 		action = "验证"
 	}
 	subject = fmt.Sprintf("【软考学系】邮箱%s验证码", action)

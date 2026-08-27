@@ -93,6 +93,14 @@ async function handleLogin() {
               {{ showPassword ? '隐藏' : '显示' }}
             </button>
           </div>
+          <div class="mt-1.5 flex justify-end">
+            <router-link
+              to="/forgot-password"
+              class="cursor-pointer text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+            >
+              忘记密码？
+            </router-link>
+          </div>
         </div>
 
         <div v-if="error" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3">

@@ -66,3 +66,16 @@ type VerifyEmailCodeReq struct {
 	Code    string `json:"code"    binding:"required,len=6"`
 	Purpose string `json:"purpose" binding:"required,oneof=verify change"`
 }
+
+// ResetPasswordSendCodeReq 未登录场景发送重置密码验证码请求
+type ResetPasswordSendCodeReq struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+// ResetPasswordReq 未登录场景校验验证码并重置密码请求
+type ResetPasswordReq struct {
+	Email           string `json:"email"            binding:"required,email"`
+	Code            string `json:"code"             binding:"required,len=6"`
+	NewPassword     string `json:"new_password"     binding:"required,min=8"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=NewPassword"`
+}

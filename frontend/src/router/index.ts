@@ -16,6 +16,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/Register.vue'),
   },
   {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    meta: { guest: true },
+    component: () => import('@/views/auth/ForgotPassword.vue'),
+  },
+  {
     path: '/',
     component: () => import('@/components/layout/AppLayout.vue'),
     meta: { requiresAuth: true },
