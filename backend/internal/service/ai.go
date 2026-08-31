@@ -69,8 +69,8 @@ func (s *AiService) GetProviders() dto.AiProvidersResp {
 			{Provider: "deepseek", Name: "DeepSeek", BaseURL: "https://api.deepseek.com", Models: []string{"deepseek-chat", "deepseek-reasoner"}},
 			{Provider: "openai", Name: "OpenAI", BaseURL: "https://api.openai.com", Models: []string{"gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"}},
 			{Provider: "azure", Name: "Azure OpenAI", BaseURL: "https://<your-resource-name>.openai.azure.com", Models: []string{"gpt-35-turbo", "gpt-4o-mini", "gpt-4o"}},
-			{Provider: "anthropic", Name: "Anthropic", BaseURL: "https://api.anthropic.com", Models: []string{"claude-3.5-mini", "claude-3.5", "claude-4o"}},
-			{Provider: "minimax", Name: "MiniMax", BaseURL: "https://api.minimax.io/v1", Models: []string{"MiniMax-M3"}},
+			{Provider: "anthropic", Name: "Anthropic", BaseURL: "https://api.anthropic.com", Models: []string{"claude-3-5-haiku-20241022", "claude-3-5-sonnet-20241022", "claude-3-7-sonnet-20250219"}},
+			{Provider: "minimax", Name: "MiniMax", BaseURL: "https://api.minimax.io/v1", Models: []string{"MiniMax-ABAB6.5s-chat", "MiniMax-ABAB6.5-chat", "MiniMax-ABAB5.5-chat"}},
 			{Provider: "custom", Name: "自定义", BaseURL: "", Models: []string{}},
 		},
 	}
