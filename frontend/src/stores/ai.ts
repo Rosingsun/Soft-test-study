@@ -6,12 +6,21 @@ import {
   setSessionItem,
   removeSessionItem,
   migrateAiKeyFromLocalStorage,
+  getLocalItem,
+  setLocalItem,
+  removeLocalItem,
+  getRememberFlag,
+  setRememberFlag,
 } from '@/utils/storage'
 
 const LEGACY_STORAGE_KEY = 'ai_api_config'
 const AI_KEY = 'ai_key'
 // 其它非敏感配置（provider / base_url / model）继续存在 localStorage
 const NON_SENSITIVE_KEY = 'ai_api_meta'
+// 「记住 API Key」开关（localStorage，无前缀）
+const REMEMBER_FLAG = 'ai_key_remember'
+// 用户勾选「记住」后，Key 落盘到 localStorage 的键（带 sts_local: 前缀）
+const PERSISTED_KEY = 'ai_key'
 
 function loadMeta(): Pick<AiApiConfig, 'provider' | 'base_url' | 'model'> {
   try {
@@ -67,6 +76,25 @@ export const useAiStore = defineStore('ai', () => {
   }
 
   const meta = ref(loadMeta())
+
+  // 是否「记住 API Key」：默认 false，Key 只存活于当前标签页。
+  // 勾选后 Key 会明文写入 localStorage，跨标签页/重开浏览器自动恢复。
+  const remember = ref<boolean>(getRememberFlag(REMEMBER_FLAG))
+
+  /**
+   * 若用户已勾选「记住」，且当前会话没有 Key，则从 localStorage 恢复到 sessionStorage。
+   * 之后所有读取仍统一走 sessionStorage，保证行为一致。
+   */
+  function restorePersistedKey(): void {
+    if (!remember.value) return
+    if (getSessionItem(AI_KEY)) return
+    const persisted = getLocalItem(PERSISTED_KEY)
+    if (persisted) {
+      setSessionItem(AI_KEY, persisted)
+    }
+  }
+  restorePersistedKey()
+
   // aiKey 仅在内存中占位（不持久），实际值每次从 sessionStorage 实时读
   const aiKey = ref<string>(getSessionItem(AI_KEY) || '')
 
@@ -82,6 +110,7 @@ export const useAiStore = defineStore('ai', () => {
   )
 
   function syncConfig() {
+    restorePersistedKey()
     aiKey.value = getSessionItem(AI_KEY) || ''
   }
 
@@ -94,10 +123,27 @@ export const useAiStore = defineStore('ai', () => {
   function setAiKey(key: string) {
     if (key && key.trim() !== '') {
       setSessionItem(AI_KEY, key)
+      // 仅在用户显式勾选「记住」时落盘到 localStorage
+      if (remember.value) setLocalItem(PERSISTED_KEY, key)
+      else removeLocalItem(PERSISTED_KEY)
     } else {
       removeSessionItem(AI_KEY)
+      removeLocalItem(PERSISTED_KEY)
     }
     aiKey.value = key
+  }
+
+  /** 切换「记住 API Key」开关；关闭时立即清除已落盘的 Key */
+  function setRemember(on: boolean) {
+    remember.value = on
+    setRememberFlag(REMEMBER_FLAG, on)
+    if (on) {
+      const cur = getSessionItem(AI_KEY) || aiKey.value
+      if (cur) setLocalItem(PERSISTED_KEY, cur)
+      else removeLocalItem(PERSISTED_KEY)
+    } else {
+      removeLocalItem(PERSISTED_KEY)
+    }
   }
 
   function getAiKey(): string {
@@ -109,6 +155,7 @@ export const useAiStore = defineStore('ai', () => {
 
   function clearAiKey() {
     removeSessionItem(AI_KEY)
+    removeLocalItem(PERSISTED_KEY)
     aiKey.value = ''
   }
 
@@ -150,11 +197,13 @@ export const useAiStore = defineStore('ai', () => {
   return {
     meta,
     aiKey,
+    remember,
     config,
     hasConfig,
     syncConfig,
     saveConfig,
     setAiKey,
+    setRemember,
     getAiKey,
     clearAiKey,
     updateProvider,

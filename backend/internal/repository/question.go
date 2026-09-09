@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/soft-test-study/backend/internal/model"
@@ -303,6 +304,225 @@ func (r *QuestionRepo) BatchCreate(questions []model.Question) error {
 		return nil
 	}
 	return r.db.CreateInBatches(questions, 50).Error
+}
+
+// =============================================================
+// 管理端题库：需要 JOIN 科目/子科目/章节带出名称，
+// 且必须能查到 status=0（已停用）的题，故与练习侧查询分开实现。
+// =============================================================
+
+// adminQuestionSelect 管理端题目 SELECT 片段（三次 LEFT JOIN 取名称）
+const adminQuestionSelect = `
+	SELECT q.id             AS id,
+	       q.subject_id     AS subject_id,
+	       q.sub_subject_id AS sub_subject_id,
+	       q.chapter_id     AS chapter_id,
+	       q.parent_id      AS parent_id,
+	       q.type           AS type,
+	       q.difficulty     AS difficulty,
+	       q.content        AS content,
+	       q.case_material  AS case_material,
+	       q.options        AS options,
+	       q.blank_options  AS blank_options,
+	       q.answer         AS answer,
+	       q.analysis       AS analysis,
+	       q.year           AS year,
+	       q.source         AS source,
+	       q.status         AS status,
+	       q.created_at     AS created_at,
+	       q.updated_at     AS updated_at,
+	       COALESCE(s.name, '')  AS subject_name,
+	       COALESCE(ss.name, '') AS sub_subject_name,
+	       COALESCE(c.name, '')  AS chapter_name
+	FROM questions q
+	LEFT JOIN subjects s     ON s.id  = q.subject_id
+	LEFT JOIN sub_subjects ss ON ss.id = q.sub_subject_id
+	LEFT JOIN chapters c     ON c.id  = q.chapter_id`
+
+// AdminQuestionRow 管理端题目行（含 JOIN 出来的名称）
+type AdminQuestionRow struct {
+	ID             uint
+	SubjectID      uint
+	SubjectName    string
+	SubSubjectID   uint
+	SubSubjectName string
+	ChapterID      uint
+	ChapterName    string
+	ParentID       uint
+	Type           string
+	Difficulty     string
+	Content        string
+	CaseMaterial   string
+	Options        string
+	BlankOptions   string
+	Answer         string
+	Analysis       string
+	Year           int
+	Source         string
+	Status         int
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
+// AdminQuestionFilter 管理端题目筛选条件（零值表示不限）
+type AdminQuestionFilter struct {
+	SubjectID    uint
+	SubSubjectID uint
+	ChapterID    uint
+	Type         string
+	Difficulty   string
+	Status       string // "" 全部 / "1" 启用 / "0" 停用
+	Year         int
+	Keyword      string // 匹配题干 / 解析 / 来源
+}
+
+// buildAdminQuestionWhere 拼装 WHERE 子句与绑定参数
+func buildAdminQuestionWhere(f AdminQuestionFilter) (string, []any) {
+	var sb strings.Builder
+	args := make([]any, 0, 6)
+
+	sb.WriteString(" WHERE 1 = 1")
+	if f.SubjectID > 0 {
+		sb.WriteString(" AND q.subject_id = ?")
+		args = append(args, f.SubjectID)
+	}
+	if f.SubSubjectID > 0 {
+		sb.WriteString(" AND q.sub_subject_id = ?")
+		args = append(args, f.SubSubjectID)
+	}
+	if f.ChapterID > 0 {
+		sb.WriteString(" AND q.chapter_id = ?")
+		args = append(args, f.ChapterID)
+	}
+	if f.Type != "" {
+		sb.WriteString(" AND q.type = ?")
+		args = append(args, f.Type)
+	}
+	if f.Difficulty != "" {
+		sb.WriteString(" AND q.difficulty = ?")
+		args = append(args, f.Difficulty)
+	}
+	if f.Status == "0" || f.Status == "1" {
+		sb.WriteString(" AND q.status = ?")
+		args = append(args, f.Status)
+	}
+	if f.Year > 0 {
+		sb.WriteString(" AND q.year = ?")
+		args = append(args, f.Year)
+	}
+	if kw := strings.TrimSpace(f.Keyword); kw != "" {
+		sb.WriteString(" AND (q.content LIKE ? OR q.analysis LIKE ? OR q.source LIKE ?)")
+		like := "%" + escapeLike(kw) + "%"
+		args = append(args, like, like, like)
+	}
+	return sb.String(), args
+}
+
+// AdminCountQuestions 按筛选条件统计题目总数
+func (r *QuestionRepo) AdminCountQuestions(f AdminQuestionFilter) (int64, error) {
+	where, args := buildAdminQuestionWhere(f)
+	var total int64
+	err := r.db.Raw("SELECT COUNT(*) FROM questions q"+where, args...).Scan(&total).Error
+	return total, err
+}
+
+// AdminListQuestions 按筛选条件倒序取一页题目（含科目/章节名称）
+func (r *QuestionRepo) AdminListQuestions(f AdminQuestionFilter, limit, offset int) ([]AdminQuestionRow, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	where, args := buildAdminQuestionWhere(f)
+	args = append(args, limit, offset)
+
+	var rows []AdminQuestionRow
+	err := r.db.Raw(adminQuestionSelect+where+" ORDER BY q.id DESC LIMIT ? OFFSET ?", args...).Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	if rows == nil {
+		rows = []AdminQuestionRow{}
+	}
+	return rows, nil
+}
+
+// AdminFindByID 按主键查询（不做 status 过滤，管理端需要看到停用题）
+func (r *QuestionRepo) AdminFindByID(id uint) (*model.Question, error) {
+	var q model.Question
+	err := r.db.Where("id = ?", id).First(&q).Error
+	if err != nil {
+		return nil, err
+	}
+	return &q, nil
+}
+
+// AdminFindChildren 查询某大题目下的小题目（不做 status 过滤）
+func (r *QuestionRepo) AdminFindChildren(parentID uint) ([]model.Question, error) {
+	var list []model.Question
+	err := r.db.Where("parent_id = ?", parentID).Order("id asc").Find(&list).Error
+	return list, err
+}
+
+// Create 写入一道新题，回填主键
+func (r *QuestionRepo) Create(q *model.Question) error {
+	return r.db.Create(q).Error
+}
+
+// UpdateColumns 按字段白名单更新题目，避免零值字段被误写入
+func (r *QuestionRepo) UpdateColumns(id uint, columns map[string]any) error {
+	if len(columns) == 0 {
+		return nil
+	}
+	return r.db.Model(&model.Question{}).Where("id = ?", id).Updates(columns).Error
+}
+
+// SetStatus 批量启用 / 停用题目（软删除语义：status=0 为停用，不做物理删除）
+func (r *QuestionRepo) SetStatus(ids []uint, status int) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	return r.db.Model(&model.Question{}).
+		Where("id IN ?", ids).
+		Update("status", status).Error
+}
+
+// AdminQuestionTypeStatRow 按题型分组的题量
+type AdminQuestionTypeStatRow struct {
+	Type  string
+	Count int64
+}
+
+// AdminTypeStats 按题型统计全部题目（含停用）的题量
+func (r *QuestionRepo) AdminTypeStats() ([]AdminQuestionTypeStatRow, error) {
+	var rows []AdminQuestionTypeStatRow
+	err := r.db.Model(&model.Question{}).
+		Select("type, COUNT(*) AS count").
+		Group("type").
+		Order("count desc").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	if rows == nil {
+		rows = []AdminQuestionTypeStatRow{}
+	}
+	return rows, nil
+}
+
+// CountAll 统计全部题目（含停用）
+func (r *QuestionRepo) CountAll() (int64, error) {
+	var count int64
+	err := r.db.Model(&model.Question{}).Count(&count).Error
+	return count, err
+}
+
+// CountByStatus 统计指定状态的题目数量
+func (r *QuestionRepo) CountByStatus(status int) (int64, error) {
+	var count int64
+	err := r.db.Model(&model.Question{}).Where("status = ?", status).Count(&count).Error
+	return count, err
 }
 
 // randomIDs 主键洗牌：在给定 query（已拼好 WHERE 条件）上随机抽取 N 个主键。

@@ -28,6 +28,10 @@ export function typeLabel(type: string): string {
   return TYPE_LABELS[type] || type
 }
 
+export function difficultyLabel(d: string): string {
+  return DIFFICULTY_LABELS[d as Difficulty] || d
+}
+
 /** 是否 AI 出题 */
 export function isAiSource(source: string | undefined | null): boolean {
   return !!source && source.trim().toLowerCase() === 'ai'

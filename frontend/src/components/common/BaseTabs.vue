@@ -39,7 +39,7 @@ function hasIcon(value: string | number) {
       role="tab"
       :aria-selected="active === tab.value"
       :class="[
-        'group relative flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl font-semibold transition-all duration-200 active:scale-[0.97]',
+        'group relative flex flex-1 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-xl font-semibold transition-all duration-200 active:scale-[0.97]',
         size === 'sm' ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm',
         active === tab.value
           ? variant === 'gradient'

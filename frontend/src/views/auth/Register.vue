@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSubjectStore } from '@/stores/subject'
 import { showToast } from '@/utils/toast'
@@ -8,6 +8,7 @@ import { showToast } from '@/utils/toast'
 const auth = useAuthStore()
 const subjectStore = useSubjectStore()
 const router = useRouter()
+const route = useRoute()
 const username = ref('')
 const password = ref('')
 const confirmPassword = ref('')
@@ -95,6 +96,11 @@ const canSubmit = computed(() => {
 })
 
 onMounted(async () => {
+  // 邀请链接进入时自动带上邀请码，避免手工抄录出错
+  const code = route.query.invite_code
+  if (typeof code === 'string' && code.trim()) {
+    inviteCode.value = code.trim()
+  }
   if (subjectStore.levels.length === 0) {
     await subjectStore.fetchLevels()
   }

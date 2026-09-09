@@ -70,6 +70,7 @@ const navGroups = computed(() => {
     groups.push({
       title: '管理',
       items: [
+        { label: '邀请码管理', icon: 'ticket', to: '/admin/invite-codes' },
         { label: '用户管理', icon: 'users', to: '/admin/users' },
         { label: '科目管理', icon: 'layers', to: '/admin/subjects' },
         { label: '题库管理', icon: 'database', to: '/admin/questions' },
@@ -224,6 +225,9 @@ function navigate(to: string) {
                 </template>
                 <template v-else-if="item.icon === 'chat'">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.113 3.401-.662a8.25 8.25 0 002.599.912z" />
+                </template>
+                <template v-else-if="item.icon === 'ticket'">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H7.5c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125zM21 8.25V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v.75m18 0v8.25A2.25 2.25 0 0118.75 18H5.25A2.25 2.25 0 013 15.75V8.25" />
                 </template>
                 <template v-else-if="item.icon === 'users'">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />

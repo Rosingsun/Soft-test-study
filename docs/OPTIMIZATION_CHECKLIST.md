@@ -226,6 +226,13 @@ OPT-18 ──> OPT-19（OPT-18 提供后端批量接口，OPT-19 调用之）
 - 调用 `logout` 后 Key 被清除
 - `npm run typecheck` 通过
 
+**补充（用户可选持久化）**：
+- 默认行为不变：Key 仅存 `sessionStorage`，换标签页/关闭浏览器即失效
+- AI 配置页新增「记住 API Key」开关（`localStorage.ai_key_remember`），用户在知情前提下主动勾选后，
+  Key 落盘到 `localStorage` 的 `sts_local:ai_key`，下次打开自动恢复到 `sessionStorage`
+- 取消勾选或「清除配置」/ 登出时，立即删除落盘的 Key
+- 未勾选时 DevTools 的 Local Storage 中不应出现任何 Key 明文
+
 ---
 
 ### OPT-06 配置可信代理白名单

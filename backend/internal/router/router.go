@@ -45,10 +45,11 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config, ctx context.Context) 
 	notifySvc := service.NewNotificationService(notifyRepo)
 	knowledgePointRepo := repository.NewKnowledgePointRepo(db)
 
+	invitationCodeSvc := service.NewInvitationCodeService(invitationCodeRepo)
 	userSvc := service.NewUserService(
 		db,
 		userRepo, examLevelRepo, subjectRepo,
-		service.NewInvitationCodeService(invitationCodeRepo),
+		invitationCodeSvc,
 		cfg.JWTSecret, cfg.JWTExpiresIn,
 		cfg.AdminBypassUsernames,
 	)
@@ -98,6 +99,14 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config, ctx context.Context) 
 	rankingSvc := service.NewRankingService(rankingRepo, userRepo)
 	knowledgePointSvc := service.NewKnowledgePointService(knowledgePointRepo, questionRepo, subjectRepo)
 
+	// 管理端服务：复用现有 user / stats / exam 仓储，不引入新数据源
+	adminSvc := service.NewAdminService(
+		userRepo, examLevelRepo, subjectRepo,
+		invitationCodeRepo, invitationCodeSvc, statsSvc,
+		examRecordRepo, examTemplateRepo,
+		questionRepo, subSubjectRepo, chapterRepo,
+	)
+
 	// 邮件发送器：未配置 SMTP 时降级为日志发送器
 	var emailSender service.EmailSender
 	if cfg.SMTPHost != "" && cfg.SMTPUser != "" && cfg.SMTPPassword != "" {
@@ -129,6 +138,7 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config, ctx context.Context) 
 	rankingH := handler.NewRankingHandler(rankingSvc)
 	notifyH := handler.NewNotificationHandler(notifySvc)
 	knowledgePointH := handler.NewKnowledgePointHandler(knowledgePointSvc)
+	adminH := handler.NewAdminHandler(adminSvc)
 
 	rateLimiter := middleware.RateLimit(5, time.Minute)
 
@@ -248,10 +258,36 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config, ctx context.Context) 
 		auth.POST("/notifications/read-all", notifyH.MarkAllRead)
 	}
 
-	// OPT-04: 管理员专用路由组（题目导入、教学大纲、题目审批等）
-	// 当前项目暂无 /admin/* 路由，留出分组以便未来扩展。
-	// 任何新增的 /api/v1/admin/* 路由必须挂载 RequireAdmin()。
-	_ = middleware.RequireAdmin // keep reference to avoid unused import when admin routes added
+	// 管理员专用路由组：Auth + RequireAdmin 双重保护，任何 /admin/* 路由都不得绕过
 	admin := api.Group("/admin", middleware.Auth(cfg.JWTSecret), middleware.RequireAdmin(userRepo))
-	_ = admin // admin 路由组保留，等待后续模块接入
+	{
+		admin.GET("/invitation-codes", adminH.ListInvitationCodes)
+		admin.POST("/invitation-codes", adminH.CreateInvitationCode)
+
+		// 用户管理
+		admin.GET("/users", adminH.ListUsers)
+		admin.POST("/users", adminH.CreateUser)
+		admin.PUT("/users/:id", adminH.UpdateUser)
+		admin.PATCH("/users/:id/status", adminH.UpdateUserStatus)
+		admin.POST("/users/:id/reset-password", adminH.ResetUserPassword)
+		admin.DELETE("/users/:id", adminH.DeleteUser)
+		admin.GET("/users/:id", adminH.GetUserDetail)
+
+		// 科目管理
+		admin.GET("/subjects", adminH.ListSubjects)
+		admin.POST("/subjects", adminH.CreateSubject)
+		admin.PUT("/subjects/:id", adminH.UpdateSubject)
+		admin.PATCH("/subjects/:id/status", adminH.SetSubjectStatus)
+		admin.DELETE("/subjects/:id", adminH.DeleteSubject)
+
+		// 题库管理（管理员）
+		admin.GET("/questions", adminH.ListQuestions)
+		admin.POST("/questions", adminH.CreateQuestion)
+		admin.GET("/questions/:id", adminH.GetQuestion)
+		admin.PUT("/questions/:id", adminH.UpdateQuestion)
+		admin.DELETE("/questions/:id", adminH.DeleteQuestion)
+		// 批量启停：先于 /questions/:id 匹配（避免把 status 路由当成 :id）
+		admin.PATCH("/questions/status", adminH.BatchUpdateQuestionStatus)
+		admin.GET("/stats/questions", adminH.QuestionStats)
+	}
 }

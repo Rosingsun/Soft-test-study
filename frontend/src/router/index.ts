@@ -162,6 +162,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/community/PostList.vue'),
       },
       {
+        path: 'admin/invite-codes',
+        name: 'AdminInviteCodes',
+        meta: { role: 'admin' },
+        component: () => import('@/views/admin/InvitationCodeManage.vue'),
+      },
+      {
         path: 'admin/users',
         name: 'AdminUsers',
         meta: { role: 'admin' },

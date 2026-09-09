@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAiStore } from '@/stores/ai'
@@ -22,7 +22,21 @@ const form = ref({
   model: aiStore.config.model,
 })
 
+// 「记住 API Key」开关：勾选后 Key 明文落盘到本机 localStorage
+const remember = computed({
+  get: () => aiStore.remember,
+  set: (v: boolean) => aiStore.setRemember(v),
+})
+
 onMounted(async () => {
+  // 先同步一次（例如勾选「记住」后重新打开页面，需要从落盘值恢复）
+  aiStore.syncConfig()
+  form.value = {
+    provider: aiStore.config.provider,
+    api_key: aiStore.config.api_key,
+    base_url: aiStore.config.base_url,
+    model: aiStore.config.model,
+  }
   try {
     const res = await getAiProviders()
     providers.value = res.providers
@@ -130,7 +144,9 @@ function goPractice() {
         </div>
         <div>
           <h2 class="text-base font-semibold text-gray-900">API 配置</h2>
-          <p class="mt-0.5 text-sm text-gray-500">你的 API Key 仅存储在浏览器本地，不会上传到服务器</p>
+          <p class="mt-0.5 text-sm text-gray-500">
+            API 地址与模型长期保存在本机；API Key 默认只在当前标签页有效，可按需勾选「记住」
+          </p>
         </div>
       </div>
 
@@ -175,7 +191,23 @@ function goPractice() {
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             placeholder="sk-xxxxxxxxxxxxxxxx"
           />
-          <p class="mt-1 text-xs text-gray-400">Key 仅保存在你的浏览器本地存储中</p>
+          <p class="mt-1 text-xs text-gray-400">Key 不会上传到服务器，仅保存在你的浏览器中</p>
+          <label class="mt-3 flex cursor-pointer items-start gap-2">
+            <input
+              v-model="remember"
+              type="checkbox"
+              class="mt-0.5 h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span class="text-sm text-gray-700">
+              记住 API Key（下次打开自动带入）
+              <span class="block text-xs text-gray-400">
+                不勾选时 Key 只在当前标签页有效，关闭标签页后需要重新填写
+              </span>
+            </span>
+          </label>
+          <p v-if="remember" class="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            已开启记住：Key 会以明文保存在本机浏览器，公用/共享电脑请勿勾选。
+          </p>
         </div>
       </div>
 
@@ -223,7 +255,8 @@ function goPractice() {
         <li>选择提供商，或选「自定义」自行填写任意 OpenAI 兼容接口</li>
         <li>前往对应平台获取 API Key（如 DeepSeek: platform.deepseek.com，MiniMax: platform.minimaxi.com）</li>
         <li>确认 API 地址与模型无误（可手动修改），填入 API Key</li>
-        <li>点击"保存配置"，配置仅保存在浏览器本地</li>
+        <li>点击"保存配置"；API 地址与模型会长期保存，API Key 默认仅当前标签页有效</li>
+        <li>若希望关掉浏览器后仍保留 Key，勾选「记住 API Key」（会明文存在本机）</li>
         <li>点击"测试连接"确认可用，再前往 AI 练习页面让 AI 出题</li>
       </ol>
     </div>
