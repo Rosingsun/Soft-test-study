@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import type { UserInfo } from '@/types/user'
 import * as authApi from '@/api/auth'
 import { useSubjectStore } from '@/stores/subject'
+import { useNotificationStore } from '@/stores/notification'
 import router from '@/router'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -111,6 +112,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   function logout() {
     localStorage.removeItem('access_token')
+    // 停止通知轮询，避免退出登录后仍请求受保护接口（触发 10003 误跳登录）
+    useNotificationStore().stopPolling()
     user.value = null
     isLoggedIn.value = false
     selectedLevelId.value = 0

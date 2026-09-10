@@ -19,11 +19,19 @@ type Config struct {
 	JWTSecret            string
 	JWTExpiresIn         int
 	ServerPort           string
+	// MailProvider 发信方式：resend / smtp / log（留空则自动判断：优先 resend，其次 smtp，最后 log）
+	MailProvider         string
+	// ResendAPIKey Resend HTTP API Key（配置后即用 Resend 发信，无需邮箱授权码）
+	ResendAPIKey         string
+	// ResendFrom Resend 发件人，形如 "软考学系 <no-reply@your-domain.com>"
+	ResendFrom           string
 	SMTPHost             string
 	SMTPPort             int
 	SMTPUser             string
 	SMTPPassword         string
 	SMTPFromName         string
+	// EmailDailyMax 单邮箱/单用户每日验证码发送上限（默认 50）
+	EmailDailyMax        int
 	AdminBypassUsernames []string
 	// OPT-01: CORS 白名单
 	CORSAllowedOrigins []string
@@ -45,11 +53,15 @@ func Load() *Config {
 		JWTSecret:            getEnv("JWT_SECRET", "dev-secret-change-me"),
 		JWTExpiresIn:         getEnvInt("JWT_EXPIRES_IN", 168),
 		ServerPort:           getEnv("SERVER_PORT", "3000"),
+		MailProvider:         getEnv("MAIL_PROVIDER", ""),
+		ResendAPIKey:         os.Getenv("RESEND_API_KEY"),
+		ResendFrom:           getEnv("RESEND_FROM", ""),
 		SMTPHost:             getEnv("SMTP_HOST", ""),
 		SMTPPort:             getEnvInt("SMTP_PORT", 465),
 		SMTPUser:             getEnv("SMTP_USER", ""),
 		SMTPPassword:         os.Getenv("SMTP_PASSWORD"),
 		SMTPFromName:         getEnv("SMTP_FROM_NAME", "软考学系"),
+		EmailDailyMax:        getEnvInt("EMAIL_DAILY_MAX", 50),
 		// OPT-04: 生产环境默认不绕过任何用户（必须显式设置 ADMIN_BYPASS_USERNAMES）；
 		// 开发环境保持默认 ["ross"] 兼容旧项目初始化逻辑。
 		AdminBypassUsernames: loadAdminBypassUsernames(getEnv("APP_ENV", "development")),

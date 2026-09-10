@@ -75,6 +75,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  // 关键：定时器在全局 store 中，组件卸载必须显式停止，否则退出登录后仍会轮询受保护接口
+  notifyStore.stopPolling()
 })
 </script>
 

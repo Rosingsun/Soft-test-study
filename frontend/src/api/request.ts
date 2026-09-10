@@ -36,9 +36,12 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 
   if (json.code !== 0) {
     if (json.code === 10003) {
-      // 未登录 / Token 失效：清掉本地 token，保留 from 路径后跳到登录页
+      // 未登录 / Token 失效：清掉本地 token
       localStorage.removeItem('access_token')
-      if (_router && !_redirectingToLogin) {
+      // 公开页面（登录/注册/找回密码）不应被强制跳转到登录页，
+      // 否则用户在找回密码过程中会被后台请求「误伤」弹走
+      const isGuestPage = _router?.currentRoute.value.meta?.guest === true
+      if (_router && !isGuestPage && !_redirectingToLogin) {
         _redirectingToLogin = true
         const from = _router.currentRoute.value.fullPath
         _router

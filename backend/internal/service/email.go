@@ -23,24 +23,28 @@ import (
 //   - 每用户每日 10 条上限
 //   - purpose=change 时校验新邮箱未被其他用户占用
 type EmailService struct {
-	repo    *repository.EmailVerificationCodeRepo
-	userRepo *repository.UserRepo
-	sender  EmailSender
+	repo      *repository.EmailVerificationCodeRepo
+	userRepo  *repository.UserRepo
+	sender    EmailSender
+	dailyMax  int
 }
 
 func NewEmailService(
 	repo *repository.EmailVerificationCodeRepo,
 	userRepo *repository.UserRepo,
 	sender EmailSender,
+	dailyMax int,
 ) *EmailService {
-	return &EmailService{repo: repo, userRepo: userRepo, sender: sender}
+	if dailyMax <= 0 {
+		dailyMax = 50
+	}
+	return &EmailService{repo: repo, userRepo: userRepo, sender: sender, dailyMax: dailyMax}
 }
 
 // 配置常量
 const (
 	emailCodeTTL       = 5 * time.Minute
 	emailCodeCooldown  = 60 * time.Second
-	emailCodeDailyMax  = 10
 	emailPurposeVerify         = "verify"
 	emailPurposeChange         = "change"
 	emailPurposeResetPassword  = "reset_password"
@@ -89,7 +93,7 @@ func (s *EmailService) SendCode(userID uint, email, purpose string) error {
 
 	// 每日上限
 	today, _ := s.repo.CountToday(userID)
-	if today >= emailCodeDailyMax {
+	if today >= int64(s.dailyMax) {
 		return errors.New("今日发送次数已达上限，请明天再试")
 	}
 
@@ -185,7 +189,10 @@ func generateCode() (string, error) {
 // SendResetPasswordCode 未登录场景发送重置密码验证码
 //
 // 安全策略：
-//   - 邮箱不存在 / 邮箱未验证：静默返回 nil（防止通过接口枚举已注册邮箱）
+//   - 邮箱不存在：静默返回 nil（防止通过接口枚举已注册邮箱）
+//   - 不校验 email_verified：注册流程不做邮箱验证，该标记默认 false，
+//     若据此拦截会导致找回密码永远发不出邮件。验证码发往注册邮箱，
+//     只有邮箱持有人能收到，安全性由「邮箱唯一 + 限流 + 防枚举」保障。
 //   - 60s 冷却 / 单邮箱每日 10 条上限（复用常量）
 //   - 验证码 user_id 写 NULL，service 层走 email 维度查
 func (s *EmailService) SendResetPasswordCode(rawEmail string) error {
@@ -194,12 +201,9 @@ func (s *EmailService) SendResetPasswordCode(rawEmail string) error {
 		return errors.New("邮箱格式不正确")
 	}
 
-	// 查用户：找不到 / 未验证 → 静默成功
+	// 查用户：找不到 → 静默成功（防枚举）
 	user, err := s.userRepo.FindByEmail(email)
 	if err != nil || user == nil || user.ID == 0 {
-		return nil
-	}
-	if !user.EmailVerified {
 		return nil
 	}
 
@@ -214,7 +218,7 @@ func (s *EmailService) SendResetPasswordCode(rawEmail string) error {
 
 	// 每日上限
 	today, _ := s.repo.CountTodayByEmail(email)
-	if today >= emailCodeDailyMax {
+	if today >= int64(s.dailyMax) {
 		return errors.New("今日发送次数已达上限，请明天再试")
 	}
 

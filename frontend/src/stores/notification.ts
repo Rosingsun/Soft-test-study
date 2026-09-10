@@ -26,6 +26,8 @@ export const useNotificationStore = defineStore('notification', () => {
   }
 
   async function fetchUnread() {
+    // 未登录（无 token）不请求受保护接口，避免 10003 触发强制跳登录
+    if (!localStorage.getItem('access_token')) return
     try {
       const resp = await getUnreadCount()
       unreadCount.value = resp.unread_count
@@ -61,6 +63,8 @@ export const useNotificationStore = defineStore('notification', () => {
   // 启动 30s 轮询未读数
   function startPolling(intervalMs = 30000) {
     if (pollTimer) return
+    // 未登录（无 token）不启动轮询
+    if (!localStorage.getItem('access_token')) return
     fetchUnread()
     pollTimer = setInterval(fetchUnread, intervalMs)
   }

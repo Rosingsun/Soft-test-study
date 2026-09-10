@@ -207,8 +207,12 @@ router.beforeEach(async (to, _from, next) => {
     if (!auth.initialized) {
       await auth.checkAuth()
     }
-    next(auth.getHomeRoute())
-    return
+    // token 有效：已登录用户访问登录/注册/找回密码 → 回首页
+    if (auth.isLoggedIn) {
+      next(auth.getHomeRoute())
+      return
+    }
+    // token 已失效：放行到当前公开页面（如找回密码），checkAuth 已清理失效 token
   }
 
   if (to.meta.requiresAuth && token) {

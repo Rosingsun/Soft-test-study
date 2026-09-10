@@ -3,6 +3,7 @@ package router
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -107,16 +108,37 @@ func Setup(db *gorm.DB, r *gin.Engine, cfg *config.Config, ctx context.Context) 
 		questionRepo, subSubjectRepo, chapterRepo,
 	)
 
-	// 邮件发送器：未配置 SMTP 时降级为日志发送器
+	// 邮件发送器选择顺序：
+	//   1. MAIL_PROVIDER=resend 或已配置 RESEND_API_KEY → Resend HTTP API（无需邮箱授权码）
+	//   2. MAIL_PROVIDER=smtp 或已配置完整 SMTP → SMTP 直连
+	//   3. 都未配置 → 降级为日志发送器（开发模式，验证码打进日志）
 	var emailSender service.EmailSender
-	if cfg.SMTPHost != "" && cfg.SMTPUser != "" && cfg.SMTPPassword != "" {
-		emailSender = service.NewSMTPEmailSender(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPassword, cfg.SMTPFromName)
+	provider := strings.ToLower(strings.TrimSpace(cfg.MailProvider))
+	hasResend := cfg.ResendAPIKey != ""
+	hasSMTP := cfg.SMTPHost != "" && cfg.SMTPUser != "" && cfg.SMTPPassword != ""
+
+	switch {
+	case provider == "resend" || (provider == "" && hasResend):
+		if !hasResend {
+			log.Println("[email] MAIL_PROVIDER=resend 但未配置 RESEND_API_KEY，降级为日志发送器")
+			emailSender = service.NewLogEmailSender()
+			break
+		}
+		emailSender = service.NewResendEmailSender(cfg.ResendAPIKey, cfg.ResendFrom)
+		log.Printf("[email] 使用 Resend API 发送器 from=%s", cfg.ResendFrom)
+	case provider == "smtp" || (provider == "" && hasSMTP):
+		if !hasSMTP {
+			log.Println("[email] MAIL_PROVIDER=smtp 但 SMTP 配置不完整，降级为日志发送器")
+			emailSender = service.NewLogEmailSender()
+			break
+		}
+		emailSender = service.NewSMTPEmailSender(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPassword, cfg.SMTPUser, cfg.SMTPFromName)
 		log.Printf("[email] 使用 SMTP 发送器 host=%s port=%d", cfg.SMTPHost, cfg.SMTPPort)
-	} else {
+	default:
 		emailSender = service.NewLogEmailSender()
-		log.Println("[email] SMTP 未配置，验证码将仅打印到日志（开发模式）")
+		log.Println("[email] 未配置 Resend / SMTP，验证码将仅打印到日志（开发模式）")
 	}
-	emailSvc := service.NewEmailService(emailCodeRepo, userRepo, emailSender)
+	emailSvc := service.NewEmailService(emailCodeRepo, userRepo, emailSender, cfg.EmailDailyMax)
 
 	userH := handler.NewUserHandler(userSvc, emailSvc)
 	examLevelH := handler.NewExamLevelHandler(examLevelSvc)
