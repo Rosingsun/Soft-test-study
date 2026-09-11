@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "markmap-common": "^0.18.9",
+    "markmap-view": "^0.18.12",
     "pinia": "^3.0.4",
     "vue": "^3.5.39",
     "vue-router": "^4.6.4"
